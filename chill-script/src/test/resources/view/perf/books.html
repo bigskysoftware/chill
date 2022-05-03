@@ -1,0 +1,17 @@
+#layout /perf/layout.html
+
+<main>
+    <h1>Foo</h1>
+    <div class="row row-3">
+        #for book in books
+        <div class="col">
+            <a class="book" href="/books/${book.isbn}">
+                <div class="bookCover">
+                    <img src="${book.mediumCover}" alt="${book.name}">
+                </div>
+                ${book.author + book.name}
+            </a>
+        </div>
+        #end
+    </div>
+</main>

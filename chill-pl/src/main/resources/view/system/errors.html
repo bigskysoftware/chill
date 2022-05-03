@@ -1,0 +1,20 @@
+<html>
+<head>
+    <head>
+        <title>Chill... Not So Chill...</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="https://classless.de/classless.css" crossorigin="anonymous">
+    </head>
+</head>
+<body>
+<h1>A Not So Chill Exception Happened...</h1>
+<p>Well now shoot, an exception occurred:</p>
+<pre>
+${exception.message}
+
+#for line in exception.stack_trace
+  ${line}
+#end
+</pre>
+</body>
+</html>

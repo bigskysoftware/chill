@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Welcome To Chill!</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="/js/htmx.org@1.7.0.js"></script>
+    <script src="/js/hyperscript.org@0.9.4.js"></script>
+    <link rel="stylesheet" href="https://the.missing.style" type="text/css"/>
+    <link rel="stylesheet" href="css/site.css" type="text/css"/>
+</head>
+<body>
+
+<header is="nav-bar">
+    <nav>
+        <ul role="list">
+            <li>
+                <a href="/">Home</a>
+            </li>
+            <li>
+                <a href="/admin">Admin</a>
+            </li>
+        </ul>
+    </nav>
+</header>
+
+<main>
+
+    #if flash.has('msg')
+    <div class="card hint"
+         _="on load wait 2s then transition my opacity to 0 then remove me">
+        <p>Message</p>
+        <div>${flash.msg}</div>
+    </div>
+    #end
+
+    #content
+
+</main>
+</body>
+</html>
