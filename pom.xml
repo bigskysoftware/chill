@@ -11,6 +11,7 @@
     <module>chill-script</module>
     <module>chill-rpc</module>
     <module>chill-pl</module>
+    <module>chill-init</module>
   </modules>
   <properties>
     <maven.compiler.source>17</maven.compiler.source>

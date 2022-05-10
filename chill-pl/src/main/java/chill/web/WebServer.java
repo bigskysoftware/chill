@@ -95,7 +95,7 @@ public class WebServer {
         if (ChillEnv.isDevMode()) {
             javalin.exception(Exception.class, (e, ctx) -> {
                 e.printStackTrace();
-                Utils.render("system/errors.html", "exception", e);
+                Utils.render("/system/errors.html", "exception", e);
             });
         }
         return javalin;

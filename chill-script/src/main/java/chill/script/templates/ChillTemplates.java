@@ -56,6 +56,9 @@ public class ChillTemplates {
     public ChillTemplate getNoCache(String fullName) {
         String[] nameAndFragment = fullName.split("#"); // ignore fragment
         String name = nameAndFragment[0];
+        if (!name.startsWith("/")) {
+            name = "/" + name;
+        }
         TemplateLoader loader = loadSource(name);
         String source = safely(loader::getSource);
         ChillTemplateParser parser = new ChillTemplateParser();
@@ -142,17 +145,17 @@ public class ChillTemplates {
 
         @Override
         public boolean resolves() {
-            return getClass().getResource("/" + root + "/" + fileName) != null;
+            return getClass().getResource("/" + root + fileName) != null;
         }
 
         @Override
         public String getFullPath() {
-            return "resource: " + "/" + root + "/" + fileName;
+            return "resource: " + "/" + root +  fileName;
         }
 
         @Override
         public String getSource() throws IOException {
-            try (InputStream inputStream = getClass().getResourceAsStream("/" + root + "/" + fileName)) {
+            try (InputStream inputStream = getClass().getResourceAsStream("/" + root + fileName)) {
                 ByteArrayOutputStream result = new ByteArrayOutputStream();
                 byte[] buffer = new byte[2048];
                 int length;
