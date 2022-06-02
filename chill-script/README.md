@@ -1,8 +1,8 @@
-# Lekker Template Language
+# Chill Template Language
 
-The Lekker Template Language (LTL) is Yet Another Templating Language (YATL) for the JVM.  
+The Chill Template Language is Yet Another Templating Language (YATL) for the JVM.  
 
-LTL is designed to be relatively simple and lightweight, but is not overly concerned with pure rendering performance.  
+CTL is designed to be relatively simple and lightweight, but is not overly concerned with pure rendering performance.  
 Rather it is focused on developer productivity with:
 
 * Automatic detection of developer mode, with hot reload
@@ -13,7 +13,7 @@ Rather it is focused on developer productivity with:
 
 ## Syntax
 
-Lekker Templates consist of a mixture of expressions and commands.  
+Chill Templates consist of a mixture of expressions and commands.  
 
 Here is an example chill template:
 
@@ -38,7 +38,7 @@ Note that commands start with a `#` and expressions start with a `$`.
 
 ### Commands
 
-All commands in LTL start with a `#` character and *must* start the line they are on.  
+All commands in Chill Templates start with a `#` character and *must* start the line they are on.  
 
 Any characters placed before a `#` make that line not a command.
 
