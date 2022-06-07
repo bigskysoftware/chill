@@ -9,7 +9,6 @@ import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.client.builder.AwsClientBuilder;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
-import io.findify.s3mock.S3Mock;
 
 public class Storage {
 
@@ -38,19 +37,20 @@ public class Storage {
                     .build();
             return s3client;
         } else {
-            LOG.info("No S3 Configuration Detected, starting local file system storage");
-            // No cloud storage service defined, use local mock
-            var api = new S3Mock.Builder().withPort(ChillEnv.getS3MockPort()).withFileBackend("./fs").build();
-            api.start();
-            String localS3ServiceURL = "http://localhost:" + ChillEnv.getS3MockPort();
-            var endpoint = new AwsClientBuilder.EndpointConfiguration(localS3ServiceURL, "DUMMY");
-            var s3client = AmazonS3ClientBuilder
-                    .standard()
-                    .withPathStyleAccessEnabled(true)
-                    .withCredentials(new AWSStaticCredentialsProvider(new AnonymousAWSCredentials()))
-                    .withEndpointConfiguration(endpoint)
-                    .build();
-            return s3client;
+//            LOG.info("No S3 Configuration Detected, starting local file system storage");
+//            // No cloud storage service defined, use local mock
+//            var api = new S3Mock.Builder().withPort(ChillEnv.getS3MockPort()).withFileBackend("./fs").build();
+//            api.start();
+//            String localS3ServiceURL = "http://localhost:" + ChillEnv.getS3MockPort();
+//            var endpoint = new AwsClientBuilder.EndpointConfiguration(localS3ServiceURL, "DUMMY");
+//            var s3client = AmazonS3ClientBuilder
+//                    .standard()
+//                    .withPathStyleAccessEnabled(true)
+//                    .withCredentials(new AWSStaticCredentialsProvider(new AnonymousAWSCredentials()))
+//                    .withEndpointConfiguration(endpoint)
+//                    .build();
+//            return s3client;
+            return null; // TODO fixme
         }
     }
 
