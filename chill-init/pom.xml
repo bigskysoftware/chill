@@ -21,7 +21,7 @@
 
         <dependency>
             <groupId>chill.software</groupId>
-            <artifactId>chill-pl</artifactId>
+            <artifactId>chill-web</artifactId>
             <version>0.0.1-SNAPSHOT</version>
         </dependency>
 
