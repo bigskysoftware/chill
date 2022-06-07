@@ -1,6 +1,5 @@
 package chill.m8.parser;
 
-import auto.m8.parsetree.commands.*;
 import chill.m8.parsetree.commands.*;
 import chill.m8.parsetree.expressions.BodyExpression;
 import chill.m8.parsetree.expressions.ButtonPostfixExpression;
