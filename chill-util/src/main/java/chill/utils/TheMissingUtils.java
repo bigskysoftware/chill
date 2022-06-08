@@ -238,6 +238,10 @@ public class TheMissingUtils {
 
     public interface DangerousRunnable {
         void run() throws Exception;
+
+        default void runDangerously(){
+            TheMissingUtils.safely(this::run);
+        }
     }
 
     public interface SafeAutoCloseable extends AutoCloseable {

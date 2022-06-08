@@ -17,7 +17,7 @@ import java.util.UUID;
 
 public class WebServer {
 
-    static private ChillLogs.LogCategory LOG = ChillLogs.get(WebServer.class);
+    static public ChillLogs.LogCategory LOG = ChillLogs.get(WebServer.class);
 
     private Javalin javalin;
 
@@ -72,25 +72,6 @@ public class WebServer {
         javalin.before(Utils::establishContext);
         javalin.after(ctx -> Utils.clearContext());
 
-
-        //===================================================
-        //  Request Logging
-        //===================================================
-        javalin.before(ctx -> {
-            UUID uuid = UUID.randomUUID();
-            ChillLogs.establishCtx();
-            ChillLogs.addContext("request-id", uuid);
-            ctx.req.setAttribute("chill.web.request-id", uuid);
-            long currentTimeMillis = System.currentTimeMillis();
-            ctx.req.setAttribute("chill.web.request-start", currentTimeMillis);
-            LOG.info("Started  " + ctx.method() + " : " + ctx.path());
-        });
-        javalin.after(ctx -> {
-            Long startTimeInMillis = (Long) ctx.req.getAttribute("chill.web.request-start");
-            long totalTime = System.currentTimeMillis() - startTimeInMillis;
-            LOG.info("Finished " + ctx.method() + " : " + ctx.path() + " (" + totalTime + " ms)");
-            ChillLogs.closeContext();
-        });
 
         if (ChillEnv.isDevMode()) {
             javalin.exception(Exception.class, (e, ctx) -> {

@@ -2,6 +2,7 @@ package chill.web;
 
 import chill.utils.ChillLogs;
 import chill.utils.TheMissingUtils;
+import chill.utils.TheMissingUtils.DangerousRunnable;
 import io.javalin.core.JavalinConfig;
 import org.jetbrains.annotations.NotNull;
 
@@ -22,7 +23,7 @@ public abstract class ChillRoutes {
     //  No Args
     //===============================================
 
-    public void all(@NotNull String path, @NotNull TheMissingUtils.DangerousRunnable handler) {
+    public void all(@NotNull String path, @NotNull DangerousRunnable handler) {
         get(path, handler);
         post(path, handler);
         put(path, handler);
@@ -32,35 +33,35 @@ public abstract class ChillRoutes {
         options(path, handler);
     }
 
-    public void get(@NotNull String path, @NotNull TheMissingUtils.DangerousRunnable handler) {
-        getJavalin().get(path, ctx -> executeHandler(handler));
+    public void get(@NotNull String path, @NotNull DangerousRunnable handler) {
+        getJavalin().get(path, new ChillHandler(handler));
     }
 
-    public void post(@NotNull String path, @NotNull TheMissingUtils.DangerousRunnable handler) {
-        getJavalin().post(path, ctx -> executeHandler(handler));
+    public void post(@NotNull String path, @NotNull DangerousRunnable handler) {
+        getJavalin().post(path, new ChillHandler(handler));
     }
 
-    public void put(@NotNull String path, @NotNull TheMissingUtils.DangerousRunnable handler) {
-        getJavalin().put(path, ctx -> executeHandler(handler));
+    public void put(@NotNull String path, @NotNull DangerousRunnable handler) {
+        getJavalin().put(path, new ChillHandler(handler));
     }
 
-    public void patch(@NotNull String path, @NotNull TheMissingUtils.DangerousRunnable handler) {
-        getJavalin().patch(path, ctx -> executeHandler(handler));
+    public void patch(@NotNull String path, @NotNull DangerousRunnable handler) {
+        getJavalin().patch(path, new ChillHandler(handler));
     }
 
-    public void delete(@NotNull String path, @NotNull TheMissingUtils.DangerousRunnable handler) {
-        getJavalin().delete(path, ctx -> executeHandler(handler));
+    public void delete(@NotNull String path, @NotNull DangerousRunnable handler) {
+        getJavalin().delete(path, new ChillHandler(handler));
     }
 
-    public void head(@NotNull String path, @NotNull TheMissingUtils.DangerousRunnable handler) {
-        getJavalin().head(path, ctx -> executeHandler(handler));
+    public void head(@NotNull String path, @NotNull DangerousRunnable handler) {
+        getJavalin().head(path, new ChillHandler(handler));
     }
 
-    public void options(@NotNull String path, @NotNull TheMissingUtils.DangerousRunnable handler) {
+    public void options(@NotNull String path, @NotNull DangerousRunnable handler) {
         getJavalin().options(path, ctx -> executeHandler(handler));
     }
 
-    private void executeHandler(TheMissingUtils.DangerousRunnable handler) {
+    private void executeHandler(DangerousRunnable handler) {
         TheMissingUtils.safely(() -> handler.run());
     }
 

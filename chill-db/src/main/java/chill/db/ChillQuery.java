@@ -61,6 +61,10 @@ public class ChillQuery<T extends ChillRecord> implements Iterable<T> {
         return new ChillQuery<T>(this).where$(conditions);
     }
 
+    public T firstWhere(Object... conditions) {
+        return new ChillQuery<T>(this).where$(conditions).first();
+    }
+
     private ChillQuery<T> where$(Object... conditions) {
         if (conditions.length > 0) {
             Map conditionParameters = new HashMap();
