@@ -6,14 +6,14 @@ import chill.utils.NiceList;
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 
-import static chill.storage.Bucket.PATH_SEPARATOR;
+import static chill.storage.CloudBucket.PATH_SEPARATOR;
 
 public class CloudFile {
 
-    private final Bucket bucket;
+    private final CloudBucket bucket;
     private final String name;
 
-    public CloudFile(Bucket bucket, String fileName) {
+    public CloudFile(CloudBucket bucket, String fileName) {
         this.bucket = bucket;
         this.name = fileName;
     }
@@ -50,22 +50,8 @@ public class CloudFile {
     }
 
     public NiceList<CloudFile> list() {
-        var objects = bucket.listObjects(name);
-        var filtered = objects.filter(s3ObjectSummary -> isDirectDescendent(s3ObjectSummary.getKey()));
-        var cloudFiles = filtered.map(obj -> new CloudFile(bucket, obj.getKey()));
-        return cloudFiles;
-    }
-
-    private boolean isDirectDescendent(String key) {
-        var subPath = key.substring(name.length() + 1);
-        boolean containsSlash = subPath.contains(PATH_SEPARATOR);
-        return !containsSlash;
-    }
-
-    public NiceList<CloudFile> listAll() {
-        var objects = bucket.listObjects(name);
-        var cloudFiles = objects.map(obj -> new CloudFile(bucket, obj.getKey()));
-        return cloudFiles;
+        return bucket.listObjects(name)
+                .map(fileName -> new CloudFile(bucket, fileName));
     }
 
     public boolean isDir() {
