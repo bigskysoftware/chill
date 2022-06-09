@@ -12,6 +12,7 @@ import static chill.utils.TheMissingUtils.forceThrow;
 
 public class ChillJavaMethod implements ChillMethod {
 
+    public static final int MAX_VALUE_MINUS_ONE = Integer.MAX_VALUE - 1;
     private final List<Method> javaMethods;
     private final String name;
 
@@ -67,11 +68,11 @@ public class ChillJavaMethod implements ChillMethod {
                 if (o != null) {
                     Class<?> runtimeClass = o.getClass();
                     if (!parameterType.isAssignableFrom(runtimeClass)) {
-                        return Integer.MAX_VALUE;
+                        return MAX_VALUE_MINUS_ONE;
                     } else {
                         int paramDistance = distanceTo(runtimeClass, parameterType);
                         if (paramDistance == Integer.MAX_VALUE) {
-                            return Integer.MAX_VALUE;
+                            return MAX_VALUE_MINUS_ONE;
                         }
                         distance += paramDistance;
                     }
@@ -79,7 +80,7 @@ public class ChillJavaMethod implements ChillMethod {
             }
             return distance;
         }
-        return Integer.MAX_VALUE;
+        return MAX_VALUE_MINUS_ONE;
     }
 
     @Override

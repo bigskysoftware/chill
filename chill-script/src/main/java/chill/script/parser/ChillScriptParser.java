@@ -126,6 +126,7 @@ public class ChillScriptParser {
         // Core grammar
         registerExpression("expression", this::parsePostfixExpressions);
         registerExpression("equalityExpression", EqualityExpression::parse);
+        registerExpression("logicalExpression", LogicalExpression::parse);
         registerExpression("comparisonExpression", ComparisonExpression::parse);
         registerExpression("additiveExpression", AdditiveExpression::parse);
         registerExpression("factorExpression", (parser) -> parser.parse("unaryExpression"));

@@ -27,8 +27,8 @@ public class ChillTemplateIfCommand extends ChillTemplateCommand {
 
     @Override
     public void render(ChillTemplateRuntime context) {
-        Object evaluate = expr.evaluate(context);
-        if (evaluate != null && !Boolean.FALSE.equals(evaluate)) {
+        Object testValue = expr.evaluate(context);
+        if (context.isTruthy(testValue)) {
             for (ChillTemplateCommand elt : body) {
                 elt.render(context);
             }

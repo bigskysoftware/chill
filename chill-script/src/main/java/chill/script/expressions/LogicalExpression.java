@@ -1,19 +1,20 @@
 package chill.script.expressions;
 
 import chill.script.parser.ChillScriptParser;
+import chill.script.parser.ErrorType;
 import chill.script.runtime.ChillScriptRuntime;
 import chill.script.tokenizer.Token;
 import chill.script.tokenizer.TokenType;
 
 import java.util.Objects;
 
-public class EqualityExpression extends Expression {
+public class LogicalExpression extends Expression {
 
     private final Token operator;
     private final Expression leftHandSide;
     private final Expression rightHandSide;
 
-    public EqualityExpression(Token operator, Expression leftHandSide, Expression rightHandSide) {
+    public LogicalExpression(Token operator, Expression leftHandSide, Expression rightHandSide) {
         this.leftHandSide = addChild(leftHandSide);
         this.rightHandSide = addChild(rightHandSide);
         this.operator = operator;
@@ -32,8 +33,8 @@ public class EqualityExpression extends Expression {
         return super.toString() + "[" + operator.getStringValue() + "]";
     }
 
-    public boolean isEqual() {
-        return operator.getType().equals(TokenType.EQUAL_EQUAL) || operator.getStringValue().equals("is");
+    public boolean isAnd() {
+        return operator.getStringValue().equals("and");
     }
 
 
@@ -44,20 +45,33 @@ public class EqualityExpression extends Expression {
     @Override
     public Object evaluate(ChillScriptRuntime runtime) {
         Object lhsValue = leftHandSide.evaluate(runtime);
-        Object rhsValue = rightHandSide.evaluate(runtime);
-        if (isEqual()) {
-            return Objects.equals(lhsValue, rhsValue);
+        if (isAnd()) {
+            if (runtime.isTruthy(lhsValue)) {
+                return rightHandSide.evaluate(runtime);
+            } else {
+                return false;
+            }
         } else {
-            return !Objects.equals(lhsValue, rhsValue);
+            if (runtime.isTruthy(lhsValue)) {
+                return lhsValue;
+            } else {
+                return rightHandSide.evaluate(runtime);
+            }
         }
     }
 
     public static Expression parse(ChillScriptParser parser) {
-        Expression expression = parser.parse("logicalExpression");
-        while (parser.match(TokenType.EQUAL_EQUAL, TokenType.BANG_EQUAL) || parser.match("is")) {
+        Expression expression = parser.parse("comparisonExpression");
+        Token firstOperator = null;
+        while (parser.match("and") || parser.match("or")) {
             Token operator = parser.consumeToken();
-            final Expression rightHandSide = parser.parse("logicalExpression");
-            EqualityExpression equalityExpression = new EqualityExpression(operator, expression, rightHandSide);
+            if (firstOperator == null) {
+                firstOperator = operator;
+            } else if (!firstOperator.getStringValue().equals(operator.getStringValue())) {
+                expression.addError(ErrorType.MUST_PARENTHESIZE);
+            }
+            final Expression rightHandSide = parser.parse("comparisonExpression");
+            LogicalExpression equalityExpression = new LogicalExpression(operator, expression, rightHandSide);
             equalityExpression.setStart(expression.getStart());
             equalityExpression.setEnd(rightHandSide.getEnd());
             expression = equalityExpression;

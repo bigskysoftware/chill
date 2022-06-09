@@ -176,7 +176,7 @@ public class ChillQuery<T extends ChillRecord> implements Iterable<T> {
         return queryArguments;
     }
 
-    public T findByPrimaryKey(Object[] keys) {
+    public T findByPrimaryKey(Object... keys) {
         String where = getFields().filter(ChillField::isPrimaryKey).map(field -> field.getColumnName() + "=?").join(" AND ");
         LinkedList<Object> queryList = new LinkedList<>();
         queryList.add(where);

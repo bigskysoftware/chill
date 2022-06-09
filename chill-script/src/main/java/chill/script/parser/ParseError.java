@@ -27,4 +27,9 @@ public class ParseError {
         sb.append(message);
         return sb.toString();
     }
+
+    @Override
+    public String toString() {
+        return message;
+    }
 }
