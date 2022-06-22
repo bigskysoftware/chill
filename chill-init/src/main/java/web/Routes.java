@@ -9,15 +9,11 @@ import static chill.web.WebServer.Utils.*;
 
 public class Routes extends ChillRoutes {
 
-    public void foo() {
-    }
-
     @Override
     public void init() {
 
         get("/", () -> {
             // render the index template
-            System.out.println("HURRRRRRRRRRR");
             render("index.html");
         });
 
