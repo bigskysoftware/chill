@@ -78,15 +78,14 @@ public class ChillApp {
             System.exit(cmd.getCommandSpec().exitCodeOnUsageHelp());
         }
 
+        ChillEnv.MODE.initialize(this);
+
         // if no arguments are passed in, we are in dev mode
         if (mode == null && !web && !workers) {
-            String comment = "No mode, web or worker argument passed in.  Starting in dev mode.";
-            info(comment);
+            info("No mode, web or worker argument passed in.  Starting in dev mode.");
 
             workers = true;
             web = true;
-
-            ChillEnv.setMode(ChillMode.Modes.DEV, comment);
 
             Path tomlFilePath = Path.of("src/main/resources/config/chill.toml");
             if (tomlFilePath.toFile().exists()) {

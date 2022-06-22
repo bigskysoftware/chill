@@ -116,7 +116,7 @@ public class ChillEnv {
     }
 
     public String getMode() {
-        return MODE.stringValue();
+        return MODE.get() == null ? null : MODE.stringValue();
     }
 
     protected static <T> ChillEnvVar<T> envVar(String name, Class<T> type) {

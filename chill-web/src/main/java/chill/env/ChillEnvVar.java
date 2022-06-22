@@ -89,24 +89,26 @@ public class ChillEnvVar<T> {
 
             // next via environment-specific TOML
             String mode = ChillEnv.INSTANCE.getMode();
-            if (tomlFile.isTable(mode)) {
-                TomlTable table = tomlFile.getTable(mode);
-                Object o = table.get(name);
+            if (mode != null) {
+                if (tomlFile.isTable(mode)) {
+                    TomlTable table = tomlFile.getTable(mode);
+                    Object o = table.get(name);
+                    if (o != null) {
+                        this.source = "TOML file (environment specific: " + mode + ")";
+                        this.value = convertFromString(String.valueOf(o));
+                        this.valueSet = true;
+                        return;
+                    }
+                }
+
+                // top level TOML file
+                Object o = tomlFile.get(name);
                 if (o != null) {
-                    this.source = "TOML file (environment specific: " + mode + ")";
+                    this.source = "TOML file";
                     this.value = convertFromString(String.valueOf(o));
                     this.valueSet = true;
                     return;
                 }
-            }
-
-            // top level TOML file
-            Object o = tomlFile.get(name);
-            if (o != null) {
-                this.source = "TOML file";
-                this.value = convertFromString(String.valueOf(o));
-                this.valueSet = true;
-                return;
             }
         }
 
