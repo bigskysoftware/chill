@@ -16,6 +16,7 @@ import java.util.function.Predicate;
 
 public class TheMissingUtils {
 
+    public static final String EMPTY_STRING = "";
     private static final ForceThrower THROWER = generateForceThrower();
 
     public static <T> T safely(Callable<T> logic) {

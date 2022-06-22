@@ -1,6 +1,9 @@
 package chill.utils;
 
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.*;
+import java.util.concurrent.Callable;
 import java.util.function.*;
 import java.util.stream.Stream;
 
@@ -120,6 +123,23 @@ public class NiceList<T> implements List<T>{
 
     public NiceList<T> removeNulls() {
         return this.filter(Objects::nonNull);
+    }
+
+    public boolean anyMatch(Predicate<T> test) {
+        for (T obj : this) {
+            if (test.test(obj)) {
+                return true;
+            }
+        }
+        return false;
+    }
+    public boolean allMatch(Predicate<T> test) {
+        for (T obj : this) {
+            if (!test.test(obj)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     public interface Each<T> {

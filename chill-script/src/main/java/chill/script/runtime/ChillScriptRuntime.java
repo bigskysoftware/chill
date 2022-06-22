@@ -14,7 +14,6 @@ import static java.lang.Boolean.FALSE;
 public class ChillScriptRuntime {
 
     public static final Object UNDEFINED = new Object();
-    public static final String EMPTY_STRING = "";
 
     TypedMap metadata = new TypedMap();
 
@@ -123,7 +122,7 @@ public class ChillScriptRuntime {
     public boolean isTruthy(Object value) {
         return value != null &&
                 !FALSE.equals(value) &&
-                !EMPTY_STRING.equals(value);
+                !TheMissingUtils.EMPTY_STRING.equals(value);
     }
 
     public interface ExceptionHandler{

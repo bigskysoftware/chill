@@ -418,6 +418,9 @@ public class ChillRecord {
         public T first() {
             return where().first();
         }
+        public T firstWhere(Object... conditions) {
+            return new ChillQuery<T>(clazz).firstWhere(conditions);
+        }
 
         public ChillQuery<T> all() {
             return where();

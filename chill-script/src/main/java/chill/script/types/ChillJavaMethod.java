@@ -13,12 +13,12 @@ import static chill.utils.TheMissingUtils.forceThrow;
 public class ChillJavaMethod implements ChillMethod {
 
     public static final int MAX_VALUE_MINUS_ONE = Integer.MAX_VALUE - 1;
-    private final List<Method> javaMethods;
+    private final NiceList<Method> javaMethods;
     private final String name;
 
     public ChillJavaMethod(String methodName, Class backingClass) {
         this.name = methodName;
-        this.javaMethods = new ArrayList<>();
+        this.javaMethods = new NiceList<>();
         Method[] allMethods = backingClass.getMethods();
         for (Method m : allMethods) {
             if (m.getName().equals(methodName)) {
@@ -95,13 +95,18 @@ public class ChillJavaMethod implements ChillMethod {
 
     @Override
     public boolean isStatic() {
-        for (Method javaMethod : javaMethods) {
-            boolean isStatic = Modifier.isStatic(javaMethod.getModifiers());
-            if (isStatic) {
-                return true;
-            }
-        }
-        return false;
+        return javaMethods.anyMatch((m) -> Modifier.isStatic(m.getModifiers()));
+    }
+
+    @Override
+    public boolean isPublic() {
+        return javaMethods.anyMatch((m) -> Modifier.isPublic(m.getModifiers()));
+    }
+
+    @Override
+    public boolean canInvokeWith(List<Object> args) {
+        Method method = bestMatch(args);
+        return method != null;
     }
 
     private int distanceTo(Class<?> runtimeClass, Class<?> parameterType) {
