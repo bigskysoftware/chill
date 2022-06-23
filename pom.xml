@@ -10,8 +10,8 @@
     <module>chill-db</module>
     <module>chill-script</module>
     <module>chill-init</module>
-    <module>chill-m8</module>
     <module>chill-web</module>
+    <module>autom8</module>
   </modules>
   <properties>
     <maven.compiler.source>17</maven.compiler.source>
