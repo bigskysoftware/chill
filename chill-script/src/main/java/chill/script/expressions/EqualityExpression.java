@@ -33,7 +33,7 @@ public class EqualityExpression extends Expression {
     }
 
     public boolean isEqual() {
-        return operator.getType().equals(TokenType.EQUAL_EQUAL);
+        return operator.getType().equals(TokenType.EQUAL_EQUAL) || operator.getStringValue().equals("is");
     }
 
 
@@ -54,7 +54,7 @@ public class EqualityExpression extends Expression {
 
     public static Expression parse(ChillScriptParser parser) {
         Expression expression = parser.parse("logicalExpression");
-        while (parser.match(TokenType.EQUAL_EQUAL, TokenType.BANG_EQUAL)) {
+        while (parser.match(TokenType.EQUAL_EQUAL, TokenType.BANG_EQUAL) || parser.match("is")) {
             Token operator = parser.consumeToken();
             final Expression rightHandSide = parser.parse("logicalExpression");
             EqualityExpression equalityExpression = new EqualityExpression(operator, expression, rightHandSide);
