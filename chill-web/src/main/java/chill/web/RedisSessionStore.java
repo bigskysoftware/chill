@@ -14,12 +14,14 @@ public class RedisSessionStore extends AbstractSessionDataStore {
 
     private static final String SESSION_PREFIX = "jetty:sessions:";
     // TODO - move to factor/wrapper
-    Jedis redis = new Jedis(ChillEnv.getRedisURL());
     Gson gson = new Gson();
+
 
     @Override
     public void doStore(String id, SessionData data, long lastSaveTime) throws Exception {
-        redis.set(SESSION_PREFIX + id, gson.toJson(data));
+        try(var redis = Redis.get()) {
+            redis.set(SESSION_PREFIX + id, gson.toJson(data));
+        }
     }
 
     @Override
