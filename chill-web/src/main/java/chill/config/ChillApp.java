@@ -19,6 +19,7 @@ import static java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY;
 import static chill.utils.ChillLogs.*;
 public class ChillApp {
 
+    public static final String UNSET_VALUE = "unset";
     static String BANNER = """
                                                                                         \s
                                                                                         \s
@@ -35,10 +36,10 @@ public class ChillApp {
                                   Let's chill..
             """;
 
-    @Option(names = {"--console"}, arity = "0..1", description = "start console", defaultValue = "unset", fallbackValue = "jline")
+    @Option(names = {"--console"}, arity = "0..1", description = "start console", defaultValue = UNSET_VALUE, fallbackValue = "jline")
     String console;
 
-    @Option(names = {"--migrations"}, arity = "0..1", description = "Execute a migration command or start the console", defaultValue = "unset", fallbackValue = "console")
+    @Option(names = {"--migrations"}, arity = "0..1", description = "Execute a migration command or start the console", defaultValue = UNSET_VALUE, fallbackValue = "console")
     String migrationCommand;
 
     @Option(names = {"-m", "--mode"}, description = "The mode that the system is started in")
@@ -63,7 +64,7 @@ public class ChillApp {
         ChillHelper.INSTANCE.reload();
     }
 
-    public ChillApp exec(String[] args) {
+    public final ChillApp exec(String[] args) {
 
         SLF4JSupport.init();
 
@@ -113,13 +114,13 @@ public class ChillApp {
         // init db connections
         ChillDataSource.init();
 
-        if (!"unset".equals(migrationCommand)) {
+        if (!UNSET_VALUE.equals(migrationCommand)) {
             ChillMigrations.execute(migrationCommand);
             System.exit(0);
             return this;
         }
 
-        if (!"unset".equals(console)) {
+        if (!UNSET_VALUE.equals(console)) {
             ChillShell chillShell = new ChillShell().withImport("model.*");
             if ("jline".equals(console)) {
                 chillShell.jline();
@@ -144,7 +145,12 @@ public class ChillApp {
             Foreman.INSTANCE.initClient();
         }
 
+        afterSystemInitialization();
+
         return this;
+    }
+
+    protected void afterSystemInitialization() {
     }
 
     public void chillConsole() {
