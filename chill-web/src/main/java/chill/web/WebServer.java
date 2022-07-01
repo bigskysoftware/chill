@@ -124,8 +124,8 @@ public class WebServer {
             ctx.get().redirect(location);
         }
 
-        public static void raw(String content) {
-            ctx.get().result(content);
+        public static void raw(Object content) {
+            ctx.get().result(String.valueOf(content));
         }
 
         @NotNull

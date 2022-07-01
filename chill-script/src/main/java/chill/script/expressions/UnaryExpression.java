@@ -6,6 +6,7 @@ import chill.script.tokenizer.Token;
 import chill.script.tokenizer.TokenType;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 
 public class UnaryExpression extends Expression {
 
@@ -34,14 +35,19 @@ public class UnaryExpression extends Expression {
         if (operator.getStringValue().equals("-")) {
             if (rhsValue instanceof BigDecimal bigDecimal) {
                 return bigDecimal.multiply(NEGATIVE_ONE);
+            } else {
+                var bigDecimal = new BigDecimal(rhsValue.toString());
+                return bigDecimal.multiply(NEGATIVE_ONE);
             }
+        } else if (operator.getStringValue().equals("not")) {
+            return !runtime.isTruthy(rhsValue);
         }
         throw new UnsupportedOperationException(operator.getStringValue() + " not implemented for this type yet");
     }
 
     public static Expression parse(ChillScriptParser parser) {
         parser.matchAndConsume("the"); // optional 'the'
-        if (parser.match(TokenType.MINUS)) {
+        if (parser.match(TokenType.MINUS) || parser.match("not")) {
             Token operator = parser.consumeToken();
             final Expression rightHandSide = parser.parse("unaryExpression");
             var unaryExpr = new UnaryExpression(operator, rightHandSide);

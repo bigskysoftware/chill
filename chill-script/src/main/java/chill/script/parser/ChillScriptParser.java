@@ -42,7 +42,7 @@ public class ChillScriptParser {
         }
     }
 
-    public ChillScriptProgram parseProgram(String src) {
+    public ChillScriptProgram parseProgram(String src) throws ChillScriptParseException{
         initTokens(src);
         ChillScriptProgram program = new ChillScriptProgram();
         program.setStart(currentToken());

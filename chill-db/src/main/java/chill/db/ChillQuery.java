@@ -2,6 +2,7 @@ package chill.db;
 
 import chill.utils.ChillLogs;
 import chill.utils.NiceList;
+import chill.utils.Pair;
 import chill.utils.TheMissingUtils;
 
 import java.sql.Connection;
@@ -14,6 +15,11 @@ import java.util.regex.Pattern;
 @SuppressWarnings("unchecked")
 public class ChillQuery<T extends ChillRecord> implements Iterable<T> {
 
+    public enum Direction {
+        ASCENDING,
+        DESCENDING
+    }
+
     private final Class<T> clazz;
     private final T protoInstance;
     private final StringBuilder whereClause = new StringBuilder();
@@ -21,6 +27,7 @@ public class ChillQuery<T extends ChillRecord> implements Iterable<T> {
     private final Map<String, Object> colValues = new LinkedHashMap<>();
     private final String tableName;
     private final ChillLogs.LogCategory log;
+    private NiceList<Pair<String, Direction>> orders = new NiceList();
 
     private boolean instantiatable = true;
 
@@ -59,6 +66,30 @@ public class ChillQuery<T extends ChillRecord> implements Iterable<T> {
 
     public ChillQuery<T> where(Object... conditions) {
         return new ChillQuery<T>(this).where$(conditions);
+    }
+
+    public ChillQuery<T> reorder(String col) {
+        ChillQuery<T> ts = new ChillQuery<>(this);
+        ts.orders = new NiceList<>();
+        return ts.orderBy$(col, Direction.ASCENDING);
+    }
+    public ChillQuery<T> reorderDescending(String col) {
+        ChillQuery<T> ts = new ChillQuery<>(this);
+        ts.orders = new NiceList<>();
+        return ts.orderBy$(col, Direction.DESCENDING);
+    }
+
+    public ChillQuery<T> ascendingBy(String col) {
+        return new ChillQuery<T>(this).orderBy$(col, Direction.ASCENDING);
+    }
+
+    public ChillQuery<T> descendingBy(String col) {
+        return new ChillQuery<T>(this).orderBy$(col, Direction.DESCENDING);
+    }
+
+    private ChillQuery<T> orderBy$(String col, Direction direction) {
+        orders.add(Pair.of(col, direction));
+        return this;
     }
 
     public T firstWhere(Object... conditions) {
@@ -137,6 +168,16 @@ public class ChillQuery<T extends ChillRecord> implements Iterable<T> {
                 "FROM " + getTableName();
         if (whereClause.length() > 0) {
             sql = sql + "\nWHERE " + whereClause;
+        }
+        if (orders.size() > 0) {
+            sql = sql + "\n ORDER BY ";
+            for (int i = 0; i < orders.size(); i++) {
+                Pair<String, Direction> order = orders.get(i);
+                sql = sql + order.first + (order.second == Direction.ASCENDING ? " ASC " : " DESC ");
+                if (i < orders.size() - 2) {
+                    sql += ", ";
+                }
+            }
         }
         return sql;
     }

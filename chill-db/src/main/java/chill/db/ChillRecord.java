@@ -127,6 +127,7 @@ public class ChillRecord {
     //==========================================================
 
     private void beforeCreateImpl() {
+        beforeSaveImpl();
         beforeCreate();
         fields.forEach(ChillField::beforeCreate);
     }
@@ -134,11 +135,18 @@ public class ChillRecord {
     protected void beforeCreate() { /* to be overridden */}
 
     private void beforeUpdateImpl() {
+        beforeSaveImpl();
         beforeUpdate();
         fields.forEach(ChillField::beforeUpdate);
     }
 
     protected void beforeUpdate() { /* to be overridden */}
+
+    private void beforeSaveImpl() {
+        beforeSave();
+        fields.forEach(ChillField::beforeSave);
+    }
+    protected void beforeSave() { /* to be overridden */ }
 
     //==========================================================
     //  C[R]UD - For Read, see the Finder API
@@ -504,11 +512,13 @@ public class ChillRecord {
                 ChillField chillField = (ChillField) safely(() -> javaField.get(instance));
 
                 String propName = TheMissingUtils.capitalize(javaField.getName());
-                Method existingGetter = safelyOr(() -> templateClass.getMethod("get" + propName), null);
+
+                String getterPrefix = chillField.isBoolean() ? "is" : "get";
+                Method existingGetter = safelyOr(() -> templateClass.getMethod(getterPrefix + propName), null);
                 boolean overriddenGetter = existingGetter != null && existingGetter.getAnnotation(Generated.class) == null;
                 sb.append("@chill.db.ChillRecord.Generated ")
                         .append(overriddenGetter ? "protected " : "public ")
-                        .append(chillField.getTypeName()).append(" get")
+                        .append(chillField.getTypeName()).append(" " + getterPrefix)
                         .append(propName)
                         .append(overriddenGetter ? "Internal" : "").append("() {").append(newLine)
                         .append("  return ").append(javaField.getName()).append(".get();").append(newLine)

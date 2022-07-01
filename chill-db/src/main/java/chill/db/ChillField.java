@@ -32,6 +32,7 @@ public class ChillField<T> {
     protected final List<ChillValidation<T>> validations;
     protected final NiceList<Consumer<ChillField<T>>> beforeCreates;
     protected final NiceList<Consumer<ChillField<T>>> beforeUpdates;
+    protected final NiceList<Consumer<ChillField<T>>> beforeSaves;
 
     public ChillField(ChillRecord record, String columnName, Class<T> type) {
         this.record = record;
@@ -45,6 +46,7 @@ public class ChillField<T> {
         beforeReturns = new LinkedList<>();
         beforeCreates = new NiceList<>();
         beforeUpdates = new NiceList<>();
+        beforeSaves = new NiceList<>();
         this.validations = new LinkedList<>();
         if (type.isEnum()) {
             beforeReturn(val -> enumValueFor(String.valueOf(val)));
@@ -277,6 +279,10 @@ public class ChillField<T> {
         beforeUpdates.forEach(fieldConsumer -> fieldConsumer.accept(this));
     }
 
+    void beforeSave() {
+        beforeSaves.forEach(fieldConsumer -> fieldConsumer.accept(this));
+    }
+
     public ChillField<T> readOnly() {
         readOnly = true;
         return this;
@@ -298,6 +304,15 @@ public class ChillField<T> {
         } else {
             throw new IllegalArgumentException("I don't know how to convert a string into a " + this.type.getName());
         }
+    }
+
+    public ChillField<T> withDefault(T defaultValue) {
+        set(defaultValue);
+        return this;
+    }
+
+    public boolean isBoolean() {
+        return getType().equals(Boolean.class) || getType().equals(Boolean.TYPE);
     }
 
     public static class FK<S extends ChillRecord, T> extends ChillField<T> {
