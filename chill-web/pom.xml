@@ -85,15 +85,21 @@
         </dependency>
 
         <dependency>
-            <groupId>com.github.fppt</groupId>
-            <artifactId>jedis-mock</artifactId>
-            <version>1.0.1</version>
+            <groupId>io.findify</groupId>
+            <artifactId>s3mock_2.13</artifactId>
+            <version>0.2.6</version>
         </dependency>
 
         <dependency>
             <groupId>redis.clients</groupId>
             <artifactId>jedis</artifactId>
             <version>3.6.3</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.github.fppt</groupId>
+            <artifactId>jedis-mock</artifactId>
+            <version>1.0.1</version>
         </dependency>
 
     </dependencies>

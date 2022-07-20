@@ -68,7 +68,7 @@ public class ChillEnv {
     }
 
     public static String getS3AccessKey() {
-        return S3_ACCESS_KEY.require();
+        return S3_ACCESS_KEY.get();
     }
 
     public static String getS3SecretKey() {
