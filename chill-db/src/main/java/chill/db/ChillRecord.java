@@ -403,6 +403,11 @@ public class ChillRecord {
         return errors;
     }
 
+    public void reload() {
+        var query = new ChillQuery<>(this.getClass());
+        query.reload(this);
+    }
+
     public interface ConnectionSource {
         Connection getConnection() throws SQLException;
     }

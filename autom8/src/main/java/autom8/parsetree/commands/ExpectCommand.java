@@ -22,7 +22,7 @@ public class ExpectCommand extends Command {
     }
 
     @Override
-    public void execInternal(ChillScriptRuntime runtime) {
+    public void execute(ChillScriptRuntime runtime) {
         Object value = this.value.evaluate(runtime);
         Object target = this.target.evaluate(runtime);
         if (target instanceof WebElement) {

@@ -16,7 +16,7 @@ public class ClickCommand extends Command {
     }
 
     @Override
-    public void execInternal(ChillScriptRuntime runtime) {
+    public void execute(ChillScriptRuntime runtime) {
         Object target = this.target.evaluate(runtime);
         if (target instanceof WebElement) {
             ((WebElement) target).click();

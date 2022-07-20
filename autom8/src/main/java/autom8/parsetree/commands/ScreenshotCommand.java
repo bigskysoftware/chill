@@ -11,7 +11,7 @@ public class ScreenshotCommand extends Command {
     private Expression name;
 
     @Override
-    public void execInternal(ChillScriptRuntime runtime) {
+    public void execute(ChillScriptRuntime runtime) {
         Autom8Runtime chillTests = (Autom8Runtime) runtime;
         chillTests.takeScreenshot(String.valueOf(name.evaluate(runtime)));
     }

@@ -11,7 +11,7 @@ public class SetCommand extends Command {
     private IdentifierExpression symbol;
 
     @Override
-    protected void execInternal(ChillScriptRuntime runtime) {
+    public void execute(ChillScriptRuntime runtime) {
         runtime.setSymbolValue(symbol.getName(), value.evaluate(runtime));
     }
 

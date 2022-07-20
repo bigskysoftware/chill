@@ -19,7 +19,7 @@ public class GoToCommand extends Command {
     }
 
     @Override
-    public void execInternal(ChillScriptRuntime runtime) {
+    public void execute(ChillScriptRuntime runtime) {
         Autom8Runtime chillTests = (Autom8Runtime) runtime;
         WebDriver driver = chillTests.getDriver();
         driver.get(String.valueOf(destination.evaluate(runtime)));

@@ -10,7 +10,7 @@ public class PrintCommand extends Command {
     Expression value;
 
     @Override
-    protected void execInternal(ChillScriptRuntime runtime) {
+    public void execute(ChillScriptRuntime runtime) {
         runtime.print(value.evaluate(runtime));
     }
 

@@ -1,5 +1,7 @@
 package autom8.runtime;
 
+import chill.script.commands.Command;
+import chill.script.parser.ChillScriptProgram;
 import chill.script.runtime.ChillScriptRuntime;
 import org.openqa.selenium.OutputType;
 import org.openqa.selenium.WebDriver;
@@ -19,15 +21,19 @@ public class Autom8Runtime extends ChillScriptRuntime {
     }
 
     @Override
-    public void onStart() {
-        ChromeOptions options = new ChromeOptions();
-        options.setHeadless(true);
-        options.addArguments("--no-sandbox", "--disable-dev-shm-usage");
-        driver = new ChromeDriver(options);
+    public void beforeExecute(Command command) {
+        if (command instanceof ChillScriptProgram) {
+            ChromeOptions options = new ChromeOptions();
+            options.setHeadless(true);
+            options.addArguments("--no-sandbox", "--disable-dev-shm-usage");
+            driver = new ChromeDriver(options);
+        }
     }
 
-    public void onFinish() {
-        driver.close();
+    public void afterExecute(Command command) {
+        if (command instanceof ChillScriptProgram) {
+            driver.close();
+        }
     }
 
     public void takeScreenshot(String name) {

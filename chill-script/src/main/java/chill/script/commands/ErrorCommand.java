@@ -11,7 +11,7 @@ public class ErrorCommand extends Command {
     }
 
     @Override
-    public void execInternal(ChillScriptRuntime runtime) {
+    public void execute(ChillScriptRuntime runtime) {
         throw new UnsupportedOperationException("Error command");
     }
 }

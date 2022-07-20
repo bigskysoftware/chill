@@ -4,6 +4,8 @@ import chill.script.commands.Command;
 import chill.script.expressions.Expression;
 import chill.script.parser.ChillScriptParser;
 import chill.script.runtime.ChillScriptRuntime;
+import chill.script.runtime.ChillScriptUtils;
+import chill.utils.TheMissingUtils;
 
 import java.math.BigDecimal;
 
@@ -12,13 +14,9 @@ public class WaitCommand extends Command {
     private Expression value;
 
     @Override
-    public void execInternal(ChillScriptRuntime runtime) {
-        try {
-            BigDecimal val = (BigDecimal) value.evaluate(runtime);
-            Thread.sleep(val.intValue());
-        } catch (InterruptedException e) {
-            runtime.handleException(this, e);
-        }
+    public void execute(ChillScriptRuntime runtime) {
+        BigDecimal val = (BigDecimal) value.evaluate(runtime);
+        TheMissingUtils.safely(() -> Thread.sleep(val.intValue()));
     }
 
     private void setValue(Expression value) {

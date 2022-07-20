@@ -21,7 +21,6 @@ public class ChillScriptRuntime {
     private Object currentThis = null;
 
     private List<String> imports = new LinkedList<>();
-    private ExceptionHandler exceptionHandler;
 
     public ChillScriptRuntime(Object... rootValues) {
         this(TheMissingUtils.mapFrom(rootValues));
@@ -64,24 +63,13 @@ public class ChillScriptRuntime {
 
 
     public void execute(Command command) {
-        onStart();
+        beforeExecute(command);
         command.execute(this);
-        onFinish();
+        afterExecute(command);
     }
 
-    public void handleException(Command current, Exception e) {
-        if (exceptionHandler != null) {
-            exceptionHandler.handle(current, e);
-        } else {
-            e.printStackTrace();
-        }
-    }
-
-    public void onStart() {}
     public void beforeExecute(Command command) {}
     public void afterExecute(Command command) {}
-    public void onFinish() {}
-
 
     public void print(Object value) {
         System.out.println(String.valueOf(value));
@@ -113,10 +101,6 @@ public class ChillScriptRuntime {
 
     public void addImport(String importStr) {
         imports.add(importStr);
-    }
-
-    public void setExceptionHandler(ExceptionHandler handler) {
-        this.exceptionHandler = handler;
     }
 
     public boolean isTruthy(Object value) {

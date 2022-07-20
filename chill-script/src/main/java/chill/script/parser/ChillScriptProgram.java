@@ -23,7 +23,7 @@ public class ChillScriptProgram extends Command {
     }
 
     @Override
-    protected void execInternal(ChillScriptRuntime runtime) {
+    public void execute(ChillScriptRuntime runtime) {
         for (Command command : body) {
             runtime.execute(command);
         }

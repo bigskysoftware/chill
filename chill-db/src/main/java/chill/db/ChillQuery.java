@@ -217,6 +217,26 @@ public class ChillQuery<T extends ChillRecord> implements Iterable<T> {
         return queryArguments;
     }
 
+    protected void reload(ChillRecord record) {
+        NiceList<ChillField> primaryKeyFields = record.getFields().filter(ChillField::isPrimaryKey);
+        if (primaryKeyFields.isEmpty()) {
+            throw new UnsupportedOperationException(record + " does not have primary keys to reload via.");
+        }
+        NiceList<Object> primaryKeyValues = primaryKeyFields.map(ChillField::get);
+        String whereClause = primaryKeyFields.map(field -> field.getColumnName() + "=?").join(" AND ");
+        LinkedList<Object> queryList = new LinkedList<>();
+        queryList.add(whereClause);
+        queryList.addAll(primaryKeyValues);
+        TheMissingUtils.safely(() -> {
+            try (var resultSetAndConnection =  where(queryList.toArray()).executeQuery()) {
+                if (resultSetAndConnection.resultSet.next()) {
+                    ChillRecord.populateFromResultSet(record, resultSetAndConnection.resultSet);
+                } else {
+                    throw new IllegalStateException("Could not reload " + record);
+                }
+            }
+        });
+    }
     public T findByPrimaryKey(Object... keys) {
         String where = getFields().filter(ChillField::isPrimaryKey).map(field -> field.getColumnName() + "=?").join(" AND ");
         LinkedList<Object> queryList = new LinkedList<>();

@@ -23,10 +23,6 @@ public class ChillShell {
 
     public ChillShell() {
         runtime = new ChillScriptRuntime();
-        runtime.setExceptionHandler((cmd, e) -> {
-            println(e.getMessage());
-            println(stacktraceAsString(e));
-        });
         parser = new ChillScriptParser();
     }
 
@@ -56,7 +52,7 @@ public class ChillShell {
             }
             Object programOrExpression = parser.parseProgramOrExpression(line);
             if (programOrExpression instanceof ChillScriptProgram program) {
-                program.execute(runtime);
+                runtime.execute(program);
             } else if(programOrExpression instanceof  Expression expr) {
                 println(expr.evaluate(runtime));
             }
