@@ -258,7 +258,7 @@ public class ChillField<T> {
     }
 
     public String getTypeName() {
-        return  getType().getSimpleName();
+        return  getType().getTypeName().replace("$", ".");
     }
 
     public ChillField<T> beforeCreate(Consumer<ChillField<T>> callback){

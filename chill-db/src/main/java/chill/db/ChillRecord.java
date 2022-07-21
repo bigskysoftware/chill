@@ -6,7 +6,6 @@ import chill.utils.TheMissingUtils;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
-import java.lang.reflect.Method;
 import java.sql.*;
 import java.time.Instant;
 import java.util.*;
@@ -114,7 +113,7 @@ public class ChillRecord {
     //  Validation
     //==========================================================
 
-    public boolean isValid() {
+    public boolean isRecordValid() {
         this.errors = new ChillValidation.Errors(this);
         for (ChillField field : fields) {
             field.validate(errors);
@@ -176,7 +175,7 @@ public class ChillRecord {
     }
 
     public boolean create() {
-        if (!isValid()) {
+        if (!isRecordValid()) {
             return  false;
         }
         return safely(() -> {
@@ -454,144 +453,6 @@ public class ChillRecord {
         public T by(String column, Object val) {
             return new ChillQuery<T>(clazz).where(column, val).first();
         }
-    }
-
-    public static void codeGen() {
-
-        StackTraceElement trace[] = Thread.currentThread().getStackTrace();
-        Class templateClass;
-        Object instance;
-        if (trace.length > 0) {
-            templateClass = safely(() -> Class.forName(trace[trace.length - 1].getClassName()));
-            instance = TheMissingUtils.newInstance(templateClass);
-        } else {
-            throw new IllegalStateException("Could not determine class to code gen for!");
-        }
-
-        String newLine = "\n    ";
-        StringBuilder sb = new StringBuilder()
-                .append(newLine)
-                .append("//region chill.Record GENERATED CODE").append(newLine)
-                .append(newLine);
-
-        // Class logger
-        String className = templateClass.getSimpleName().replace("$", ".");
-
-        // createOrThrow()
-        sb.append("public ").append(className).append(" createOrThrow(){").append(newLine)
-                .append("  if(!create()){").append(newLine)
-                .append("    throw new chill.db.ChillValidation.ValidationException(getErrors());")
-                .append(newLine).append("  }").append(newLine)
-                .append("  return this;").append(newLine)
-                .append("}").append(newLine)
-                .append(newLine);
-
-        // saveOrThrow()
-        sb.append("public ").append(className).append(" saveOrThrow(){").append(newLine)
-                .append("  if(!save()){").append(newLine)
-                .append("    throw new chill.db.ChillValidation.ValidationException(getErrors());")
-                .append(newLine).append("  }").append(newLine)
-                .append("  return this;").append(newLine)
-                .append("}").append(newLine)
-                .append(newLine);
-
-        // firstOrCreateOrThrow()
-        sb.append("public ").append(className).append(" firstOrCreateOrThrow(){").append(newLine)
-                .append("  return (").append(className).append(") firstOrCreateImpl();").append(newLine)
-                .append("}").append(newLine)
-                .append(newLine);
-
-        // fromWebParams()
-        sb.append("@chill.db.ChillRecord.Generated ")
-                .append("public ")
-                .append(className).append(" fromWebParams(java.util.Map<String, String> values, String... params) {").append(newLine)
-                .append("  ChillRecord.populateFromWebParams(this, values, params);").append(newLine)
-                .append("  return this;").append(newLine)
-                .append("}").append(newLine)
-                .append(newLine);
-
-        java.lang.reflect.Field[] classFields = templateClass.getDeclaredFields();
-        for (java.lang.reflect.Field javaField : classFields) {
-            if (ChillField.class.isAssignableFrom(javaField.getType())) {
-                javaField.setAccessible(true);
-                ChillField chillField = (ChillField) safely(() -> javaField.get(instance));
-
-                String propName = TheMissingUtils.capitalize(javaField.getName());
-
-                String getterPrefix = chillField.isBoolean() ? "is" : "get";
-                Method existingGetter = safelyOr(() -> templateClass.getMethod(getterPrefix + propName), null);
-                boolean overriddenGetter = existingGetter != null && existingGetter.getAnnotation(Generated.class) == null;
-                sb.append("@chill.db.ChillRecord.Generated ")
-                        .append(overriddenGetter ? "protected " : "public ")
-                        .append(chillField.getTypeName()).append(" " + getterPrefix)
-                        .append(propName)
-                        .append(overriddenGetter ? "Internal" : "").append("() {").append(newLine)
-                        .append("  return ").append(javaField.getName()).append(".get();").append(newLine)
-                        .append("}").append(newLine)
-                        .append(newLine);
-
-                if (!chillField.isReadOnly()) {
-                    Method existingSetter = safelyOr(() -> templateClass.getMethod("set" + propName, chillField.getType()), null);
-                    boolean overriddenSetter = existingSetter != null && existingSetter.getAnnotation(Generated.class) == null;
-                    sb.append("@chill.db.ChillRecord.Generated ")
-                            .append(overriddenSetter ? "protected" : "public").append(" void set")
-                            .append(propName)
-                            .append(overriddenSetter ? "Internal" : "")
-                            .append("(").append(chillField.getType().getSimpleName()).append(" ")
-                            .append(javaField.getName()).append(") {").append(newLine)
-                            .append("  this.").append(javaField.getName()).append(".set(").append(javaField.getName()).append(");").append(newLine)
-                            .append("}").append(newLine)
-                            .append(newLine);
-
-                    Method existingWith = safelyOr(() -> templateClass.getMethod("with" + propName, chillField.getType()), null);
-                    boolean overriddenWith = existingWith != null && existingWith.getAnnotation(Generated.class) == null;
-                    sb.append("@chill.db.ChillRecord.Generated ")
-                            .append(overriddenWith ? "protected " : "public ")
-                            .append(className).append(" with")
-                            .append(propName)
-                            .append(overriddenWith ? "Internal" : "")
-                            .append("(").append(chillField.getType().getSimpleName()).append(" ")
-                            .append(javaField.getName()).append(") {").append(newLine)
-                            .append("  set").append(propName).append("(").append(javaField.getName()).append(");").append("").append(newLine)
-                            .append("  return this;").append(newLine)
-                            .append("}").append(newLine)
-                            .append(newLine);
-                }
-                if (chillField instanceof ChillField.FK) {
-                    Method forFK = safelyOr(() -> templateClass.getMethod("for" + chillField.getType().getSimpleName(), chillField.getType()), null);
-                    boolean overridenFK = forFK != null && forFK.getAnnotation(Generated.class) == null;
-                    sb.append("@chill.db.ChillRecord.Generated ")
-                            .append(overridenFK ? "protected " : "public static chill.db.ChillQuery<")
-                            .append(className).append("> for")
-                            .append(chillField.getType().getSimpleName())
-                            .append(overridenFK ? "Internal" : "")
-                            .append("(").append(chillField.getType().getSimpleName()).append(" ")
-                            .append(javaField.getName()).append(") {").append(newLine)
-                            .append("  return new ").append(className).append("().").append(javaField.getName()).append(".reverse(").append(javaField.getName()).append(");").append(newLine)
-                            .append("}").append(newLine)
-                            .append(newLine);
-                }
-                if (chillField.isPassword()) {
-                    Method forFK = safelyOr(() -> templateClass.getMethod("for" + chillField.getType().getSimpleName(), chillField.getType()), null);
-                    boolean overridenFK = forFK != null && forFK.getAnnotation(Generated.class) == null;
-                    sb.append("@chill.db.ChillRecord.Generated ")
-                            .append(overridenFK ? "protected " : "public boolean ")
-                            .append(javaField.getName())
-                            .append("Matches")
-                            .append(overridenFK ? "Internal" : "")
-                            .append("(String passwd) {").append(newLine)
-                            .append("  return ").append(javaField.getName()).append(".passwordMatches(passwd);").append(newLine)
-                            .append("}").append(newLine)
-                            .append(newLine);
-                }
-            }
-        }
-        sb.append("public static final chill.db.ChillRecord.Finder<").append(className).append("> find = finder(").append(className).append(".class);").append(newLine)
-                .append(newLine);
-
-        sb.append("//endregion").append(newLine);
-
-        System.out.println(sb.toString());
     }
 
     // manages timestamps during update/insert

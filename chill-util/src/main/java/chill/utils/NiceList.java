@@ -142,6 +142,18 @@ public class NiceList<T> implements List<T>{
         return true;
     }
 
+    public NiceList<T> sort() {
+        NiceList<T>  copy = copy();
+        Collections.sort((List) copy);
+        return copy;
+    }
+
+    public NiceList<T> copy() {
+        NiceList<T> copy = new NiceList<>();
+        copy.addAll(this);
+        return copy;
+    }
+
     public interface Each<T> {
         void doIt(T elt);
     }

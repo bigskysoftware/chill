@@ -197,7 +197,7 @@ public class ChillRecordTest {
     void requiredTest() {
         var user = new User();
 
-        assertEquals(false, user.isValid());
+        assertEquals(false, user.isRecordValid());
 
         List<String> emailErrors = user.getErrors().getErrorsFor("email");
 

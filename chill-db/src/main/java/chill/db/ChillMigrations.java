@@ -437,7 +437,7 @@ public class ChillMigrations {
         //endregion
 
         public static void main(String[] args) {
-            codeGen();
+            ChillCodeGenerator.codeGen(ChillMigration.class);
         }
     }
 

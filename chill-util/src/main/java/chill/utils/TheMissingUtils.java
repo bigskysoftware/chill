@@ -13,6 +13,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 public class TheMissingUtils {
 
@@ -200,8 +201,13 @@ public class TheMissingUtils {
     }
 
     public static <T> T newInstance(String className) {
-        return (T) safely(() -> newInstance(Class.forName(className)));
+        return safely(() -> newInstance(getClass(className)));
     }
+
+    public static <T> Class<T> getClass(String className) {
+        return (Class<T>) safely(() -> Class.forName(className));
+    }
+
     public static <T> T newInstance(Class<T> otherRoutesFile) {
         T t = safely(() -> otherRoutesFile.newInstance());
         return t;
@@ -235,6 +241,10 @@ public class TheMissingUtils {
 
     public static <T> NiceList<T> nice(Iterable<T> arr) {
         return new NiceList<>(arr);
+    }
+
+    public static <T> NiceList<T> nice(Stream<T> arr) {
+        return new NiceList<>(arr.toList());
     }
 
     public interface DangerousRunnable {
