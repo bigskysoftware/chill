@@ -1,24 +1,26 @@
 package chill.script.types;
 
+import chill.script.types.coercions.Coercion;
 import chill.utils.NiceList;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 import static chill.utils.TheMissingUtils.forceThrow;
+import static chill.utils.TheMissingUtils.nice;
+import static java.lang.Integer.MAX_VALUE;
 
 public class ChillJavaMethod implements ChillMethod {
 
-    public static final int MAX_VALUE_MINUS_ONE = Integer.MAX_VALUE - 1;
     private final NiceList<Method> javaMethods;
     private final String name;
+    private final Class backingClass;
 
     public ChillJavaMethod(String methodName, Class backingClass) {
         this.name = methodName;
+        this.backingClass = backingClass;
         this.javaMethods = new NiceList<>();
         Method[] allMethods = backingClass.getMethods();
         for (Method m : allMethods) {
@@ -31,7 +33,27 @@ public class ChillJavaMethod implements ChillMethod {
     @Override
     public Object invoke(Object rootVal, List<Object> args) {
         try {
+            if (javaMethods.size() == 0) {
+                throw new NoSuchMethodException("No methods named " + this.name + " were found on " + backingClass.getName());
+            }
             Method method = bestMatch(args);
+            if (method == null) {
+                String argTypes = nice(args).map(o -> o.getClass().getName()).join(",");
+                throw new IllegalArgumentException("Could not find compatible method with args (" + argTypes + ")");
+            }
+            for (int i = 0; i < args.size(); i++) {
+                Object arg = args.get(i);
+                Class<?> parameterType = method.getParameterTypes()[i];
+                Class<?> runtimeType = arg.getClass();
+                if (!parameterType.isAssignableFrom(runtimeType)) {
+                    Coercion coercer = Coercion.resolve(runtimeType, parameterType);
+                    if (coercer == null) {
+                        throw new IllegalArgumentException("Could not figure out how to convert argument " + i + " of type " + runtimeType.getName() + " to " + parameterType.getName());
+                    } else {
+                        args.set(i, coercer.coerce(arg));
+                    }
+                }
+            }
             return method.invoke(rootVal, args.toArray());
         } catch (Exception e) {
             throw forceThrow(e);
@@ -39,16 +61,17 @@ public class ChillJavaMethod implements ChillMethod {
     }
 
     private Method bestMatch(List<Object> argValues) {
-        int closestDistance = Integer.MAX_VALUE;
+        int closestDistance = MAX_VALUE;
         Method bestMatch = null;
         for (Method javaMethod : javaMethods) {
             int distance = distanceFromValues(javaMethod, argValues);
-            if (distance < closestDistance) {
+            if (distance == MAX_VALUE) {
+                continue;
+            } else if (distance < closestDistance) {
                 closestDistance = distance;
                 bestMatch = javaMethod;
-            }
-            // stable resolution by using string comparison
-            if (distance == closestDistance) {
+            } else if (distance == closestDistance) {
+                // stable resolution by using string comparison
                 String str1 = new NiceList<>(bestMatch.getParameterTypes()).map(aClass -> aClass.getName()).join("-");
                 String str2 = new NiceList<>(javaMethod.getParameterTypes()).map(aClass -> aClass.getName()).join("-");
                 if (str1.compareTo(str2) < 0) {
@@ -68,20 +91,16 @@ public class ChillJavaMethod implements ChillMethod {
                 Object o = argValues.get(i);
                 if (o != null) {
                     Class<?> runtimeClass = o.getClass();
-                    if (!parameterType.isAssignableFrom(runtimeClass)) {
-                        return MAX_VALUE_MINUS_ONE;
-                    } else {
-                        int paramDistance = distanceTo(runtimeClass, parameterType);
-                        if (paramDistance == Integer.MAX_VALUE) {
-                            return MAX_VALUE_MINUS_ONE;
-                        }
-                        distance += paramDistance;
+                    int paramDistance = distanceTo(runtimeClass, parameterType);
+                    if (paramDistance == MAX_VALUE) {
+                        return MAX_VALUE;
                     }
+                    distance += paramDistance;
                 }
             }
             return distance;
         }
-        return MAX_VALUE_MINUS_ONE;
+        return MAX_VALUE;
     }
 
     @Override
@@ -110,17 +129,26 @@ public class ChillJavaMethod implements ChillMethod {
         return method != null;
     }
 
-    private int distanceTo(Class<?> runtimeClass, Class<?> parameterType) {
-        if (runtimeClass == null) {
-            return Integer.MAX_VALUE;
+    private int distanceTo(Class<?> from, Class<?> to) {
+        if (from == null) {
+            return MAX_VALUE;
         }
-        if (runtimeClass.equals(parameterType)) {
+        if (from.equals(to)) {
             return 0;
         }
-        if (Arrays.asList(runtimeClass.getInterfaces()).contains(parameterType)) {
+        if (Arrays.asList(from.getInterfaces()).contains(to)) {
             return 1;
         }
-        return 2 + distanceTo(runtimeClass.getSuperclass(), parameterType);
+        Coercion coercion = Coercion.resolve(from, to);
+        if (coercion != null) {
+            return coercion.getRank();
+        }
+        int distanceToSuperclass = distanceTo(from.getSuperclass(), to);
+        if (distanceToSuperclass == MAX_VALUE) {
+            return MAX_VALUE;
+        } else {
+            return 2 + distanceToSuperclass;
+        }
     }
 
     public boolean isValid() {

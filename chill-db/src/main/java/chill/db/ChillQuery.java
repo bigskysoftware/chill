@@ -5,7 +5,6 @@ import chill.utils.NiceList;
 import chill.utils.Pair;
 import chill.utils.TheMissingUtils;
 
-import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -78,15 +77,15 @@ public class ChillQuery<T extends ChillRecord> implements Iterable<T> {
     }
 
     // TODO this needs to be int and we need a coercion layer in chill script
-    public ChillQuery<T> limit(BigDecimal limit) {
+    public ChillQuery<T> limit(int limit) {
         ChillQuery<T> ts = new ChillQuery<>(this);
-        ts.limit = limit.intValue();
+        ts.limit = limit;
         return ts;
     }
 
-    public ChillQuery<T> page(BigDecimal page) {
+    public ChillQuery<T> page(int page) {
         ChillQuery<T> ts = new ChillQuery<>(this);
-        ts.page = page.intValue();
+        ts.page = page;
         return ts;
     }
 
