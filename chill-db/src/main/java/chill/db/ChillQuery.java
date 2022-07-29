@@ -5,6 +5,7 @@ import chill.utils.NiceList;
 import chill.utils.Pair;
 import chill.utils.TheMissingUtils;
 
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -33,6 +34,8 @@ public class ChillQuery<T extends ChillRecord> implements Iterable<T> {
 
     private boolean instantiatable = true;
 
+    private Integer limit;
+    private Integer page;
 
     public ChillQuery(Class<T> clazz) {
         this.clazz = clazz;
@@ -65,10 +68,26 @@ public class ChillQuery<T extends ChillRecord> implements Iterable<T> {
         this.instantiatable = from.instantiatable;
         this.tableName = from.tableName;
         this.joins.addAll(from.joins);
+        this.orders.addAll(from.orders);
+        this.limit = from.limit;
+        this.page = from.page;
     }
 
     public ChillQuery<T> where(Object... conditions) {
         return new ChillQuery<T>(this).where$(conditions);
+    }
+
+    // TODO this needs to be int and we need a coercion layer in chill script
+    public ChillQuery<T> limit(BigDecimal limit) {
+        ChillQuery<T> ts = new ChillQuery<>(this);
+        ts.limit = limit.intValue();
+        return ts;
+    }
+
+    public ChillQuery<T> page(BigDecimal page) {
+        ChillQuery<T> ts = new ChillQuery<>(this);
+        ts.page = page.intValue();
+        return ts;
     }
 
     public ChillQuery<T> join(ChillField.FK foreignKey) {
@@ -191,11 +210,20 @@ public class ChillQuery<T extends ChillRecord> implements Iterable<T> {
                 }
             }
         }
+        if (limit != null) {
+            sql += "\nLIMIT " + limit;
+            if (page != null) {
+                sql += "\nOFFSET " + limit * (page - 1);
+            }
+        }
         return sql;
     }
 
     public String countSQL() {
         String sql = "SELECT COUNT(1) FROM " + getTableName();
+        for (Join join : joins) {
+            sql += "\n" + join.sql();
+        }
         if (whereClause.length() > 0) {
             sql = sql + "\nWHERE " + whereClause;
         }
