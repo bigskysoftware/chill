@@ -27,7 +27,9 @@ public class ChillQuery<T extends ChillRecord> implements Iterable<T> {
     private final Map<String, Object> colValues = new LinkedHashMap<>();
     private final String tableName;
     private final ChillLogs.LogCategory log;
-    private NiceList<Pair<String, Direction>> orders = new NiceList();
+    private NiceList<Pair<String, Direction>> orders = new NiceList<>();
+
+    private NiceList<Join> joins = new NiceList<>();
 
     private boolean instantiatable = true;
 
@@ -35,7 +37,7 @@ public class ChillQuery<T extends ChillRecord> implements Iterable<T> {
     public ChillQuery(Class<T> clazz) {
         this.clazz = clazz;
         this.log = ChillLogs.get(clazz);
-        this.protoInstance = makeInstance();
+        this.protoInstance = ChillRecord.getPrototype(clazz);
         this.tableName = protoInstance.getTableName();
     }
 
@@ -62,10 +64,17 @@ public class ChillQuery<T extends ChillRecord> implements Iterable<T> {
         this.colValues.putAll(from.colValues);
         this.instantiatable = from.instantiatable;
         this.tableName = from.tableName;
+        this.joins.addAll(from.joins);
     }
 
     public ChillQuery<T> where(Object... conditions) {
         return new ChillQuery<T>(this).where$(conditions);
+    }
+
+    public ChillQuery<T> join(ChillField.FK foreignKey) {
+        ChillQuery<T> ts = new ChillQuery<>(this);
+        ts.joins.add(new Join(foreignKey));
+        return ts;
     }
 
     public ChillQuery<T> reorder(String col) {
@@ -164,8 +173,11 @@ public class ChillQuery<T extends ChillRecord> implements Iterable<T> {
 
     public String sql() {
         var fields = getFields();
-        var sql = "SELECT " + fields.map(ChillField::getColumnName).join(", ") + "\n" +
+        var sql = "SELECT " + fields.map(field -> getTableName() + "." + field.getColumnName()).join(", ") + "\n" +
                 "FROM " + getTableName();
+        for (Join join : joins) {
+            sql += "\n" + join.sql();
+        }
         if (whereClause.length() > 0) {
             sql = sql + "\nWHERE " + whereClause;
         }
@@ -406,5 +418,22 @@ public class ChillQuery<T extends ChillRecord> implements Iterable<T> {
                 return instance;
             }
         };
+    }
+
+    protected class Join {
+        String table;
+        String from;
+        String to;
+
+        public Join(ChillField.FK foreignKey) {
+            T prototype = (T) ChillRecord.getPrototype(foreignKey.getType());
+            table = prototype.tableName;
+            from = foreignKey.getRecord().getTableName() + "." + foreignKey.getColumnName();
+            to = table + "." + foreignKey.getForeignColumn();
+        }
+
+        public String sql() {
+            return "  JOIN " + table + " ON " + from + " = " + to;
+        }
     }
 }

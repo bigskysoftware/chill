@@ -31,6 +31,6 @@ public class Vehicle extends _generated.AbstractVehicle {
 
     ChillField<Integer> year = field("year", Integer.class);
 
-    FK<Vehicle, User> user = fk("user_id", User.class);
+    FK<Vehicle, User> user = fk(User.class);
 
 }

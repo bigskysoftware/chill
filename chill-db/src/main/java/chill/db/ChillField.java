@@ -4,6 +4,7 @@ import chill.utils.NiceList;
 import chill.utils.TheMissingUtils;
 
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.function.Consumer;
@@ -387,6 +388,10 @@ public class ChillField<T> {
             query.where(this.getColumnName(), getFKValue(forRecord));
             return query;
         }
+
+        public String getForeignColumn() {
+            return foreignColumn;
+        }
     }
 
     //===================================================
@@ -396,39 +401,42 @@ public class ChillField<T> {
         T transform(T value);
     }
 
-    public static class Many<T extends ChillRecord, Q extends ChillQuery<T>> extends ChillField<Q> {
-        private final String otherColumn;
+    public static class Many<T extends ChillRecord> {
+        private final String foreignKeyColumn;
         private final Class componentType;
-        private final String myColumn;
+        private final ChillField joinValueField;
+        private Many through;
 
-        public <T extends ChillRecord> Many(Class<? extends ChillRecord> aClass, ChillRecord record, Class<T> type, String otherColumn) {
-            super(record, null, (Class) ChillQuery.class);
+        public <T extends ChillRecord> Many(ChillRecord record, Class<T> type, String foreignKeyColumn) {
             this.componentType = type;
-            this.readOnly = true;
-            this.otherColumn = otherColumn;
-            this.myColumn = "id";
+            this.foreignKeyColumn = foreignKeyColumn;
+            record.manys.add(this);
+            // TODO parameterize 'id'
+            this.joinValueField = record.getFieldsAsMap().get("id");
         }
 
-        @Override
-        public Q get() {
+        public ChillQuery<T> get() {
             var query = new ChillQuery(componentType);
-            return (Q) query.where(otherColumn, getRecord().getFields().find(field -> field.getColumnName().equals(myColumn)).get());
+            if (through != null) {
+                FK joinFk = findJoinFKFor(componentType, through.componentType);
+                query = query.join(joinFk);
+            }
+            return query.where(foreignKeyColumn, joinValueField.get());
         }
 
-        @Override
-        protected void setRaw(Object value) {
-            throw new UnsupportedOperationException("Cannot set a synthetic field");
+        private FK findJoinFKFor(Class type, Class componentType) {
+            ChillRecord prototype = ChillRecord.getPrototype(type);
+            FK fk = prototype.getFields().ofType(FK.class).first(field -> field.getType().equals(componentType));
+            return fk;
         }
 
-        @Override
         public String getTypeName() {
-            String typeName = super.getTypeName();
-            return typeName + "<" + componentType.getName() + ">";
+            return "chill.db.ChillQuery<" + componentType.getName() + ">";
         }
 
-        @Override
-        public String getColumnName() {
-            return "** SYNTHETIC ARRAY COLUMN **";
+        public Many<T> through(Many through) {
+            this.through = through;
+            return this;
         }
     }
 }

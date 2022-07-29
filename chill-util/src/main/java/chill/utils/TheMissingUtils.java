@@ -156,7 +156,7 @@ public class TheMissingUtils {
         safely(() -> Thread.sleep(millis));
     }
 
-    public static <T> NiceList<T> filter(NiceList<T> ts, Predicate<? super T> predicate) {
+    public static <T> NiceList<T> filter(Iterable<T> ts, Predicate<? super T> predicate) {
         NiceList<T> result = new NiceList<>();
         for (T field : ts) {
             if (predicate.test(field)) {
@@ -166,7 +166,7 @@ public class TheMissingUtils {
         return result;
     }
 
-    public static <R, T> NiceList<R> map(NiceList<T> ts, Function<? super T, ? extends R> mapper) {
+    public static <R, T> NiceList<R> map(Iterable<T> ts, Function<? super T, ? extends R> mapper) {
         NiceList<R> result = new NiceList<>();
         for (T field : ts) {
             result.add(mapper.apply(field));
@@ -174,7 +174,7 @@ public class TheMissingUtils {
         return result;
     }
 
-    public static <T, C> NiceList<T> sortBy(NiceList<T> listToSort, Function<? super T, Comparable> toComp) {
+    public static <T, C> NiceList<T> sortBy(Iterable<T> listToSort, Function<? super T, Comparable> toComp) {
         var niceList = new NiceList<T>(listToSort);
         niceList.sort((o1, o2) -> {
             var comp1 = toComp.apply(o1);
@@ -198,6 +198,15 @@ public class TheMissingUtils {
         } else {
             return null;
         }
+    }
+
+    public static <T> T first(Iterable<T> lst, Predicate<T> filter) {
+        for (T t : lst) {
+            if (filter.test(t)) {
+                return t;
+            }
+        }
+        return null;
     }
 
     public static <T> T newInstance(String className) {
@@ -233,6 +242,10 @@ public class TheMissingUtils {
 
     public interface ToString {
         String getString();
+    }
+
+    public static <K, V> NiceMap<K, V> nice(Map<K, V> map) {
+        return new NiceMap<>(map);
     }
 
     public static <T> NiceList<T> nice(T[] arr) {

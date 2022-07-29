@@ -1,9 +1,7 @@
 package test.model;
 
-import chill.db.ChillCodeGenerator;
 import chill.db.ChillField;
 import chill.db.ChillQuery;
-import chill.db.ChillRecord;
 
 public class User extends _generated.AbstractUser {
 
@@ -31,7 +29,7 @@ public class User extends _generated.AbstractUser {
 
     ChillField<Integer> age = field("age", Integer.class);
 
-    ChillField<ChillQuery<Vehicle>> vehicles = many(Vehicle.class, "user_id");
+    ChillField.Many<Vehicle> vehicles = hasMany(Vehicle.class);
 
 
 

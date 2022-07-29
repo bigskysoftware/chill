@@ -88,7 +88,17 @@ public class ChillCodeGenerator {
 
         java.lang.reflect.Field[] classFields = templateClass.getDeclaredFields();
         for (java.lang.reflect.Field javaField : classFields) {
-            if (ChillField.class.isAssignableFrom(javaField.getType())) {
+            if (ChillField.Many.class.isAssignableFrom(javaField.getType())) {
+                javaField.setAccessible(true);
+                ChillField.Many chillField = (ChillField.Many) safely(() -> javaField.get(instance));
+                String propName = TheMissingUtils.capitalize(javaField.getName());
+                sb.append("public ")
+                        .append(chillField.getTypeName()).append(" get")
+                        .append(propName).append("() {").append(newLine)
+                        .append("  return self.").append(javaField.getName()).append(".get();").append(newLine)
+                        .append("}").append(newLine)
+                        .append(newLine);
+            } else if (ChillField.class.isAssignableFrom(javaField.getType())) {
                 javaField.setAccessible(true);
                 ChillField chillField = (ChillField) safely(() -> javaField.get(instance));
 

@@ -84,6 +84,10 @@ public class NiceList<T> implements List<T>{
         return TheMissingUtils.first(this);
     }
 
+    public T first(Predicate<T> filter) {
+        return TheMissingUtils.first(this, filter);
+    }
+
     public T last() {
         if (size() > 0) {
             return get(size() - 1);
@@ -96,8 +100,8 @@ public class NiceList<T> implements List<T>{
         return TheMissingUtils.sortBy(this, toComp);
     }
 
-    public <K> Map<K, T> toMap(Function<? super T, K> toKey) {
-        HashMap<K, T> map = new HashMap<>();
+    public <K> NiceMap<K, T> toMap(Function<? super T, K> toKey) {
+        NiceMap<K, T> map = new NiceMap<>();
         for (T t : this) {
             map.put(toKey.apply(t), t);
         }
@@ -152,6 +156,16 @@ public class NiceList<T> implements List<T>{
         NiceList<T> copy = new NiceList<>();
         copy.addAll(this);
         return copy;
+    }
+
+    public <TT> NiceList<TT> ofType(Class<TT> fkClass) {
+        NiceList<TT> elementsOfType = new NiceList<>();
+        for (T t : this) {
+            if (fkClass.isInstance(t)) {
+                elementsOfType.add((TT) t);
+            }
+        }
+        return elementsOfType;
     }
 
     public interface Each<T> {
