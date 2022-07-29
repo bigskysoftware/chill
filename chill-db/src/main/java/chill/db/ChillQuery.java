@@ -91,6 +91,7 @@ public class ChillQuery<T extends ChillRecord> implements Iterable<T> {
     }
 
     public ChillQuery<T> join(ChillField.FK foreignKey) {
+        instantiatable = false;
         ChillQuery<T> ts = new ChillQuery<>(this);
         ts.joins.add(new Join(foreignKey));
         return ts;
@@ -182,7 +183,7 @@ public class ChillQuery<T extends ChillRecord> implements Iterable<T> {
             ChillRecord.populateFromHashMap(t, colValues);
             return t;
         } else {
-            throw new IllegalStateException("This query cannot be used to instantiate new elements because it has non-column conditions on it");
+            throw new IllegalStateException("This query cannot be used to instantiate new elements: " + sql());
         }
     }
 
