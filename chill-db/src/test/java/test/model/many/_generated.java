@@ -52,6 +52,16 @@ public class _generated extends ChillCodeGenerator {
 
         public static final chill.db.ChillRecord.Finder<ManyA> find = finder(ManyA.class);
 
+        public static chill.db.ChillQuery<ManyA> where(Object... args) {
+            return find.where(args);}
+
+        public static chill.db.ChillQuery<ManyA> join(chill.db.ChillField.FK fk) {
+            return find.join(fk);}
+
+        public static class to {
+            private static final ManyA instance = new ManyA();
+        }
+
     }
 
 
@@ -110,6 +120,17 @@ public class _generated extends ChillCodeGenerator {
 
         public static final chill.db.ChillRecord.Finder<ManyB> find = finder(ManyB.class);
 
+        public static chill.db.ChillQuery<ManyB> where(Object... args) {
+            return find.where(args);}
+
+        public static chill.db.ChillQuery<ManyB> join(chill.db.ChillField.FK fk) {
+            return find.join(fk);}
+
+        public static class to {
+            private static final ManyB instance = new ManyB();
+            public static final chill.db.ChillField.FK parentA = instance.parentA;
+        }
+
     }
 
 
@@ -164,6 +185,16 @@ public class _generated extends ChillCodeGenerator {
 
         public static final chill.db.ChillRecord.Finder<ManyC> find = finder(ManyC.class);
 
-    }
+        public static chill.db.ChillQuery<ManyC> where(Object... args) {
+            return find.where(args);}
 
+        public static chill.db.ChillQuery<ManyC> join(chill.db.ChillField.FK fk) {
+            return find.join(fk);}
+
+        public static class to {
+            private static final ManyC instance = new ManyC();
+            public static final chill.db.ChillField.FK parentB = instance.parentB;
+        }
+
+    }
 }

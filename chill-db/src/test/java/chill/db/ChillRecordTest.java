@@ -32,7 +32,7 @@ public class ChillRecordTest {
     @Test
     public void boostrapTest() {
 
-        assertEquals(0, User.find.where("first_name=$first AND last_name=$last").count());
+        assertEquals(0, User.where("first_name=$first AND last_name=$last").count());
 
         User sample = new User()
                 .withFirstName("Carson")
@@ -46,36 +46,50 @@ public class ChillRecordTest {
         // Raw Queries
         //============================================
         assertEquals(1, User.find.all().count());
-        assertEquals(1, User.find.where("first_name IS NOT NULL").count());
+        assertEquals(1, User.where("first_name IS NOT NULL").count());
 
         //============================================
         // Named Value Queries
         //============================================
-        assertEquals(1, User.find.where("first_name=$first",
+        assertEquals(1, User.where("first_name=$first",
                 "first", "Carson").count());
-        assertEquals(1, User.find.where("first_name=$first AND last_name=$last",
+        assertEquals(1, User.where("first_name=$first AND last_name=$last",
                 "first", "Carson",
                 "last", "Gross").count());
 
-        assertEquals(0, User.find.where("first_name=$first AND last_name=$last",
+        assertEquals(0, User.where("first_name=$first AND last_name=$last",
                 "first", "Carson",
                 "last", "Taft").count());
 
         //============================================
         // Positional Queries
         //============================================
-        assertEquals(1, User.find.where("first_name=?", "Carson").count());
-        assertEquals(1, User.find.where("first_name=? AND last_name=?", "Carson", "Gross").count());
-        assertEquals(0, User.find.where("first_name=? AND last_name=?", "Carson", "Taft").count());
+        assertEquals(1, User.where("first_name=?", "Carson").count());
+        assertEquals(1, User.where("first_name=? AND last_name=?", "Carson", "Gross").count());
+        assertEquals(0, User.where("first_name=? AND last_name=?", "Carson", "Taft").count());
 
         //============================================
         // Short Queries
         //============================================
-        assertEquals(1, User.find.where("first_name", "Carson").count());
-        assertEquals(1, User.find.where("last_name", "Gross").count());
-        assertEquals(1, User.find.where("first_name", "Carson", "last_name", "Gross").count());
-        assertEquals(0, User.find.where("last_name", "Taft").count());
-        assertEquals(0, User.find.where("first_name", "Carson", "last_name", "Taft").count());
+        assertEquals(1, User.where("first_name", "Carson").count());
+        assertEquals(1, User.where("last_name", "Gross").count());
+        assertEquals(1, User.where("first_name", "Carson", "last_name", "Gross").count());
+        assertEquals(0, User.where("last_name", "Taft").count());
+        assertEquals(0, User.where("first_name", "Carson", "last_name", "Taft").count());
+
+        //============================================
+        // Non-equality Queries
+        //============================================
+        assertEquals(0, User.where("first_name <>", "Carson").count());
+        assertEquals(0, User.where("first_name !=", "Carson").count());
+        assertEquals(1, User.where("first_name LIKE", "%rs%").count());
+        assertEquals(0, User.where("first_name NOT LIKE", "%rs%").count());
+
+        //============================================
+        // And syntax
+        //============================================
+        assertEquals(1, User.where("first_name", "Carson").and("last_name", "Gross").count());
+
     }
 
     @Test
