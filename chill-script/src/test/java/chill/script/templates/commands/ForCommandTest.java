@@ -35,4 +35,21 @@ public class ForCommandTest {
                         #end"""));
     }
 
+    @Test
+    public void doesNotPolluteGlobals() {
+        assertEquals("""
+                Hello
+                1
+                2
+                3
+                Hello\
+                """, renderTemplate(
+                """
+                        ${x}
+                        #for x in [1, 2, 3]
+                        ${x}
+                        #end
+                        ${x}""", "x", "Hello"));
+    }
+
 }
