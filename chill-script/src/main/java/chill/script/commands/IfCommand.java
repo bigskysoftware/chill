@@ -26,7 +26,7 @@ public class IfCommand extends Command {
                 // TODO: Copied from ChillScriptParser.parseCommandList -- need a method for parsing command lists that
                 //       doesn't just recover when it sees an unrecognized token
                 Command cmd = parser.parseCommand();
-                trueBranch.add(cmd);
+                trueBranch.add(rv.addChild(cmd));
                 if (cmd instanceof ErrorCommand) {
                     // parser.advanceToNextCommandStart();
                     // TODO: Public recovery API. Possibly: parser.panic(String... checkpoints)
@@ -43,7 +43,7 @@ public class IfCommand extends Command {
                     // TODO: Copied from ChillScriptParser.parseCommandList -- need a method for parsing command lists that
                     //       doesn't just recover when it sees an unrecognized token
                     Command cmd = parser.parseCommand();
-                    falseBranch.add(cmd);
+                    falseBranch.add(rv.addChild(cmd));
                     if (cmd instanceof ErrorCommand) {
                         // parser.advanceToNextCommandStart();
                         // TODO: Public recovery API. Possibly: parser.panic(TokenType... checkpoints)
@@ -70,9 +70,9 @@ public class IfCommand extends Command {
         }
     }
 
-    private void setCondition(Expression cond) { condition = cond; }
+    private void setCondition(Expression cond) { condition = addChild(cond); }
 
-    private void setTrueBranch(List<Command> branch) { trueBranch = branch; }
+    private void setTrueBranch(List<Command> branch) { trueBranch = addChildren(branch); }
 
-    private void setFalseBranch(List<Command> branch) { falseBranch = branch; }
+    private void setFalseBranch(List<Command> branch) { falseBranch = addChildren(branch); }
 }

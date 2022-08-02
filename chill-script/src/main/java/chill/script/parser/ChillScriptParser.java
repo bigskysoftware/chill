@@ -118,6 +118,7 @@ public class ChillScriptParser {
         registerCommand("print", PrintCommand::parse);
         registerCommand("set", SetCommand::parse);
         registerCommand("if", IfCommand::parse);
+        registerCommand("for", ForCommand::parse);
     }
 
     private void initExpressionCoreGrammar() {
