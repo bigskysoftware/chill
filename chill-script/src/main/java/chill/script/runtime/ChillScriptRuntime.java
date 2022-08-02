@@ -32,7 +32,7 @@ public class ChillScriptRuntime {
 
     // TODO - scope semantics
     public Object getSymbol(String symbol) {
-        Iterator<Map<String, Object>> mapIterator = scopes.descendingIterator();
+        Iterator<Map<String, Object>> mapIterator = scopes.iterator();
         while (mapIterator.hasNext()) {
             Map<String, Object> scope = mapIterator.next();
             if (scope.containsKey(symbol)) {
