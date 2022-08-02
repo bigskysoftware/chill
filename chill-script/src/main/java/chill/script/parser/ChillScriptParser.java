@@ -1,14 +1,11 @@
 package chill.script.parser;
 
-import chill.script.commands.ErrorCommand;
-import chill.script.commands.PrintCommand;
-import chill.script.commands.SetCommand;
+import chill.script.commands.*;
 import chill.script.expressions.*;
 import chill.script.tokenizer.Token;
 import chill.script.tokenizer.TokenList;
 import chill.script.tokenizer.TokenType;
 import chill.script.tokenizer.Tokenizer;
-import chill.script.commands.Command;
 import chill.utils.Pair;
 
 import java.util.*;
@@ -98,7 +95,7 @@ public class ChillScriptParser {
                 commands.get(currentToken.getStringValue()) != null;
     }
 
-    private Command parseCommand() {
+    public Command parseCommand() {
         var commandParser = getCommandParser(tokens);
         if (commandParser != null) {
             Command command = commandParser.parse(this);
@@ -120,6 +117,7 @@ public class ChillScriptParser {
     private void initCoreCommands() {
         registerCommand("print", PrintCommand::parse);
         registerCommand("set", SetCommand::parse);
+        registerCommand("if", IfCommand::parse);
     }
 
     private void initExpressionCoreGrammar() {
