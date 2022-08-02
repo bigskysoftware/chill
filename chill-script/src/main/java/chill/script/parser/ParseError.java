@@ -28,6 +28,10 @@ public class ParseError {
         return sb.toString();
     }
 
+    public String getBareMessage() {
+        return message;
+    }
+
     @Override
     public String toString() {
         return message;
