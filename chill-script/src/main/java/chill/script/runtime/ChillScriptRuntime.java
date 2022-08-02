@@ -42,8 +42,17 @@ public class ChillScriptRuntime {
         return UNDEFINED;
     }
 
-    public void setSymbolValue(String symbol, Object value) {
-        scopes.getLast().put(symbol, value);
+    public void declareSymbol(String symbol, Object initialValue) {
+        scopes.getFirst().put(symbol, initialValue);
+    }
+    public void setSymbol(String symbol, Object value) {
+        for (var scope : scopes) {
+            if (scope.containsKey(symbol)) {
+                scope.put(symbol, value);
+                return;
+            }
+        }
+        scopes.getFirst().put(symbol, value);
     }
     public void pushScope(){
         scopes.push(new HashMap<>());
@@ -51,7 +60,6 @@ public class ChillScriptRuntime {
     public void popScope(){
         scopes.pop();
     }
-
 
     public <T> T getMetaData(TypedMap.Key<T> key) {
         return metadata.get(key);

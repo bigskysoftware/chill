@@ -37,17 +37,21 @@ public class ChillTemplateForCommand extends ChillTemplateCommand {
             }
             Iterable iter = (Iterable) iterable;
             int index = 0;
-            for (Object value : iter) {
-                context.setSymbolValue(identifier.getStringValue(), value);
-                if (indexIdentifier != null) {
-                    context.setSymbolValue(indexIdentifier.getStringValue(), index);
+
+            context.pushScope();
+            {
+                for (Object value : iter) {
+                    context.declareSymbol(identifier.getStringValue(), value);
+                    if (indexIdentifier != null) {
+                        context.declareSymbol(indexIdentifier.getStringValue(), index);
+                    }
+                    for (ChillTemplateCommand elt : body) {
+                        elt.render(context);
+                    }
+                    index++;
                 }
-                context.setSymbolValue(identifier.getStringValue(), value);
-                for (ChillTemplateCommand elt : body) {
-                    elt.render(context);
-                }
-                index++;
             }
+            context.popScope();
         }
     }
 }

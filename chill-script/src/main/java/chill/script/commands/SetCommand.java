@@ -12,7 +12,7 @@ public class SetCommand extends Command {
 
     @Override
     public void execute(ChillScriptRuntime runtime) {
-        runtime.setSymbolValue(symbol.getName(), value.evaluate(runtime));
+        runtime.setSymbol(symbol.getName(), value.evaluate(runtime));
     }
 
     public static Command parse(ChillScriptParser parser) {
