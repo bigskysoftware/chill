@@ -5,7 +5,7 @@ import chill.script.runtime.ChillScriptRuntime;
 
 public class TestUtils {
     public static class TestRuntime extends ChillScriptRuntime {
-        StringBuilder terminal;
+        StringBuilder terminal = new StringBuilder();
 
         @Override
         public void print(Object value) {
