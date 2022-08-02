@@ -23,7 +23,7 @@ public class IfCommandTest {
     public void handlesObviouslyTruthyValues() {
         assertEquals(
                 "4",
-                TestUtils.programOutput("if true print 4 end")
+                TestUtils.programOutput("if 1 == 1 print 4 end")
         );
 
         assertEquals(
@@ -45,7 +45,7 @@ public class IfCommandTest {
     @Test
     public void handlesTrickyValues() {
         assertEquals(
-                "",
+                "8!",
                 TestUtils.programOutput("if nonexistentVar_d208715e_c9f2_4d43_a4d1_50c3cbe96def print 8 else print '8!' end")
         );
 
@@ -62,7 +62,7 @@ public class IfCommandTest {
 
 
         assertEquals(
-                "11",
+                "",
                 TestUtils.programOutput("if '' print 11 end")
         );
 
