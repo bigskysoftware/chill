@@ -66,7 +66,7 @@ public class IfCommand extends Command {
         if (context.isTruthy(conditionValue)) {
             for (var cmd : trueBranch) cmd.execute(context);
         } else {
-            for (var cmd : falseBranch) cmd.execute(context);
+            if (falseBranch != null) for (var cmd : falseBranch) cmd.execute(context);
         }
     }
 

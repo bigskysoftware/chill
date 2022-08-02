@@ -9,12 +9,12 @@ public class IfCommandTest {
     @Test
     public void handlesFalseyValues() {
         assertEquals(
-                "2",
-                TestUtils.programOutput("if false print 2 end")
+                "!2",
+                TestUtils.programOutput("if false print 2 else print '!2' end")
         );
 
         assertEquals(
-                "3",
+                "",
                 TestUtils.programOutput("if null print 3 end")
         );
     }
@@ -46,12 +46,12 @@ public class IfCommandTest {
     public void handlesTrickyValues() {
         assertEquals(
                 "",
-                TestUtils.programOutput("if nonexistentVar_d208715e_c9f2_4d43_a4d1_50c3cbe96def print 8 end")
+                TestUtils.programOutput("if nonexistentVar_d208715e_c9f2_4d43_a4d1_50c3cbe96def print 8 else print '8!' end")
         );
 
         assertEquals(
                 "9",
-                TestUtils.programOutput("if 0 print 9 end")
+                TestUtils.programOutput("if 0 print 9 else print '9!' end")
         );
 
 
