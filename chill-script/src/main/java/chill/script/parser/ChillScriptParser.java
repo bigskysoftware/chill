@@ -179,11 +179,11 @@ public class ChillScriptParser {
     private Expression parsePostfixExpressions(ChillScriptParser chillScriptParser) {
         var urRoot = parse("equalityExpression");
         var root = urRoot;
-        Expression indirectExpression = parseIndirectExpression(root);
-        while (indirectExpression != null) {
-            indirectExpression.setStart(urRoot.getStart());
-            root = indirectExpression;
-            indirectExpression = parseIndirectExpression(root);
+        Expression postfixExpression = parsePostfixExpression(root);
+        while (postfixExpression != null) {
+            postfixExpression.setStart(urRoot.getStart());
+            root = postfixExpression;
+            postfixExpression = parsePostfixExpression(root);
         }
         return root;
     }
