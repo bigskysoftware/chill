@@ -4,6 +4,7 @@ import chill.script.expressions.Expression;
 import chill.script.expressions.IdentifierExpression;
 import chill.script.parser.ChillScriptParser;
 import chill.script.runtime.ChillScriptRuntime;
+import chill.script.tokenizer.TokenType;
 
 public class SetCommand extends Command {
 
@@ -20,6 +21,7 @@ public class SetCommand extends Command {
             SetCommand setCommand = new SetCommand();
             setCommand.setStart(parser.consumeToken());
             setCommand.setSymbol((IdentifierExpression) parser.requireExpression(setCommand, "identifier"));
+            if (parser.match(TokenType.EQUAL)) setCommand.addError(parser.consumeToken(), "Use 'to' when setting variables");
             parser.require("to", setCommand, "Expected a 'to'");
             setCommand.setValue(parser.requireExpression(setCommand, "expression"));
             setCommand.setEnd(parser.lastMatch());

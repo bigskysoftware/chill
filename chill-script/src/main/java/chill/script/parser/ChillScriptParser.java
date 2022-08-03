@@ -102,7 +102,12 @@ public class ChillScriptParser {
             match("then"); // optional 'then' divider
             return command;
         } else {
-            return new ErrorCommand("Unknown command: " + currentToken().getStringValue(), currentToken());
+            if (currentToken().getType() == TokenType.SYMBOL) {
+                return new ErrorCommand("Unknown command: " + currentToken().getStringValue(), currentToken());
+            } else {
+                return new ErrorCommand("Unexpected token: " + currentToken().getStringValue(), currentToken());
+
+            }
         }
     }
 
