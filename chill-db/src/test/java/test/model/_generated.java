@@ -116,6 +116,16 @@ public class _generated extends ChillCodeGenerator {
 
         public static final chill.db.ChillRecord.Finder<User> find = finder(User.class);
 
+        public static chill.db.ChillQuery<User> where(Object... args) {
+            return find.where(args);}
+
+        public static chill.db.ChillQuery<User> join(chill.db.ChillField.FK fk) {
+            return find.join(fk);}
+
+        public static class to {
+            private static final User instance = new User();
+        }
+
     }
 
 
@@ -220,6 +230,17 @@ public class _generated extends ChillCodeGenerator {
         }
 
         public static final chill.db.ChillRecord.Finder<Vehicle> find = finder(Vehicle.class);
+
+        public static chill.db.ChillQuery<Vehicle> where(Object... args) {
+            return find.where(args);}
+
+        public static chill.db.ChillQuery<Vehicle> join(chill.db.ChillField.FK fk) {
+            return find.join(fk);}
+
+        public static class to {
+            private static final Vehicle instance = new Vehicle();
+            public static final chill.db.ChillField.FK user = instance.user;
+        }
 
     }
 }

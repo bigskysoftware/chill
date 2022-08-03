@@ -72,6 +72,10 @@ public class ChillQuery<T extends ChillRecord> implements Iterable<T> {
         this.page = from.page;
     }
 
+    public ChillQuery<T> and(Object... conditions) {
+        return where(conditions);
+    }
+
     public ChillQuery<T> where(Object... conditions) {
         return new ChillQuery<T>(this).where$(conditions);
     }
@@ -159,8 +163,7 @@ public class ChillQuery<T extends ChillRecord> implements Iterable<T> {
                 whereClause.append(newWhereSQL + "\n");
                 instantiatable = false;
             } else {
-                // name/value query
-                for (int i = 0; i < conditions.length - 1; i= i + 2) {
+                for (int i = 0; i < conditions.length - 1; i = i + 2) {
                     String field = String.valueOf(conditions[i]);
                     Object value = conditions[i + 1];
                     queryArguments.add(value);
@@ -168,8 +171,13 @@ public class ChillQuery<T extends ChillRecord> implements Iterable<T> {
                         whereClause.append(" AND ");
                     }
                     // TODO - support other operations, NULL values, IN, etc.
-                    whereClause.append(field).append("=?\n");
-                    colValues.put(field, value);
+                    if (field.contains(" ")) {
+                        whereClause.append(field).append(" ?\n");
+                        colValues.put(field, value);
+                    } else {
+                        whereClause.append(field).append(" = ?\n");
+                        colValues.put(field, value);
+                    }
                 }
             }
         }

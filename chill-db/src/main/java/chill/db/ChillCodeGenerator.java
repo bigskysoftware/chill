@@ -1,10 +1,12 @@
 package chill.db;
 
+import chill.utils.NiceList;
 import chill.utils.TheMissingUtils;
 
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 
@@ -87,6 +89,7 @@ public class ChillCodeGenerator {
                 .append(newLine);
 
         java.lang.reflect.Field[] classFields = templateClass.getDeclaredFields();
+        NiceList<Field> fks = new NiceList<>();
         for (java.lang.reflect.Field javaField : classFields) {
             if (ChillField.Many.class.isAssignableFrom(javaField.getType())) {
                 javaField.setAccessible(true);
@@ -140,6 +143,7 @@ public class ChillCodeGenerator {
                             .append("  return new ").append(className).append("().").append(javaField.getName()).append(".reverse(").append(javaField.getName()).append(");").append(newLine)
                             .append("}").append(newLine)
                             .append(newLine);
+                    fks.add(javaField);
                 }
                 if (chillField.isPassword()) {
                     sb.append("@chill.db.ChillRecord.Generated ")
@@ -155,6 +159,25 @@ public class ChillCodeGenerator {
         }
         sb.append("public static final chill.db.ChillRecord.Finder<").append(className).append("> find = finder(").append(className).append(".class);").append(newLine)
                 .append(newLine);
+
+        sb.append("public static chill.db.ChillQuery<").append(className).append("> where(Object... args) {").append(newLine)
+                .append("  return find.where(args);")
+                .append("}").append(newLine)
+                .append(newLine);
+
+        sb.append("public static chill.db.ChillQuery<").append(className).append("> join(chill.db.ChillField.FK fk) {").append(newLine)
+                .append("  return find.join(fk);")
+                .append("}").append(newLine)
+                .append(newLine);
+
+        sb.append("public static class to {").append(newLine)
+                .append("  private static final ").append(className).append(" instance = new ").append(className).append("();").append(newLine);
+
+        for (Field fk : fks) {
+            sb.append("  public static final chill.db.ChillField.FK ").append(fk.getName()).append(" = instance.").append(fk.getName()).append(";").append(newLine);
+        }
+        sb.append("}").append(newLine)
+        .append(newLine);
 
         sb.append("}").append(newLine);
 

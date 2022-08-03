@@ -478,6 +478,9 @@ public class ChillRecord {
             return new ChillQuery<T>(clazz).findByPrimaryKey(keys);
         }
 
+        public ChillQuery<T> join(ChillField.FK foriegnKey) {
+            return new ChillQuery<T>(clazz).join(foriegnKey);
+        }
         public ChillQuery<T> where(Object... conditions) {
             return new ChillQuery<T>(clazz).where(conditions);
         }

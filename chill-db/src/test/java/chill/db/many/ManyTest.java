@@ -1,12 +1,10 @@
 package chill.db.many;
 
+import chill.db.ChillQuery;
 import chill.db.ChillRecord;
-import chill.utils.TheMissingUtils;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import test.model.User;
-import test.model.Vehicle;
 import test.model.many.ManyA;
 import test.model.many.ManyB;
 import test.model.many.ManyC;
@@ -15,8 +13,7 @@ import java.sql.DriverManager;
 
 import static chill.db.ChillRecordTest.TEST_DB_URL;
 import static chill.utils.TheMissingUtils.n;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class ManyTest {
 
@@ -65,12 +62,30 @@ public class ManyTest {
     public void cantCreateNewRecordWithManyThrough() {
         ManyA manyA = new ManyA();
         manyA.save();
-
-        try {
-            manyA.getManyCs().newRecord();
-            fail("Shouldn't have worked");
-        } catch (IllegalStateException ise) {
-            // good
-        }
+        assertThrows(IllegalStateException.class, () -> manyA.getManyCs().newRecord());
     }
+
+    @Test
+    public void joinSyntaxWorksProperly() {
+
+        ManyA manyA = new ManyA();
+        manyA.save();
+
+        n(3).times(() -> {
+            ManyB b = manyA.getManyBs().newRecord().createOrThrow();
+            n(3).times(() -> {
+                b.getManyCs().newRecord().createOrThrow();
+            });
+        });
+
+        ChillQuery<ManyC> query = ManyC
+                .join(ManyC.to.parentB)
+                .join(ManyB.to.parentA)
+                .where("many_a.id >=", manyA.getId());
+
+        assertEquals(9, query.count());
+
+    }
+
+
 }
