@@ -62,6 +62,7 @@ public class ChillTemplates {
         TemplateLoader loader = loadSource(name);
         String source = safely(loader::getSource);
         ChillTemplateParser parser = new ChillTemplateParser();
+        parser.setSourcePath(name);
         ChillTemplate template = null;
         try {
             template = parser.parseTemplate(source);

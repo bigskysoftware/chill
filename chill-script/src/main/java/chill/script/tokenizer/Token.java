@@ -60,6 +60,15 @@ public class Token {
         return lines[line - 1];
     }
 
+    public String getSourceLocation() {
+        String sourcePath = tokenizer.getSourcePath();
+        if (sourcePath != null) {
+            return sourcePath + ":" + getLine();
+        } else {
+            return "";
+        }
+    }
+
     public String getSourceTo(Token end) {
         String src = tokenizer.src;
         return src.substring(this.start, end == null? this.end : end.end);

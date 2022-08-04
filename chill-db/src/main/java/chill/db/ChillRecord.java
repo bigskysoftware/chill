@@ -20,7 +20,7 @@ public class ChillRecord {
 
     public static ConnectionSource connectionSource = null;
 
-    private static boolean SHOULD_LOG = true;
+    private static int SHOULD_LOG = 0;
     private ChillLogs.LogCategory log = ChillLogs.get(this.getClass());
 
     String tableName = TheMissingUtils.snake(this.getClass().getSimpleName());
@@ -478,6 +478,10 @@ public class ChillRecord {
             return new ChillQuery<T>(clazz).findByPrimaryKey(keys);
         }
 
+        public T byUUID(Object uuid) {
+            return new ChillQuery<T>(clazz).findByUUID(uuid);
+        }
+
         public ChillQuery<T> join(ChillField.FK foriegnKey) {
             return new ChillQuery<T>(clazz).join(foriegnKey);
         }
@@ -508,12 +512,12 @@ public class ChillRecord {
 
 
     public static boolean shouldLog() {
-        return SHOULD_LOG;
+        return SHOULD_LOG == 0;
     }
 
     public static SafeAutoCloseable quietly() {
-        SHOULD_LOG = false;
-        return () -> SHOULD_LOG = true;
+        SHOULD_LOG++;
+        return () -> SHOULD_LOG--;
     }
 
     //=====================================

@@ -18,7 +18,9 @@ public class ChillTemplateParser extends ChillScriptParser {
 
     @Override
     protected Tokenizer getTokenizer(String src) {
-        return new Tokenizer(src, Tokenizer.Mode.TEMPLATE);
+        Tokenizer tokenizer = new Tokenizer(src, Tokenizer.Mode.TEMPLATE);
+        tokenizer.setSourcePath(getSourcePath());
+        return tokenizer;
     }
 
     public ChillTemplate parseTemplate(String src) {

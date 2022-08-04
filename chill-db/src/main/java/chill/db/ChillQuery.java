@@ -290,8 +290,20 @@ public class ChillQuery<T extends ChillRecord> implements Iterable<T> {
         LinkedList<Object> queryList = new LinkedList<>();
         queryList.add(where);
         queryList.addAll(Arrays.asList(keys));
+        return findWhere(queryList.toArray());
+    }
+
+    public T findByUUID(Object uuid) {
+        var uuidField = getFields().first(ChillField::isUUID);
+        if (uuidField == null) {
+            throw new IllegalStateException("No UUID field found on " + clazz.getName());
+        }
+        return findWhere(Arrays.asList(uuidField.getColumnName(), uuid).toArray());
+    }
+
+    private T findWhere(Object[] objects) {
         return TheMissingUtils.safely(() -> {
-            try (var resultSetAndConnection = where(queryList.toArray()).executeQuery()) {
+            try (var resultSetAndConnection = where(objects).executeQuery()) {
                 if (resultSetAndConnection.resultSet.next()) {
                     T t = makeInstance();
                     ChillRecord.populateFromResultSet(t, resultSetAndConnection.resultSet);

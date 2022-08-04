@@ -33,7 +33,12 @@ public class MethodCallExpression extends Expression {
     public Object evaluate(ChillScriptRuntime runtime) {
         Object rootVal = root.evaluate(runtime);
         if (rootVal == null) {
-            throw new NullPointerException("The expression " + root.getSource() + " returned null");
+            Expression actualRoot = root;
+            if(actualRoot instanceof PropertyAccessExpression pae) {
+                actualRoot = pae.getRoot();
+            }
+            String sourceLocation = getSourceLocation();
+            throw new NullPointerException("The root expression " + actualRoot.getSource() + " returned null in\n\n" + getLineSource() + "\n\n" + sourceLocation + "\n\n");
         } else {
             var argValues = new ArrayList<>(args.size());
             for (Expression arg : args) {

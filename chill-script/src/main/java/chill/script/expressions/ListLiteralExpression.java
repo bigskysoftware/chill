@@ -5,6 +5,7 @@ import chill.script.runtime.ChillScriptRuntime;
 import chill.script.tokenizer.Token;
 import chill.script.tokenizer.TokenType;
 import chill.script.parser.ErrorType;
+import chill.utils.NiceList;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -19,7 +20,7 @@ public class ListLiteralExpression extends Expression {
 
     @Override
     public Object evaluate(ChillScriptRuntime runtime) {
-        LinkedList<Object> returnList = new LinkedList<>();
+        NiceList<Object> returnList = new NiceList<>();
         for (Expression value : values) {
             returnList.add(value.evaluate(runtime));
         }

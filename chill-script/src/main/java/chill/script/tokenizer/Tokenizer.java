@@ -12,6 +12,7 @@ public class Tokenizer {
     int position = 0;
     int line = 1;
     int lineOffset = 0;
+    private String srcPath;
 
     public enum Mode {
         NORMAL,
@@ -220,11 +221,16 @@ public class Tokenizer {
     private boolean commandStart() {
         if (peek() == '\n') {
             int offset = position;
+            int newLines = 0;
             while (offset < src.length() && isWhitespace(src.charAt(offset))) {
+                if (src.charAt(offset) == '\n') {
+                    newLines++;
+                }
                 offset++;
             }
             if (offset < src.length() && src.charAt(offset) == '#') {
                 position = offset;
+                line += newLines;
                 return true;
             }
         }
@@ -445,6 +451,14 @@ public class Tokenizer {
 
     public TokenList getTokens() {
         return tokenList;
+    }
+
+    public void setSourcePath(String srcPath) {
+        this.srcPath = srcPath;
+    }
+
+    public String getSourcePath() {
+        return srcPath;
     }
 
     @Override

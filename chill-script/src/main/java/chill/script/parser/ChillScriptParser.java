@@ -19,6 +19,7 @@ public class ChillScriptParser {
     private final List<String> primaryExpressions = new LinkedList<>();
 
     private TokenList tokens;
+    private String srcPath;
 
     public ChillScriptParser() {
         commands = new HashMap<>();
@@ -68,7 +69,9 @@ public class ChillScriptParser {
     }
 
     protected Tokenizer getTokenizer(String src) {
-        return new Tokenizer(src);
+        Tokenizer tokenizer = new Tokenizer(src);
+        tokenizer.setSourcePath(srcPath);
+        return tokenizer;
     }
 
     protected List<Command> parseCommandList() {
@@ -322,4 +325,11 @@ public class ChillScriptParser {
         }
     }
 
+    public void setSourcePath(String srcPath) {
+        this.srcPath = srcPath;
+    }
+
+    public String getSourcePath() {
+        return srcPath;
+    }
 }

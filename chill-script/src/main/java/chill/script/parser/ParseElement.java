@@ -91,6 +91,10 @@ public class ParseElement {
         return start != null ? start.getLineContent() : "<none>";
     }
 
+    public String getSourceLocation() {
+        return start != null ? start.getSourceLocation() : "";
+    }
+
     public List<ParseError> getParseErrors() {
         return parseErrors;
     }

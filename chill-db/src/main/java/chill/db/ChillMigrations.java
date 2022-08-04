@@ -173,15 +173,21 @@ public class ChillMigrations {
     }
 
     public NiceList<ChillMigration> pending() {
-        return allMigrations.filter(chillMigration -> chillMigration.getStatus() == MigrationStatus.PENDING);
+        try(var ignore = ChillRecord.quietly()) {
+            return allMigrations.filter(chillMigration -> chillMigration.getStatus() == MigrationStatus.PENDING);
+        }
     }
 
     public NiceList<ChillMigration> applied() {
-        return allMigrations.filter(chillMigration -> chillMigration.getStatus() == MigrationStatus.APPLIED);
+        try (var ignore = ChillRecord.quietly()) {
+            return allMigrations.filter(chillMigration -> chillMigration.getStatus() == MigrationStatus.APPLIED);
+        }
     }
 
     public NiceList<ChillMigration> skipped() {
-        return allMigrations.filter(chillMigration -> chillMigration.getStatus() == MigrationStatus.SKIPPED);
+        try (var ignore = ChillRecord.quietly()) {
+            return allMigrations.filter(chillMigration -> chillMigration.getStatus() == MigrationStatus.SKIPPED);
+        }
     }
 
     public String getStatus() {
@@ -288,22 +294,26 @@ public class ChillMigrations {
 
         public final void migrateUp() {
             System.out.println("Migrating " + name  + " up...");
-            ChillRecord.inTransaction(()->{
-                up();
-                new MigrationRecord().withDescription(description).withName(name).withStatus(MigrationStatus.APPLIED).create();
-            });
+            try (var ignore = ChillRecord.quietly()) {
+                ChillRecord.inTransaction(() -> {
+                    up();
+                    new MigrationRecord().withDescription(description).withName(name).withStatus(MigrationStatus.APPLIED).create();
+                });
+            }
             System.out.println("Done");
         }
 
         protected abstract void up();
 
         public final void migrateDown() {
-            System.out.println("Migrating " + name  + " down...");
-            ChillRecord.inTransaction(()->{
-                down();
-                MigrationRecord record = getMigrationRecord();
-                record.delete();
-            });
+            System.out.println("Migrating " + name + " down...");
+            try (var ignore = ChillRecord.quietly()) {
+                ChillRecord.inTransaction(() -> {
+                    down();
+                    MigrationRecord record = getMigrationRecord();
+                    record.delete();
+                });
+            }
             System.out.println("Done");
         }
 
@@ -319,7 +329,9 @@ public class ChillMigrations {
         }
 
         private MigrationRecord getMigrationRecord() {
-            return MigrationRecord.find.where("name", this.name).first();
+            try(var ignore = ChillRecord.quietly()) {
+                return MigrationRecord.find.where("name", this.name).first();
+            }
         }
 
         public String getOwningClassName() {

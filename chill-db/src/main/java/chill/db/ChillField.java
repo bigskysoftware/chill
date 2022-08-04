@@ -34,6 +34,7 @@ public class ChillField<T> {
     protected final NiceList<Consumer<ChillField<T>>> beforeCreates;
     protected final NiceList<Consumer<ChillField<T>>> beforeUpdates;
     protected final NiceList<Consumer<ChillField<T>>> beforeSaves;
+    private boolean uuid;
 
     public ChillField(ChillRecord record, String columnName, Class<T> type) {
         this.record = record;
@@ -255,6 +256,7 @@ public class ChillField<T> {
 
     public ChillField<String> uuid() {
         readOnly = true;
+        uuid = true;
         return (ChillField<String>) lazy(() -> UUID.randomUUID().toString());
     }
 
@@ -314,6 +316,10 @@ public class ChillField<T> {
 
     public boolean isBoolean() {
         return getType().equals(Boolean.class) || getType().equals(Boolean.TYPE);
+    }
+
+    public boolean isUUID() {
+        return uuid;
     }
 
     public static class FK<S extends ChillRecord, T> extends ChillField<T> {
