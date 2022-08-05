@@ -3,16 +3,22 @@ package chill.db;
 import chill.utils.NiceList;
 import chill.utils.TheMissingUtils;
 
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.nio.file.FileVisitResult;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.util.Collections;
 
 import static chill.utils.TheMissingUtils.*;
 
 public class ChillCodeGenerator {
+
+    private static final String CODE_GEN_BOUNDARY =
+            "//=================== GENERATED CODE ========================";
 
     protected static void generateCodeForMyPackage() {
         StackTraceElement trace[] = Thread.currentThread().getStackTrace();
@@ -22,34 +28,91 @@ public class ChillCodeGenerator {
         } else {
             throw new IllegalStateException("Could not determine class to code gen for!");
         }
-        generateCodeForPackage(templateClass.getPackageName());
+        String code = generateCodeForPackage(templateClass.getPackageName());
+        if (!updateCodeInline(code)) {
+            System.out.println("Unable to update the code inline, here is the generated code:\n\n" + code);
+        }
     }
 
-    protected static void generateCodeForPackage(String packageName) {
+    private static boolean updateCodeInline(String code) {
+
+        Path[] srcDir = new Path[1];
+        try {
+            Files.walkFileTree(Path.of(".").toAbsolutePath(), Collections.emptySet(), 2, new SimpleFileVisitor<>(){
+                @Override
+                public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+                    Path fileName = dir.getFileName();
+                    if (fileName.startsWith(".") && !dir.toFile().getName().equals(".")) {
+                        return FileVisitResult.SKIP_SUBTREE;
+                    } else {
+                        return FileVisitResult.CONTINUE;
+                    }
+                }
+                @Override
+                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                    File fileFile = file.toFile();
+                    if (fileFile.getName().equals("src")) {
+                        srcDir[0] = file;
+                        return FileVisitResult.TERMINATE;
+                    }
+                    return FileVisitResult.CONTINUE;
+                }
+            });
+            if (srcDir[0] != null) {
+                Path src = srcDir[0];
+                System.out.println("Found source directory: " + src.toAbsolutePath());
+                Path generatedFilePath = src.resolve("main/java/model/_generated.java");
+                File generatedFile = generatedFilePath.toFile();
+                if (generatedFile.exists()) {
+                    System.out.println("Found generated java file: " + generatedFilePath.toAbsolutePath());
+                    String currentSource = Files.readString(generatedFilePath);
+                    int codeGenBoundary = currentSource.indexOf(CODE_GEN_BOUNDARY);
+                    if (codeGenBoundary > 0) {
+                        String currentHeader = currentSource.substring(0, codeGenBoundary);
+                        Files.writeString(generatedFilePath, currentHeader + code + "\n}\n");
+                        System.out.println("Updated " + generatedFile);
+                        return true;
+                    } else {
+                        System.out.println("Could not find code gen boundary in " + generatedFile);
+                    }
+                } else {
+                    System.out.println("Could not find generated java file: " + generatedFilePath.toAbsolutePath());
+                }
+
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        return false;
+    }
+
+    protected static String generateCodeForPackage(String packageName) {
         String packagePath = packageName.replaceAll("[.]", "/");
         InputStream stream = ClassLoader.getSystemClassLoader().getResourceAsStream(packagePath);
         BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
 
+        StringBuilder sb = new StringBuilder(CODE_GEN_BOUNDARY).append("\n\n");
         nice(reader.lines())
                 .filter(line -> line.endsWith(".class"))
                 .sort()
                 .map(line -> TheMissingUtils.getClass(packageName + "." + line.substring(0, line.lastIndexOf('.'))))
                 .each(aClass -> {
                     if (ChillRecord.class.isAssignableFrom(aClass) && !Modifier.isAbstract(aClass.getModifiers())) {
-                        codeGen(aClass);
+                        codeGen(aClass, sb);
                     }
                 });
+        return sb.toString();
     }
 
-    public static void codeGen(Class templateClass) {
+    public static void codeGen(Class templateClass, StringBuilder sb) {
         Object instance;
         instance = TheMissingUtils.newInstance(templateClass);
         String newLine = "\n    ";
 
         String className = templateClass.getSimpleName().replace("$", ".");
 
-        StringBuilder sb = new StringBuilder()
-                .append(newLine)
+        sb.append(newLine)
                 .append("public static abstract class Abstract").append(templateClass.getSimpleName()).append(" extends ChillRecord {").append(newLine)
                 .append(newLine);
 
@@ -180,7 +243,5 @@ public class ChillCodeGenerator {
         .append(newLine);
 
         sb.append("}").append(newLine);
-
-        System.out.println(sb.toString());
     }
 }

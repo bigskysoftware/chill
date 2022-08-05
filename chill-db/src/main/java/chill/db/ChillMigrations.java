@@ -448,9 +448,6 @@ public class ChillMigrations {
 
         //endregion
 
-        public static void main(String[] args) {
-            ChillCodeGenerator.codeGen(ChillMigration.class);
-        }
     }
 
     public enum MigrationStatus {

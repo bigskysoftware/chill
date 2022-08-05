@@ -154,12 +154,28 @@ public class ChillRecord {
         fields.forEach(ChillField::beforeCreate);
     }
 
+    private void afterCreateImpl() {
+        afterSaveImpl();
+        afterCreate();
+        fields.forEach(ChillField::afterCreate);
+    }
+
     protected void beforeCreate() { /* to be overridden */}
+    protected void afterCreate() { /* to be overridden */}
 
     private void beforeUpdateImpl() {
         beforeSaveImpl();
         beforeUpdate();
         fields.forEach(ChillField::beforeUpdate);
+    }
+
+    private void afterUpdateImpl() {
+        afterSaveImpl();
+        afterUpdate();
+        fields.forEach(ChillField::afterUpdate);
+    }
+
+    private void afterUpdate() {
     }
 
     protected void beforeUpdate() { /* to be overridden */}
@@ -168,7 +184,13 @@ public class ChillRecord {
         beforeSave();
         fields.forEach(ChillField::beforeSave);
     }
+    private void afterSaveImpl() {
+        afterSave();
+        fields.forEach(ChillField::afterSave);
+    }
+
     protected void beforeSave() { /* to be overridden */ }
+    protected void afterSave() { /* to be overridden */ }
 
     //==========================================================
     //  C[R]UD - For Read, see the Finder API
@@ -241,7 +263,9 @@ public class ChillRecord {
                 this.persisted = inserted == 1;
                 if (this.persisted) {
                     fields.forEach(ChillField::updateLastSaved);
+                    afterCreateImpl();
                 }
+
                 return this.persisted;
             }
         });
@@ -300,6 +324,8 @@ public class ChillRecord {
                 } else if (updated >= 1) {
                     fields.forEach(ChillField::updateLastSaved);
                 }
+
+                afterUpdateImpl();
 
                 return updated;
             }
@@ -380,8 +406,9 @@ public class ChillRecord {
     }
 
     protected <S extends ChillRecord, T extends ChillRecord> ChillField.FK<S, T> fk( Class<T> type) {
-        T prototype = getPrototype(type);
-        return fk(prototype.getTableName() + "_id", type);
+        String defaultTableName = snake(type.getSimpleName());
+
+        return fk(defaultTableName + "_id", type);
     }
 
     protected <S extends ChillRecord, T extends ChillRecord> ChillField.FK<S, T> fk(String columnName, Class<T> type) {
@@ -501,13 +528,17 @@ public class ChillRecord {
     // manages timestamps during update/insert
     private class TimestampCloseable implements AutoCloseable{
         public TimestampCloseable() {
-            currentTimestamp = new Timestamp(Instant.now().toEpochMilli());
+            currentTimestamp = now();
         }
 
         @Override
         public void close() {
             currentTimestamp = null;
         }
+    }
+
+    public Timestamp now() {
+        return new Timestamp(Instant.now().toEpochMilli());
     }
 
 

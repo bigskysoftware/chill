@@ -32,8 +32,11 @@ public class ChillField<T> {
     protected final List<Transformer<T>> beforeReturns;
     protected final List<ChillValidation<T>> validations;
     protected final NiceList<Consumer<ChillField<T>>> beforeCreates;
+    protected final NiceList<Consumer<ChillField<T>>> afterCreates;
     protected final NiceList<Consumer<ChillField<T>>> beforeUpdates;
+    protected final NiceList<Consumer<ChillField<T>>> afterUpdates;
     protected final NiceList<Consumer<ChillField<T>>> beforeSaves;
+    protected final NiceList<Consumer<ChillField<T>>> afterSaves;
     private boolean uuid;
 
     public ChillField(ChillRecord record, String columnName, Class<T> type) {
@@ -47,8 +50,11 @@ public class ChillField<T> {
         beforeSets = new LinkedList<>();
         beforeReturns = new LinkedList<>();
         beforeCreates = new NiceList<>();
+        afterCreates = new NiceList<>();
         beforeUpdates = new NiceList<>();
+        afterUpdates = new NiceList<>();
         beforeSaves = new NiceList<>();
+        afterSaves = new NiceList<>();
         this.validations = new LinkedList<>();
         if (type.isEnum()) {
             beforeReturn(val -> enumValueFor(String.valueOf(val)));
@@ -273,6 +279,10 @@ public class ChillField<T> {
         beforeCreates.forEach(fieldConsumer -> fieldConsumer.accept(this));
     }
 
+    void afterCreate() {
+        afterCreates.forEach(fieldConsumer -> fieldConsumer.accept(this));
+    }
+
     public ChillField<T> beforeUpdate(Consumer<ChillField<T>> callback){
         beforeUpdates.add(callback);
         return this;
@@ -282,8 +292,16 @@ public class ChillField<T> {
         beforeUpdates.forEach(fieldConsumer -> fieldConsumer.accept(this));
     }
 
+    void afterUpdate() {
+        afterUpdates.forEach(fieldConsumer -> fieldConsumer.accept(this));
+    }
+
     void beforeSave() {
         beforeSaves.forEach(fieldConsumer -> fieldConsumer.accept(this));
+    }
+
+    void afterSave() {
+        afterSaves.forEach(fieldConsumer -> fieldConsumer.accept(this));
     }
 
     public ChillField<T> readOnly() {
