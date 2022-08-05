@@ -42,7 +42,7 @@ public class ForCommand extends Command {
             Command cmd = parser.parseCommand();
             body.add(rv.addChild(cmd));
             if (cmd instanceof ErrorCommand) {
-                return new ErrorCommand("Error inside for (very helpful message, we know)", parser.currentToken());
+                parser.panic();
             }
         }
         rv.setBody(body);

@@ -77,16 +77,20 @@ public class ChillScriptParser {
             Command cmd = parseCommand();
             commands.add(cmd);
             if (cmd instanceof ErrorCommand) {
-                advanceToNextCommandStart();
+                panic();
             }
         }
         return commands;
     }
 
-    private void advanceToNextCommandStart() {
-        while (!atCommandStart() && moreTokens()) {
+    public void panic() {
+        while (!atCheckpoint() && moreTokens()) {
             consumeToken();
         }
+    }
+
+    private boolean atCheckpoint() {
+        return atCommandStart() || match("end");
     }
 
     private boolean atCommandStart() {

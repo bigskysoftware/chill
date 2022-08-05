@@ -28,10 +28,7 @@ public class IfCommand extends Command {
                 Command cmd = parser.parseCommand();
                 trueBranch.add(rv.addChild(cmd));
                 if (cmd instanceof ErrorCommand) {
-                    // parser.advanceToNextCommandStart();
-                    // TODO: Public recovery API. Possibly: parser.panic(String... checkpoints)
-                    //       Advances to next command start OR given token type.
-                    return new ErrorCommand("Error inside if (very helpful message, we know)", parser.currentToken());
+                    parser.panic();
                 }
             }
             rv.setTrueBranch(trueBranch);
