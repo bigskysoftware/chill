@@ -90,7 +90,7 @@ public class ChillScriptParser {
     }
 
     private boolean atCheckpoint() {
-        return atCommandStart() || match("end");
+        return atCommandStart() || match("end") || match("else");
     }
 
     private boolean atCommandStart() {
