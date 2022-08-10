@@ -23,16 +23,9 @@ public class IfCommand extends Command {
             var trueBranch = new ArrayList<Command>(); // TODO(carson): I noticed LinkedList being used, do I need to?
 
             while(!(parser.match("else") || parser.match("end"))) {
-                // TODO: Copied from ChillScriptParser.parseCommandList -- need a method for parsing command lists that
-                //       doesn't just recover when it sees an unrecognized token
                 Command cmd = parser.parseCommand();
                 trueBranch.add(rv.addChild(cmd));
-                if (cmd instanceof ErrorCommand) {
-                    // parser.advanceToNextCommandStart();
-                    // TODO: Public recovery API. Possibly: parser.panic(String... checkpoints)
-                    //       Advances to next command start OR given token type.
-                    return new ErrorCommand("Error inside if (very helpful message, we know)", parser.currentToken());
-                }
+                if (cmd instanceof ErrorCommand) parser.panic();
             }
             rv.setTrueBranch(trueBranch);
 
@@ -40,16 +33,9 @@ public class IfCommand extends Command {
 
             if (parser.matchAndConsume("else")) {
                 while(!parser.match("end")) {
-                    // TODO: Copied from ChillScriptParser.parseCommandList -- need a method for parsing command lists that
-                    //       doesn't just recover when it sees an unrecognized token
                     Command cmd = parser.parseCommand();
                     falseBranch.add(rv.addChild(cmd));
-                    if (cmd instanceof ErrorCommand) {
-                        // parser.advanceToNextCommandStart();
-                        // TODO: Public recovery API. Possibly: parser.panic(TokenType... checkpoints)
-                        //       Advances to next command start OR given token type.
-                        return new ErrorCommand("Error inside if (very helpful message, we know)", parser.currentToken());
-                    }
+                    if (cmd instanceof ErrorCommand) parser.panic();
                 }
                 rv.setFalseBranch(falseBranch);
             }
