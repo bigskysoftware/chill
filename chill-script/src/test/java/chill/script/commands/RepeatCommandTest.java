@@ -45,4 +45,17 @@ public class RepeatCommandTest {
                 programOutput("set i to 2 repeat i + i times print 1 end")
         );
     }
+
+    @Test
+    public void forLoopWorks() {
+        assertEquals(
+                "",
+                programOutput("repeat for i in [] print i end")
+        );
+
+        assertEquals(
+                "123",
+                programOutput("repeat for i in [1, 2, 3] print i end")
+        );
+    }
 }

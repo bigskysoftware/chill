@@ -4,6 +4,7 @@ import chill.script.expressions.Expression;
 import chill.script.parser.ChillScriptParser;
 import chill.script.runtime.ChillScriptRuntime;
 import chill.script.tokenizer.Token;
+import chill.script.tokenizer.TokenType;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -34,6 +35,14 @@ public class RepeatCommand extends Command {
             var loop = new UntilLoop(cond);
             rv.setLoop(loop);
 
+        } else if (parser.matchAndConsume("for")) {
+            rv.setIdentifier(parser.require(TokenType.SYMBOL, rv, "Loop variable expected"));
+
+            parser.require("in", rv, "'in' expected");
+
+            var it = parser.requireExpression(rv, "expression");
+            var loop = new ForLoop(it);
+            rv.setLoop(loop);
         } else {
 
             var num = parser.requireExpression(rv, "expression");
@@ -83,6 +92,14 @@ public class RepeatCommand extends Command {
 
     public void setBody(List<Command> body) {
         this.body = body;
+    }
+
+    public void setIdentifier(Token identifier) {
+        this.identifier = identifier;
+    }
+
+    public void setIndexIdentifier(Token indexIdentifier) {
+        this.indexIdentifier = indexIdentifier;
     }
 
     public interface Loop {
@@ -158,6 +175,20 @@ public class RepeatCommand extends Command {
                     return i++;
                 }
             };
+        }
+    }
+
+    private static class ForLoop implements Loop {
+        Expression it;
+
+        public ForLoop(Expression it) {
+            this.it = it;
+        }
+
+        @Override
+        public Iterator<Object> iterator(ChillScriptRuntime rt) {
+            var iterable = (Iterable) it.evaluate(rt);
+            return iterable.iterator();
         }
     }
 }
