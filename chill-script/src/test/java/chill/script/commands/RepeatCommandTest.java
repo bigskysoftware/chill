@@ -58,4 +58,27 @@ public class RepeatCommandTest {
                 programOutput("repeat for i in [1, 2, 3] print i end")
         );
     }
+
+    @Test
+    public void indexIdentifierWorks() {
+        assertEquals(
+                "01",
+                programOutput("set i to 0   repeat while i != 2 index j set i to i + 1 print j end")
+        );
+
+        assertEquals(
+                "01",
+                programOutput("set i to 0   repeat until i == 2 index j set i to i + 1 print j end")
+        );
+
+        assertEquals(
+                "0123",
+                programOutput("set i to 2 repeat i + i times index j print j end")
+        );
+
+        assertEquals(
+                "012",
+                programOutput("repeat for i in [1, 2, 3] index j print j end")
+        );
+    }
 }

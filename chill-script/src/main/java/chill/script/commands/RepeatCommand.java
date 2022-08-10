@@ -52,6 +52,10 @@ public class RepeatCommand extends Command {
 
         }
 
+        if (parser.matchAndConsume("index")) {
+            rv.setIndexIdentifier(parser.require(TokenType.SYMBOL, rv, "Name expected for index"));
+        }
+
         List<Command> body = new ArrayList<>();
         while (!parser.match("end")) {
             Command cmd = parser.parseCommand();
