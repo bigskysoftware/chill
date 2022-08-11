@@ -35,17 +35,7 @@ public class ForCommand extends Command {
             rv.setIndexIdentifier(parser.require(TokenType.SYMBOL, rv, "Name expected for index"));
         }
 
-        var body = new ArrayList<Command>();
-        while(!parser.match("end")) {
-            // TODO: Copied from ChillScriptParser.parseCommandList -- need a method for parsing command lists that
-            //       doesn't just recover when it sees an unrecognized token
-            Command cmd = parser.parseCommand();
-            body.add(rv.addChild(cmd));
-            if (cmd instanceof ErrorCommand) {
-                parser.panic();
-            }
-        }
-        rv.setBody(body);
+        rv.setBody(parser.parseCommandList("end"));
 
         rv.setEnd(parser.consumeToken());
 

@@ -34,6 +34,21 @@ public class TokenList implements Iterable<Token> {
         return match(0, identifier);
     }
 
+    public boolean match(String... identifiers) {
+        return match(0, identifiers);
+    }
+
+    public boolean match(int offset, String... identifiers) {
+        Token token = nthToken(offset);
+        for (var identifier : identifiers) {
+            if (token.getType().equals(SYMBOL) &&
+                    token.getStringValue().equals(identifier)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public boolean match(int offset, String identifier) {
         Token token = nthToken(offset);
         if (token.getType().equals(SYMBOL) &&
