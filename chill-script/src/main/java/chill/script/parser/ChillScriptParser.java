@@ -71,9 +71,10 @@ public class ChillScriptParser {
         return new Tokenizer(src);
     }
 
-    protected List<Command> parseCommandList() {
+    public List<Command> parseCommandList(String... delimiters) {
         LinkedList<Command> commands = new LinkedList<>();
-        while (moreTokens()) {
+
+        while (moreTokens() && !match(delimiters)) {
             Command cmd = parseCommand();
             commands.add(cmd);
             if (cmd instanceof ErrorCommand) {
@@ -267,6 +268,10 @@ public class ChillScriptParser {
     }
 
     public boolean match(String identifier) {
+        return tokens.match(identifier);
+    }
+
+    public boolean match(String... identifier) {
         return tokens.match(identifier);
     }
 

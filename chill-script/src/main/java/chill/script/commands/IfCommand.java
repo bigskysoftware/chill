@@ -20,25 +20,15 @@ public class IfCommand extends Command {
 
             rv.setCondition(parser.requireExpression(rv, "expression"));
 
-            var trueBranch = new ArrayList<Command>(); // TODO(carson): I noticed LinkedList being used, do I need to?
-
-            while(!(parser.match("else") || parser.match("end"))) {
-                Command cmd = parser.parseCommand();
-                trueBranch.add(rv.addChild(cmd));
-                if (cmd instanceof ErrorCommand) parser.panic();
-            }
+            var trueBranch = parser.parseCommandList("else", "end");
             rv.setTrueBranch(trueBranch);
 
-            var falseBranch = new ArrayList<Command>();
-
             if (parser.matchAndConsume("else")) {
-                while(!parser.match("end")) {
-                    Command cmd = parser.parseCommand();
-                    falseBranch.add(rv.addChild(cmd));
-                    if (cmd instanceof ErrorCommand) parser.panic();
-                }
+                var falseBranch = parser.parseCommandList("end");
                 rv.setFalseBranch(falseBranch);
             }
+
+            parser.require("end", rv, "'if' statement does not end");
 
             rv.setEnd(parser.consumeToken());
             return rv;
