@@ -87,6 +87,11 @@ public class ChillTemplateParser extends ChillScriptParser {
             return fragmentCommand;
         }
 
+        ChillTemplateCommand pseudoCommand = parsePseudoCommand();
+        if (pseudoCommand != null) {
+            return pseudoCommand;
+        }
+
         ChillTemplateCommand expressionElement = parseExpressionElement();
         if (expressionElement != null) {
             return expressionElement;
@@ -209,6 +214,17 @@ public class ChillTemplateParser extends ChillScriptParser {
             }
             fragmentCommand.setEnd(lastMatch());
             return fragmentCommand;
+        }
+        return null;
+    }
+
+    private ChillTemplateCommand parsePseudoCommand() {
+        if (match(TokenType.SHARP)) {
+            Token sharp = consumeToken(); // sharp
+            Token pseudoCommand = consumeToken(); // next
+            if (!pseudoCommand.getType().equals(TokenType.SYMBOL)) {
+                return new ErrorTemplateCommand("Expected a symbol to follow #", pseudoCommand);
+            }
         }
         return null;
     }

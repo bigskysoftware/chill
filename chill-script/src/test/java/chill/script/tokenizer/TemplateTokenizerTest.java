@@ -33,6 +33,21 @@ public class TemplateTokenizerTest {
                 #end""", SHARP, SYMBOL, SYMBOL, SYMBOL, SYMBOL, TEMPLATE, DOLLAR, LEFT_BRACE, SYMBOL, RIGHT_BRACE, TEMPLATE, SHARP, SYMBOL, EOF);
     }
 
+    @Test
+    public void multiLineCommands(){
+        assertTokensAre("this is a template\n #for (\nasdf asdf)", TEMPLATE, SHARP, SYMBOL, LEFT_PAREN, SYMBOL, SYMBOL, RIGHT_PAREN, EOF);
+        assertTokensAre("this is a template\n #for [\nasdf asdf]", TEMPLATE, SHARP, SYMBOL, LEFT_BRACKET, SYMBOL, SYMBOL, RIGHT_BRACKET, EOF);
+        assertTokensAre("this is a template\n #for {\nasdf asdf}", TEMPLATE, SHARP, SYMBOL, LEFT_BRACE, SYMBOL, SYMBOL, RIGHT_BRACE, EOF);
+
+        assertTokensAre("this is a template\n #for (\nasdf\n asdf)", TEMPLATE, SHARP, SYMBOL, LEFT_PAREN, SYMBOL, SYMBOL, RIGHT_PAREN, EOF);
+        assertTokensAre("this is a template\n #for [\nasdf\n asdf]", TEMPLATE, SHARP, SYMBOL, LEFT_BRACKET, SYMBOL, SYMBOL, RIGHT_BRACKET, EOF);
+        assertTokensAre("this is a template\n #for {\nasdf\n asdf}", TEMPLATE, SHARP, SYMBOL, LEFT_BRACE, SYMBOL, SYMBOL, RIGHT_BRACE, EOF);
+
+        assertTokensAre("this is a template\n #for (\nasdf\n asdf)\n test", TEMPLATE, SHARP, SYMBOL, LEFT_PAREN, SYMBOL, SYMBOL, RIGHT_PAREN, TEMPLATE, EOF);
+        assertTokensAre("this is a template\n #for [\nasdf\n asdf]\n test", TEMPLATE, SHARP, SYMBOL, LEFT_BRACKET, SYMBOL, SYMBOL, RIGHT_BRACKET, TEMPLATE, EOF);
+        assertTokensAre("this is a template\n #for {\nasdf\n asdf}\n test", TEMPLATE, SHARP, SYMBOL, LEFT_BRACE, SYMBOL, SYMBOL, RIGHT_BRACE, TEMPLATE, EOF);
+    }
+
     protected void assertTokensAre(String src, TokenType... expected) {
         TokenList tokens = tokenizeTemplate(src);
         assertEquals(Arrays.asList(expected), tokens.stream().map(Token::getType).collect(Collectors.toList()));

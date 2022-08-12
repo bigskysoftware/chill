@@ -203,9 +203,35 @@ public class Tokenizer {
             tokenList.addToken(ERROR, src.substring(start + 1, position), start, position, line, lineOffset);
         }
 
-        while (!tokenizationEnd() && peek() != '\n') {
+        int parens = 0;
+        int brackets = 0;
+        int curlies = 0;
+
+        while (!tokenizationEnd() && (peek() != '\n' || parens > 0 || brackets > 0 || curlies > 0)) {
+
+            // consume a non-terminal newline
+            if ((parens > 0 || brackets > 0 || curlies > 0) && peek() == '\n') {
+                takeChar();
+            }
+
+            // scrub any whitespace to the next token
             consumeWhitespace();
-            if (!tokenizationEnd() && peek() != '\n') {
+
+            // have to check again in case there is a long break of newlines/whitespace
+            if (!tokenizationEnd() && (peek() != '\n' || parens > 0 || brackets > 0 || curlies > 0)) {
+                if (peekMatch("(")) {
+                    parens++;
+                } else if (peekMatch(")")) {
+                    parens--;
+                } else if (peekMatch("[")) {
+                    brackets++;
+                } else if (peekMatch("]")) {
+                    brackets--;
+                } else if (peekMatch("{")) {
+                    curlies++;
+                } else if (peekMatch("}")) {
+                    curlies--;
+                }
                 scanToken();
             }
         }

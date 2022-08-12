@@ -36,9 +36,6 @@ public class TokenType {
 
     // Template stuff
     public static final  TokenType TEMPLATE = new TokenType("TEMPLATE");
-    public static final  TokenType IF_COMMAND = new TokenType("IF_COMMAND");
-    public static final  TokenType END_COMMAND = new TokenType("END_COMMAND");
-    public static final  TokenType FOR_COMMAND = new TokenType("FOR_COMMAND");
 
     // Special
     public static final  TokenType EOF = new TokenType("EOF");
