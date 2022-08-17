@@ -135,6 +135,7 @@ public class ChillApp {
 
         if (web) {
             info("Starting web node");
+            ChillHelper.INSTANCE.init();
             WebServer.INSTANCE.start();
         }
 

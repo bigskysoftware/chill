@@ -1,10 +1,10 @@
 package web;
 
 import chill.web.ChillHelper;
-import chill.web.FormHelper;
+import chill.web.macros.InputMacro;
 
 public class Helper extends ChillHelper {
     {
-        include(FormHelper.class);
+        registerMacro(InputMacro.class);
     }
 }

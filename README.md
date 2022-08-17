@@ -293,7 +293,7 @@ ChillHelper allows you to surface helper methods in your views, via the `web.Hel
 package web;
 
 import chill.web.ChillHelper;
-import chill.web.FormHelper;
+import chill.web.macros.FormMacros;
 
 public class Helper extends ChillHelper {
     {

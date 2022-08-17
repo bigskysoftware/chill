@@ -5,10 +5,12 @@ import chill.script.parser.ChillScriptParseException;
 import chill.script.parser.ChillScriptParser;
 import chill.script.parser.ParseElement;
 import chill.script.templates.commands.*;
+import chill.script.templates.commands.macros.ChillTemplateMacro;
 import chill.script.tokenizer.Token;
 import chill.script.tokenizer.TokenType;
 import chill.script.tokenizer.Tokenizer;
 import chill.script.parser.ErrorType;
+import chill.utils.NiceMap;
 
 import java.util.LinkedList;
 
@@ -87,7 +89,7 @@ public class ChillTemplateParser extends ChillScriptParser {
             return fragmentCommand;
         }
 
-        ChillTemplateCommand pseudoCommand = parsePseudoCommand();
+        ChillTemplateCommand pseudoCommand = parseMacro();
         if (pseudoCommand != null) {
             return pseudoCommand;
         }
@@ -218,13 +220,40 @@ public class ChillTemplateParser extends ChillScriptParser {
         return null;
     }
 
-    private ChillTemplateCommand parsePseudoCommand() {
+    private ChillTemplateCommand parseMacro() {
         if (match(TokenType.SHARP)) {
             Token sharp = consumeToken(); // sharp
-            Token pseudoCommand = consumeToken(); // next
-            if (!pseudoCommand.getType().equals(TokenType.SYMBOL)) {
-                return new ErrorTemplateCommand("Expected a symbol to follow #", pseudoCommand);
+            Token macroNameToken = consumeToken(); // next
+            if (!macroNameToken.getType().equals(TokenType.SYMBOL)) {
+                return new ErrorTemplateCommand("Expected a symbol to follow #", macroNameToken);
             }
+            String macroName = macroNameToken.getStringValue();
+            ChillTemplateMacro macro = ChillTemplateMacro.get(macroName);
+            if (macro == null) {
+                return new ErrorTemplateCommand("No macro with name " + macroName, macroNameToken);
+            }
+
+            require(TokenType.LEFT_PAREN, macro, "Macros must be followed by an open-paren");
+            var args = new NiceMap<String, Expression>();
+            while (moreTokens() && !match(TokenType.RIGHT_PAREN)) {
+                Token name = require(TokenType.SYMBOL, macro, ErrorType.UNEXPECTED_TOKEN.toString());
+                require(TokenType.COLON, macro, ErrorType.UNEXPECTED_TOKEN.toString());
+                Expression expression = requireExpression(macro, "expression");
+                args.put(name.getStringValue(), expression);
+            }
+            require(TokenType.RIGHT_PAREN, macro, "Unterminated macro!");
+
+            var body = new LinkedList<ChillTemplateCommand>();
+            if (macro.hasBody()) {
+                while (moreTokens()) {
+                    if (matchCommand("end")) {
+                        break;
+                    }
+                    body.add(parseTemplateElement());
+                }
+            }
+            macro.init("", args, body);
+            return macro;
         }
         return null;
     }

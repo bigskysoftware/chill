@@ -1,6 +1,7 @@
 package chill.web;
 
 import chill.script.templates.ChillTemplateCustomRenderer;
+import chill.script.templates.commands.macros.ChillTemplateMacro;
 import chill.script.types.*;
 import chill.utils.ChillLogs;
 import chill.utils.NiceList;
@@ -41,6 +42,10 @@ public class ChillHelper {
         }
     }
 
+    public void init() {
+        // runs the static initializers
+    }
+
     private void putStaticSymbols(Class<?> helper, Map<String, Object> helperSymbols) {
         ChillType type = TypeSystem.getType(helper);
 
@@ -65,6 +70,10 @@ public class ChillHelper {
 
     public Map<String, ?> getHelperSymbols() {
         return helperSymbols;
+    }
+
+    protected void registerMacro(Class<? extends ChillTemplateMacro> clazz) {
+        ChillTemplateMacro.register(clazz);
     }
 
     public static class BaseHelper {

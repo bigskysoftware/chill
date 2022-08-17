@@ -73,4 +73,8 @@ public class NiceMap<K, T> implements Map<K, T> {
     public Set<Entry<K, T>> entrySet() {
         return delegate.entrySet();
     }
+
+    public T take(K key) {
+        return remove(key);
+    }
 }

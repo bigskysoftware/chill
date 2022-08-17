@@ -22,7 +22,6 @@ public class PropertyAccessExpression extends Expression implements CanFavorMeth
     private String propName;
     private boolean favorMethods;
 
-
     public void setProperty(Token token) {
         this.property = token;
         this.propName = token.getStringValue();
@@ -119,5 +118,9 @@ public class PropertyAccessExpression extends Expression implements CanFavorMeth
     @Override
     public void favorMethods() {
         favorMethods = true;
+    }
+
+    public String getPropertyName() {
+        return propName;
     }
 }

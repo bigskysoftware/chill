@@ -2,14 +2,7 @@
 
 The Chill Template Language is Yet Another Templating Language (YATL) for the JVM.  
 
-CTL is designed to be relatively simple and lightweight, but is not overly concerned with pure rendering performance.  
-Rather it is focused on developer productivity with:
-
-* Automatic detection of developer mode, with hot reload
-* Good parse error messages
-* Good runtime error messages
-* An easy-to-configure setup
-* A high level language with features that make producing correct HTML easy
+CTL is designed to be relatively simple and lightweight, it is not overly concerned with pure rendering performance.
 
 ## Syntax
 
@@ -38,11 +31,22 @@ Note that commands start with a `#` and expressions start with a `$`.
 
 ### Commands
 
-All commands in Chill Templates start with a `#` character and *must* start the line they are on.  
+All commands in Chill Templates start with a `#` character and *must* start the line they are on.  Commands are
+typically entirely on one line:
 
-Any characters placed before a `#` make that line not a command.
+```html
+#for contact in contacts
+```
 
-The core commands in LTL are:
+but may span lines if they include an open parenthesis, bracket or brace:
+
+```html
+#for number in [1, 
+                2,
+                3]
+```
+
+The core commands in CTL are:
 
 * `#if`, `#elseif`, `#else` - conditional inclusion logic
 * `#end` - ends a command block
@@ -52,3 +56,17 @@ The core commands in LTL are:
 * `##` - line comment
 * `#fragment` - delimits a template fragment
 
+#### Macros
+
+User-defined macros can be added to CTL and allow you to define a macro 
+
+```html
+<div>
+  #input(for:user.email label:"Enter your email")
+</div>
+```
+
+Like commands, macros must be on a line that starts with `#`, followed by the macro name, followed by an open paren.
+
+Arguments to the macro consist of a name and value pair separated by a colon `:`.  Arguments can be optionally separated
+by commas.

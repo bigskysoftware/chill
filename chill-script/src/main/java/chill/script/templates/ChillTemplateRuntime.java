@@ -17,8 +17,9 @@ public class ChillTemplateRuntime extends ChillScriptRuntime {
         super(rootScope);
     }
 
-    public void append(String str) {
+    public ChillTemplateRuntime append(String str) {
         sb.append(str);
+        return this;
     }
 
     public String getContent() {
