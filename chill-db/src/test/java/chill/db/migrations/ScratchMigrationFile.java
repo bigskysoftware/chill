@@ -13,8 +13,8 @@ public class ScratchMigrationFile extends ChillMigrations {
     }
 
     public final ChillMigration migration_2022_03_08_16_02_26 = new ChillMigration("add user table"){
-        protected void up() {
-            exec("""
+        protected void steps() {
+            step("""
                     CREATE TABLE user (
                       id INT AUTO_INCREMENT PRIMARY KEY,
                       first_name VARCHAR(250),
@@ -23,16 +23,13 @@ public class ScratchMigrationFile extends ChillMigrations {
                       password VARCHAR(250) DEFAULT NULL,
                       age INTEGER
                     );
-                    """);
-        }
-        protected void down() {
-            exec("DROP TABLE user");
+                    """, "DROP TABLE user;");
         }
     };
 
     public final ChillMigration migration_2022_03_09_16_02_26 = new ChillMigration("add user2 table"){
-        protected void up() {
-            exec("""
+        protected void steps() {
+            step("""
                     CREATE TABLE user2 (
                       id INT AUTO_INCREMENT PRIMARY KEY,
                       first_name VARCHAR(250),
@@ -41,17 +38,14 @@ public class ScratchMigrationFile extends ChillMigrations {
                       password VARCHAR(250) DEFAULT NULL,
                       age INTEGER
                     );
-                    """);
-        }
-        protected void down() {
-            exec("DROP TABLE user2");
+                    """, "DROP TABLE user2;");
         }
     };
 
 
     public final ChillMigration migration_2022_03_09_16_02_27 = new ChillMigration("add user3 table"){
-        protected void up() {
-            exec("""
+        protected void steps() {
+            step("""
                     CREATE TABLE user3 (
                       id INT AUTO_INCREMENT PRIMARY KEY,
                       first_name VARCHAR(250),
@@ -60,10 +54,7 @@ public class ScratchMigrationFile extends ChillMigrations {
                       password VARCHAR(250) DEFAULT NULL,
                       age INTEGER
                     );
-                    """);
-        }
-        protected void down() {
-            exec("DROP TABLE user3");
+                    """, "DROP TABLE user3;");
         }
     };
 

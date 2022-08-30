@@ -6,8 +6,8 @@ public class BootstrapMigrationFile extends ChillMigrations {
 
     public final ChillMigration migration_2022_03_08_16_02_26 = new ChillMigration("add user table"){
 
-        protected void up() {
-            exec("""
+        protected void steps() {
+            step("""
                     CREATE TABLE user (
                       id INT AUTO_INCREMENT PRIMARY KEY,
                       first_name VARCHAR(250),
@@ -16,12 +16,9 @@ public class BootstrapMigrationFile extends ChillMigrations {
                       password VARCHAR(250) DEFAULT NULL,
                       age INTEGER
                     );
-                    """);
+                    """, "DROP TABLE user;");
         }
 
-        protected void down() {
-            exec("DROP TABLE user");
-        }
     };
 
 }

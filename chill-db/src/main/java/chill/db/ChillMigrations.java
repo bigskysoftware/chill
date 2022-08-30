@@ -22,7 +22,7 @@ public class ChillMigrations {
     private NiceList<ChillMigrations> subMigrationFiles = new NiceList<>();
 
     public static void checkPendingMigrations(boolean dropToConsole) {
-        try(var ignore = ChillRecord.quietly()) {
+        try (var ignore = ChillRecord.quietly()) {
             Class.forName(MIGRATIONS_FILE);
             ChillMigrations migrations = new ChillMigrations(MIGRATIONS_FILE);
             if (migrations.hasPending()) {
@@ -173,7 +173,7 @@ public class ChillMigrations {
     }
 
     public NiceList<ChillMigration> pending() {
-        try(var ignore = ChillRecord.quietly()) {
+        try (var ignore = ChillRecord.quietly()) {
             return allMigrations.filter(chillMigration -> chillMigration.getStatus() == MigrationStatus.PENDING);
         }
     }
@@ -262,6 +262,32 @@ public class ChillMigrations {
         private String name;
         private Class ownerClass;
 
+        private record MigrationStep(String upScript, String downScript, MigrationStep previous) {
+            public boolean up() {
+                return execute(upScript);
+            }
+
+            public boolean down() {
+                return execute(downScript);
+            }
+
+            private boolean execute(String script) {
+                System.out.println("Executing SQL : \n\n" + script);
+                try {
+                    ChillRecord.executeUpdate(script);
+                    return true;
+                } catch (Exception e) {
+                    System.out.println("An exception occurred: " + e.getMessage());
+                    e.printStackTrace();
+                    System.out.println("\n");
+                    return false;
+                }
+            }
+
+        }
+
+        private MigrationStep lastStep;
+
         public String getName() {
             return name;
         }
@@ -275,49 +301,76 @@ public class ChillMigrations {
         }
 
         public ChillMigration(String description) {
-            this.description = description;            
+            this.description = description;
+            steps();
         }
 
-        protected void exec(String sql) {
-            System.out.println("Executing SQL : \n\n" + sql);
-            ChillRecord.executeUpdate(sql);
+        protected void step(String up, String down) {
+            lastStep = new MigrationStep(up, down, lastStep);
         }
 
-        protected void file(String filePath) {
-            InputStream resourceAsStream = getClass().getResourceAsStream(filePath);
-            if (resourceAsStream == null) {
+        protected void file(String upFilePath, String downFilePath) {
+            step(readStringFromFile(upFilePath), readStringFromFile(downFilePath));
+        }
+
+        private String readStringFromFile(String filePath) {
+            InputStream fileStream = getClass().getResourceAsStream(filePath);
+            if (fileStream == null) {
                 throw new IllegalStateException("Could not find file " + filePath);
             }
-            String text = new String(safely(resourceAsStream::readAllBytes), StandardCharsets.UTF_8);
-            exec(text);
+            return new String(safely(fileStream::readAllBytes), StandardCharsets.UTF_8);
+        }
+
+        private boolean applyUp(MigrationStep step) {
+            if (step != null) {
+                if (!applyUp(step.previous))
+                    return false;
+                if (!step.up()) {
+                    applyDown(step.previous);
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        private boolean applyDown(MigrationStep step) {
+            if (step != null) {
+                if (step.down()) {
+                    return applyDown(step.previous);
+                } else {
+                    System.out.println("The following down script failed and has left the database in an inconsistent state: \n\n" + step.downScript);
+                    //TODO: allow the user to fix and resume from this point somehow?
+                }
+            }
+            return true;
         }
 
         public final void migrateUp() {
-            System.out.println("Migrating " + name  + " up...");
+            System.out.println("Migrating " + name + " up...");
             try (var ignore = ChillRecord.quietly()) {
                 ChillRecord.inTransaction(() -> {
-                    up();
-                    new MigrationRecord().withDescription(description).withName(name).withStatus(MigrationStatus.APPLIED).create();
+                    if (applyUp(lastStep)) {
+                        new MigrationRecord().withDescription(description).withName(name).withStatus(MigrationStatus.APPLIED).create();
+                    }
                 });
             }
             System.out.println("Done");
         }
-
-        protected abstract void up();
 
         public final void migrateDown() {
             System.out.println("Migrating " + name + " down...");
             try (var ignore = ChillRecord.quietly()) {
                 ChillRecord.inTransaction(() -> {
-                    down();
-                    MigrationRecord record = getMigrationRecord();
-                    record.delete();
+                    if (applyDown(lastStep)) {
+                        MigrationRecord record = getMigrationRecord();
+                        record.delete();
+                    }
                 });
             }
             System.out.println("Done");
         }
 
-        protected abstract void down();
+        protected abstract void steps();
 
         public MigrationStatus getStatus() {
             MigrationRecord record = getMigrationRecord();
@@ -329,7 +382,7 @@ public class ChillMigrations {
         }
 
         private MigrationRecord getMigrationRecord() {
-            try(var ignore = ChillRecord.quietly()) {
+            try (var ignore = ChillRecord.quietly()) {
                 return MigrationRecord.find.where("name", this.name).first();
             }
         }
@@ -351,25 +404,27 @@ public class ChillMigrations {
             }
         }
     }
-    
+
     public static class MigrationRecord extends ChillRecord {
 
         public static final String BOOTSTRAP_DDL = """
-            CREATE TABLE IF NOT EXISTS migrations (
-              id INT AUTO_INCREMENT PRIMARY KEY,
-              name VARCHAR(250),
-              created_at VARCHAR(250),
-              description VARCHAR(250),
-              status VARCHAR(250)
-            );
-            """;
+                CREATE TABLE IF NOT EXISTS migrations (
+                  id INT AUTO_INCREMENT PRIMARY KEY,
+                  name VARCHAR(250),
+                  created_at VARCHAR(250),
+                  description VARCHAR(250),
+                  status VARCHAR(250)
+                );
+                """;
 
 
         public static void bootstrap() {
             executeUpdate(BOOTSTRAP_DDL);
         }
 
-        {tableName("migrations");}
+        {
+            tableName("migrations");
+        }
 
         ChillField<Long> id = pk("id");
         ChillField<String> name = field("name", String.class);
@@ -379,67 +434,78 @@ public class ChillMigrations {
 
         //region chill.Record GENERATED CODE
 
-        public MigrationRecord createOrThrow(){
-            if(!create()){
+        public MigrationRecord createOrThrow() {
+            if (!create()) {
                 throw new chill.db.ChillValidation.ValidationException(getErrors());
             }
             return this;
         }
 
-        public MigrationRecord saveOrThrow(){
-            if(!save()){
+        public MigrationRecord saveOrThrow() {
+            if (!save()) {
                 throw new chill.db.ChillValidation.ValidationException(getErrors());
             }
             return this;
         }
 
-        public MigrationRecord firstOrCreateOrThrow(){
+        public MigrationRecord firstOrCreateOrThrow() {
             return (MigrationRecord) firstOrCreateImpl();
         }
 
-        @chill.db.ChillRecord.Generated public Long getId() {
+        @chill.db.ChillRecord.Generated
+        public Long getId() {
             return id.get();
         }
 
-        @chill.db.ChillRecord.Generated public String getName() {
+        @chill.db.ChillRecord.Generated
+        public String getName() {
             return name.get();
         }
 
-        @chill.db.ChillRecord.Generated public void setName(String name) {
+        @chill.db.ChillRecord.Generated
+        public void setName(String name) {
             this.name.set(name);
         }
 
-        @chill.db.ChillRecord.Generated public MigrationRecord withName(String name) {
+        @chill.db.ChillRecord.Generated
+        public MigrationRecord withName(String name) {
             setName(name);
             return this;
         }
 
-        @chill.db.ChillRecord.Generated public Timestamp getCreatedAt() {
+        @chill.db.ChillRecord.Generated
+        public Timestamp getCreatedAt() {
             return createdAt.get();
         }
 
-        @chill.db.ChillRecord.Generated public String getDescription() {
+        @chill.db.ChillRecord.Generated
+        public String getDescription() {
             return description.get();
         }
 
-        @chill.db.ChillRecord.Generated public void setDescription(String description) {
+        @chill.db.ChillRecord.Generated
+        public void setDescription(String description) {
             this.description.set(description);
         }
 
-        @chill.db.ChillRecord.Generated public MigrationRecord withDescription(String description) {
+        @chill.db.ChillRecord.Generated
+        public MigrationRecord withDescription(String description) {
             setDescription(description);
             return this;
         }
 
-        @chill.db.ChillRecord.Generated public MigrationStatus getStatus() {
+        @chill.db.ChillRecord.Generated
+        public MigrationStatus getStatus() {
             return status.get();
         }
 
-        @chill.db.ChillRecord.Generated public void setStatus(MigrationStatus status) {
+        @chill.db.ChillRecord.Generated
+        public void setStatus(MigrationStatus status) {
             this.status.set(status);
         }
 
-        @chill.db.ChillRecord.Generated public MigrationRecord withStatus(MigrationStatus status) {
+        @chill.db.ChillRecord.Generated
+        public MigrationRecord withStatus(MigrationStatus status) {
             setStatus(status);
             return this;
         }
