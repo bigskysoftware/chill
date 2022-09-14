@@ -23,11 +23,7 @@ public class TemplateLoadingTest {
 
     @Test
     public void forLoop() {
-        assertEquals("""
-                -a
-                -b
-                -c
-                """, renderTemplate("/for-loop.html", "lst", List.of("a", "b", "c")));
+        assertEquals("-a\n-b\n-c\n", renderTemplate("/for-loop.html", "lst", List.of("a", "b", "c")));
     }
 
     @Test
@@ -38,28 +34,17 @@ public class TemplateLoadingTest {
 
     @Test
     public void includeStmt() {
-        assertEquals("""
-                foo
-                doh
-                bar""", renderTemplate("/include.html"));
+        assertEquals("foo\ndoh\nbar", renderTemplate("/include.html"));
     }
 
     @Test
     public void basicLayout() {
-        assertEquals("""
-                foo
-                bar
-                foo""", renderTemplate("/has-layout.html"));
+        assertEquals("foo\nbar\nfoo", renderTemplate("/has-layout.html"));
     }
 
     @Test
     public void nestedLayout() {
-        assertEquals("""
-                foo
-                doh
-                bar
-                doh
-                foo""", renderTemplate("/has-nested-layout.html"));
+        assertEquals("foo\ndoh\nbar\ndoh\nfoo", renderTemplate("/has-nested-layout.html"));
     }
 
     @Test

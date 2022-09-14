@@ -4,6 +4,7 @@ import chill.script.expressions.Expression;
 import chill.script.runtime.ChillScriptRuntime;
 import chill.script.templates.ChillTemplateCustomRenderer;
 import chill.script.templates.ChillTemplateRuntime;
+import chill.script.templates.HasDisplayString;
 import org.owasp.encoder.Encode;
 
 import java.io.IOException;
@@ -30,8 +31,12 @@ public class ChillTemplateExpressionElement extends ChillTemplateCommand {
         }
         Object value = expr.evaluate(context);
         if (value != null) {
-            if (value instanceof ChillTemplateCustomRenderer customRenderer) {
+            if (value instanceof ChillTemplateCustomRenderer) {
+                ChillTemplateCustomRenderer  customRenderer = (ChillTemplateCustomRenderer) value;
                 customRenderer.render(context, body);
+            } else if (value instanceof HasDisplayString) {
+                HasDisplayString hasDisplayString = (HasDisplayString) value;
+                context.append(Encode.forHtml(hasDisplayString.getDisplayString()));
             } else {
                 context.append(Encode.forHtml(String.valueOf(value)));
             }

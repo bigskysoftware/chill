@@ -320,6 +320,8 @@ public class ChillField<T> {
             set((T) Integer.valueOf(stringValue));
         } else if (this.type.equals(Long.class)) {
             set((T) Long.valueOf(stringValue));
+        } else if (this.type.equals(Boolean.class)) {
+            set((T) (Object) "true".equalsIgnoreCase(stringValue));
         } else if (this.type.isEnum()) {
             set(enumValueFor(stringValue));
         } else {
@@ -393,7 +395,8 @@ public class ChillField<T> {
         }
 
         private Object getFKValue(Object value) {
-            if (value instanceof ChillRecord otherRecord) {
+            if (value instanceof ChillRecord) {
+                ChillRecord  otherRecord = (ChillRecord) value;
                 Object fkValue = null;
                 for (ChillField field : otherRecord.getFields()) {
                     if (field.getColumnName().equals(foreignColumn)) {

@@ -260,12 +260,12 @@ default.
 ### ChillRoutes
 
 Chill routes is a wrapper around the Javalin web framework.  Like Javalin, it allows you to specify routes in a 
-semi-declarative manner in a `web.Routes` file:
+semi-declarative manner in a `web.web.Routes` file:
 
 ```java
 package web;
 
-public class Routes extends ChillRoutes {
+public class web.Routes extends ChillRoutes {
 
   public void init() {
 

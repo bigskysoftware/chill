@@ -1,2 +1,0 @@
-DB_URL="jdbc:h2:file:./db/sample;DB_CLOSE_DELAY=-1;CASE_INSENSITIVE_IDENTIFIERS=true"
-DB_DRIVER="org.h2.Driver"

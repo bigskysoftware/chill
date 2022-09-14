@@ -51,18 +51,21 @@ public class PropertyAccessExpression extends Expression implements CanFavorMeth
                 return property.get(rootVal);
             }
 
-            if (rootVal instanceof Map mapInstance) {
+            if (rootVal instanceof Map) {
+                Map mapInstance = (Map) rootVal;
                 return mapInstance.get(this.property.getStringValue());
             }
 
-            if (rootVal instanceof PropertyMissing dynamicProperties) {
+            if (rootVal instanceof PropertyMissing) {
+                PropertyMissing dynamicProperties = (PropertyMissing) rootVal;
                 Object result = dynamicProperties.propertyMissing(propName);
                 if (result != UNDEFINED) {
                     return result;
                 }
             }
 
-            if (rootVal instanceof PropertyMissing dynamicProperties) {
+            if (rootVal instanceof PropertyMissing) {
+                PropertyMissing dynamicProperties = (PropertyMissing) rootVal;
                 Object result = dynamicProperties.propertyMissing(propName);
                 if (result != UNDEFINED) {
                     return result;
@@ -73,7 +76,8 @@ public class PropertyAccessExpression extends Expression implements CanFavorMeth
                 var dynaProps = DynaProperties.forObject(rootVal);
                 if (dynaProps.containsKey(propName)) {
                     Object value = dynaProps.get(propName);
-                    if (value instanceof Gettable getter) {
+                    if (value instanceof Gettable) {
+                        Gettable getter = (Gettable) value;
                         return getter.get();
                     } else {
                         return value;

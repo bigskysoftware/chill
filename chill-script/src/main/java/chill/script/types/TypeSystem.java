@@ -7,7 +7,8 @@ public class TypeSystem {
     private static final ConcurrentHashMap<String, ChillType> TYPESYSTEM_CACHE = new ConcurrentHashMap<>();
 
     public static ChillType getRuntimeType(Object rootVal) {
-        if (rootVal instanceof HasCustomChillType hasChillType) {
+        if (rootVal instanceof HasCustomChillType) {
+            HasCustomChillType hasChillType = (HasCustomChillType) rootVal;
             return hasChillType.getChillType();
         } else {
             Class<?> aClass = rootVal.getClass();

@@ -132,7 +132,7 @@ public class ChillQuery<T extends ChillRecord> implements Iterable<T> {
         if (conditions.length > 0) {
             Map conditionParameters = new HashMap();
             String newWhereSQL = String.valueOf(conditions[0]);
-            if (!whereClause.isEmpty()) {
+            if (whereClause.length() != 0) {
                 whereClause.append(" AND\n");
             }
 

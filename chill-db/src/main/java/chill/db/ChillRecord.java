@@ -284,8 +284,8 @@ public class ChillRecord {
 
                 NiceList<ChillField> fields = getDBFields();
 
-                var nonGeneratedFields = fields.filter(field -> !field.isGenerated());
-                String updateClauses = nonGeneratedFields.map(field -> field.getColumnName() + "=?").join(", ");
+                var dirtyNonGeneratedFields = fields.filter(field -> !field.isGenerated() && field.isDirty());
+                String updateClauses = dirtyNonGeneratedFields.map(field -> field.getColumnName() + "=?").join(", ");
                 var sql = "UPDATE " + getTableName() + " SET " + updateClauses;
 
                 var primaryKeys = fields.filter(ChillField::isPrimaryKey);
@@ -299,14 +299,14 @@ public class ChillRecord {
 
                 sql = sql + "\nWHERE " + where;
 
-                var values = nonGeneratedFields.concat(primaryKeys).map(ChillField::get).concat(optimisticLocks.map(ChillField::lastSavedValue));
+                var values = dirtyNonGeneratedFields.concat(primaryKeys).map(ChillField::get).concat(optimisticLocks.map(ChillField::lastSavedValue));
                 if (shouldLog()) {
                     info(makeQueryLog("UPDATE", sql, values));
                 }
 
                 var preparedStatement = connection.prepareStatement(sql);
                 var col = 1;
-                for (var field : nonGeneratedFields) {
+                for (var field : dirtyNonGeneratedFields) {
                     preparedStatement.setObject(col++, field.rawValue());
                 }
                 for (var field : primaryKeys) {

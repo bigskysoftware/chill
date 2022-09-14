@@ -21,7 +21,8 @@ public class IdentifierExpression extends Expression {
         if (symbol == ChillScriptRuntime.UNDEFINED) {
             ChillType type = runtime.resolveType(getName());
             return type;
-        } else if (symbol instanceof ChillProperty prop) {
+        } else if (symbol instanceof ChillProperty) {
+            ChillProperty prop = (ChillProperty) symbol;
             return prop.get(null); // TODO - support "this" notion?
         } else {
             return symbol;

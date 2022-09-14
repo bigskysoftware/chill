@@ -51,9 +51,11 @@ public class ChillShell {
                 return true;
             }
             Object programOrExpression = parser.parseProgramOrExpression(line);
-            if (programOrExpression instanceof ChillScriptProgram program) {
+            if (programOrExpression instanceof ChillScriptProgram) {
+                ChillScriptProgram program = (ChillScriptProgram) programOrExpression;
                 runtime.execute(program);
-            } else if(programOrExpression instanceof  Expression expr) {
+            } else if(programOrExpression instanceof Expression) {
+                Expression expr = (Expression) programOrExpression;
                 println(expr.evaluate(runtime));
             }
         } catch (Exception e) {

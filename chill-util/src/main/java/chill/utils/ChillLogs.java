@@ -69,9 +69,11 @@ public class ChillLogs {
     public static final LogCategory DEFAULT_CATEGORY = get(DEFAULT_LOG_CATEGORY);
 
     public static LogCategory get(Object category) {
-        if (category instanceof String str) {
+        if (category instanceof String) {
+            String  str = (String) category;
             return new LogCategory(str);
-        } else if (category instanceof Class cls) {
+        } else if (category instanceof Class) {
+            Class cls = (Class) category;
             return new LogCategory(cls.getName());
         } else {
             return new LogCategory(String.valueOf(category));
@@ -228,12 +230,12 @@ public class ChillLogs {
         public void formatAndLog(String logName, Level messageLevel, Map<String, Object> ctx, String format, Object... arguments) {
             if (adapterLevel.logs(messageLevel)) {
                 format = format.replace("{}", "%s"); // support slf4j log style formatting
-                String formattedLogMessage = format.formatted(arguments);
+                String formattedLogMessage = String.format(format, arguments);
                 String finalLogMessage;
                 if (ctx != null) {
-                    finalLogMessage = "%-5s [%s] - %s %s".formatted(messageLevel, LocalDateTime.now(), ctx, formattedLogMessage);
+                    finalLogMessage = String.format("%-5s [%s] - %s %s", messageLevel, LocalDateTime.now(), ctx, formattedLogMessage);
                 } else {
-                    finalLogMessage = "%-5s [%s] - %s".formatted(messageLevel, LocalDateTime.now(), formattedLogMessage);
+                    finalLogMessage = String.format("%-5s [%s] - %s", messageLevel, LocalDateTime.now(), formattedLogMessage);
                 }
                 print(finalLogMessage);
             }

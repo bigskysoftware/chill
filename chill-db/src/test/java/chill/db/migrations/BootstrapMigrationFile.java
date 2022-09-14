@@ -7,16 +7,14 @@ public class BootstrapMigrationFile extends ChillMigrations {
     public final ChillMigration migration_2022_03_08_16_02_26 = new ChillMigration("add user table"){
 
         protected void up() {
-            exec("""
-                    CREATE TABLE user (
-                      id INT AUTO_INCREMENT PRIMARY KEY,
-                      first_name VARCHAR(250),
-                      last_name VARCHAR(250),
-                      email VARCHAR(250) DEFAULT NULL,
-                      password VARCHAR(250) DEFAULT NULL,
-                      age INTEGER
-                    );
-                    """);
+            exec("CREATE TABLE user (\n" +
+                    "                      id INT AUTO_INCREMENT PRIMARY KEY,\n" +
+                    "                      first_name VARCHAR(250),\n" +
+                    "                      last_name VARCHAR(250),\n" +
+                    "                      email VARCHAR(250) DEFAULT NULL,\n" +
+                    "                      password VARCHAR(250) DEFAULT NULL,\n" +
+                    "                      age INTEGER\n" +
+                    "                    );");
         }
 
         protected void down() {

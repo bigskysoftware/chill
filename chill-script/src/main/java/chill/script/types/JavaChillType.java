@@ -78,6 +78,11 @@ public class JavaChillType implements ChillType, PropertyMissing {
     }
 
     @Override
+    public Class getBackingClass() {
+        return backingClass;
+    }
+
+    @Override
     public ChillMethod getMethod(String methodName) {
         return methods.computeIfAbsent(methodName, this::resolveMethod);
     }

@@ -34,7 +34,8 @@ public class MethodCallExpression extends Expression {
         Object rootVal = root.evaluate(runtime);
         if (rootVal == null) {
             Expression actualRoot = root;
-            if(actualRoot instanceof PropertyAccessExpression pae) {
+            if(actualRoot instanceof PropertyAccessExpression) {
+                PropertyAccessExpression pae = (PropertyAccessExpression) actualRoot;
                 actualRoot = pae.getRoot();
             }
             String sourceLocation = getSourceLocation();
@@ -45,14 +46,18 @@ public class MethodCallExpression extends Expression {
                 argValues.add(arg.evaluate(runtime));
             }
 
-            if(rootVal instanceof BoundChillMethod boundMethod){
+            if(rootVal instanceof BoundChillMethod){
+                BoundChillMethod boundMethod = ((BoundChillMethod) rootVal);
                 return boundMethod.invoke(argValues);
-            } else if(rootVal instanceof ChillJavaMethod unboundMethod){
+            } else if(rootVal instanceof ChillJavaMethod){
+                ChillJavaMethod unboundMethod = (ChillJavaMethod) rootVal;
                 return unboundMethod.invoke(null, argValues);
-            } else if(rootVal instanceof Runnable runnable){
+            } else if(rootVal instanceof Runnable){
+                Runnable runnable = (Runnable) rootVal;
                 runnable.run();
                 return null;
-            } else if(rootVal instanceof Callable callable){
+            } else if(rootVal instanceof Callable){
+                Callable callable = (Callable) rootVal;
                 try {
                     return callable.call();
                 } catch (Exception e) {
@@ -70,7 +75,8 @@ public class MethodCallExpression extends Expression {
         if (parser.matchAndConsume(TokenType.LEFT_PAREN) ) {
 
             // mark root as favoring methods
-            if (root instanceof CanFavorMethods canFavorMethods) {
+            if (root instanceof CanFavorMethods) {
+                CanFavorMethods canFavorMethods = (CanFavorMethods) root;
                 canFavorMethods.favorMethods();
             }
 

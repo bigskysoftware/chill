@@ -13,11 +13,9 @@ public class ErrorsTest {
 
     @Test
     public void bootstrap(){
-        ChillScriptParseException parseException = getParseErrors("""
-                foo 10 herbaderb
-                print 10
-                foo 10 herbaderb
-                """);
+        ChillScriptParseException parseException = getParseErrors("foo 10 herbaderb\n" +
+                "                print 10\n" +
+                "                foo 10 herbaderb");
         assertEquals(2, parseException.getParseErrors().size());
     }
 

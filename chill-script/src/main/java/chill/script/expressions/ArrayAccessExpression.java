@@ -26,15 +26,18 @@ public class ArrayAccessExpression extends Expression {
         Object indexVal = index.evaluate(runtime);
         if (rootVal == null) {
             return null;
-        } else if (rootVal instanceof Map<?, ?> rootAsMap) {
+        } else if (rootVal instanceof Map<?, ?>) {
+            Map rootAsMap = (Map) rootVal;
             return rootAsMap.get(indexVal);
-        } else if (rootVal instanceof List<?> rootAsList) {
+        } else if (rootVal instanceof List<?>) {
+            List rootAsList = (List) rootVal;
             int index = makeInt(indexVal);
             if (index < 0 || rootAsList.size() <= index) {
                 return null;
             }
             return rootAsList.get(index);
-        } else if (rootVal instanceof Object[] rootAsArr) {
+        } else if (rootVal instanceof Object[]) {
+            Object[] rootAsArr = (Object[]) rootVal;
             int index = makeInt(indexVal);
             if (index < 0 || rootAsArr.length <= index) {
                 return null;
@@ -54,7 +57,8 @@ public class ArrayAccessExpression extends Expression {
 
     private int makeInt(Object indexVal) {
         // TODO support more elaborate access
-        if (indexVal instanceof Number numberVal) {
+        if (indexVal instanceof Number) {
+            Number numberVal = (Number) indexVal;
             return numberVal.intValue();
         } else {
             return Integer.valueOf(String.valueOf(indexVal));

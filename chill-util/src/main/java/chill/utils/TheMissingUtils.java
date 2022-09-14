@@ -13,6 +13,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class TheMissingUtils {
@@ -79,7 +80,7 @@ public class TheMissingUtils {
     }
 
     public static Map<String, Object> mapFrom(Object... args) {
-        var returnMap = new HashMap<String, Object>();
+        var returnMap = new LinkedHashMap<String, Object>();
         for (int i = 0; i < args.length; i = i + 2) {
             String name = String.valueOf(args[i]);
             if (i + 1 < args.length) {
@@ -240,6 +241,10 @@ public class TheMissingUtils {
         };
     }
 
+    public static boolean isEmpty(String selector) {
+        return selector == null || "".equals(selector);
+    }
+
     public interface ToString {
         String getString();
     }
@@ -256,8 +261,8 @@ public class TheMissingUtils {
         return new NiceList<>(arr);
     }
 
-    public static <T> NiceList<T> nice(Stream<T> arr) {
-        return new NiceList<>(arr.toList());
+    public static <T> NiceList<T> nice(Stream<T> stream) {
+        return new NiceList<>(stream.collect(Collectors.toList()));
     }
 
     public interface DangerousRunnable {
@@ -306,8 +311,8 @@ public class TheMissingUtils {
     }
 
     public static RuntimeException forceThrow(Throwable throwable) {
-        if (throwable instanceof InvocationTargetException invocationTargetException) {
-            THROWER.throwException(invocationTargetException.getCause());
+        if (throwable instanceof InvocationTargetException) {
+            THROWER.throwException(throwable.getCause());
         } else {
             THROWER.throwException(throwable);
         }

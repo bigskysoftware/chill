@@ -157,8 +157,7 @@ public class Tokenizer {
             String[] lines = str.split("\n");
             for (int i = 0; i < lines.length; i++) {
                 String line = lines[i];
-                if (line.length() > stripLeadingSpaces &&
-                        line.substring(0, stripLeadingSpaces).matches("\s*")) {
+                if (line.length() > stripLeadingSpaces && line.substring(0, stripLeadingSpaces).matches("\\s*")) {
                     lines[i] = line.substring(stripLeadingSpaces);
                 }
             }
