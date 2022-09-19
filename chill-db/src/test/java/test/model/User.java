@@ -5,17 +5,15 @@ import chill.db.ChillQuery;
 
 public class User extends _generated.AbstractUser {
 
-    public static final String DDL = """
-            DROP TABLE IF EXISTS user;
-            CREATE TABLE user (
-              id INT AUTO_INCREMENT PRIMARY KEY,
-              first_name VARCHAR(250),
-              last_name VARCHAR(250),
-              email VARCHAR(250) DEFAULT NULL,
-              password VARCHAR(250) DEFAULT NULL,
-              age INTEGER
-            );
-            """;
+    public static final String DDL = "DROP TABLE IF EXISTS user;\n" +
+            "            CREATE TABLE user (\n" +
+            "              id INT AUTO_INCREMENT PRIMARY KEY,\n" +
+            "              first_name VARCHAR(250),\n" +
+            "              last_name VARCHAR(250),\n" +
+            "              email VARCHAR(250) DEFAULT NULL,\n" +
+            "              password VARCHAR(250) DEFAULT NULL,\n" +
+            "              age INTEGER\n" +
+            "            );";
 
     ChillField<Long> id = pk("id");
 

@@ -13,48 +13,42 @@ public class ScratchMigrationFile extends ChillMigrations {
     }
 
     public final ChillMigration migration_2022_03_08_16_02_26 = new ChillMigration("add user table"){
-        protected void steps() {
-            step("""
-                    CREATE TABLE user (
-                      id INT AUTO_INCREMENT PRIMARY KEY,
-                      first_name VARCHAR(250),
-                      last_name VARCHAR(250),
-                      email VARCHAR(250) DEFAULT NULL,
-                      password VARCHAR(250) DEFAULT NULL,
-                      age INTEGER
-                    );
-                    """, "DROP TABLE user;");
+        protected void up() {
+            step("CREATE TABLE user (\n" +
+                    "                      id INT AUTO_INCREMENT PRIMARY KEY,\n" +
+                    "                      first_name VARCHAR(250),\n" +
+                    "                      last_name VARCHAR(250),\n" +
+                    "                      email VARCHAR(250) DEFAULT NULL,\n" +
+                    "                      password VARCHAR(250) DEFAULT NULL,\n" +
+                    "                      age INTEGER\n" +
+                    "                    );","DROP TABLE user");
         }
     };
 
     public final ChillMigration migration_2022_03_09_16_02_26 = new ChillMigration("add user2 table"){
-        protected void steps() {
-            step("""
-                    CREATE TABLE user2 (
-                      id INT AUTO_INCREMENT PRIMARY KEY,
-                      first_name VARCHAR(250),
-                      last_name VARCHAR(250),
-                      email VARCHAR(250) DEFAULT NULL,
-                      password VARCHAR(250) DEFAULT NULL,
-                      age INTEGER
-                    );
-                    """, "DROP TABLE user2;");
+        protected void up() {
+            step("CREATE TABLE user2 (\n" +
+                    "                      id INT AUTO_INCREMENT PRIMARY KEY,\n" +
+                    "                      first_name VARCHAR(250),\n" +
+                    "                      last_name VARCHAR(250),\n" +
+                    "                      email VARCHAR(250) DEFAULT NULL,\n" +
+                    "                      password VARCHAR(250) DEFAULT NULL,\n" +
+                    "                      age INTEGER\n" +
+                    "                    );","DROP TABLE user2");
         }
     };
 
 
     public final ChillMigration migration_2022_03_09_16_02_27 = new ChillMigration("add user3 table"){
-        protected void steps() {
-            step("""
-                    CREATE TABLE user3 (
-                      id INT AUTO_INCREMENT PRIMARY KEY,
-                      first_name VARCHAR(250),
-                      last_name VARCHAR(250),
-                      email VARCHAR(250) DEFAULT NULL,
-                      password VARCHAR(250) DEFAULT NULL,
-                      age INTEGER
-                    );
-                    """, "DROP TABLE user3;");
+        protected void up() {
+            exec("CREATE TABLE user3 (\n" +
+                    "                      id INT AUTO_INCREMENT PRIMARY KEY,\n" +
+                    "                      first_name VARCHAR(250),\n" +
+                    "                      last_name VARCHAR(250),\n" +
+                    "                      email VARCHAR(250) DEFAULT NULL,\n" +
+                    "                      password VARCHAR(250) DEFAULT NULL,\n" +
+                    "                      age INTEGER\n" +
+                    "                    );","DROP TABLE user3");
         }
     };
 

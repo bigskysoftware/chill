@@ -7,19 +7,17 @@ import java.sql.Timestamp;
 
 public class Vehicle extends _generated.AbstractVehicle {
 
-    public static final String DDL = """
-            DROP TABLE IF EXISTS vehicle;
-            CREATE TABLE vehicle (
-              id INT AUTO_INCREMENT PRIMARY KEY,
-              created_at TIMESTAMP,
-              updated_at TIMESTAMP,
-              user_id INT,
-              make VARCHAR(250) NOT NULL,
-              model VARCHAR(250) NOT NULL,
-              uuid VARCHAR(250),
-              year INTEGER
-            );
-            """;
+    public static final String DDL = "DROP TABLE IF EXISTS vehicle;\n" +
+            "            CREATE TABLE vehicle (\n" +
+            "              id INT AUTO_INCREMENT PRIMARY KEY,\n" +
+            "              created_at TIMESTAMP,\n" +
+            "              updated_at TIMESTAMP,\n" +
+            "              user_id INT,\n" +
+            "              make VARCHAR(250) NOT NULL,\n" +
+            "              model VARCHAR(250) NOT NULL,\n" +
+            "              uuid VARCHAR(250),\n" +
+            "              year INTEGER\n" +
+            "            );";
 
     ChillField<Long> id = pk("id");
     ChillField<Timestamp> createdAt = createdAt("created_at");

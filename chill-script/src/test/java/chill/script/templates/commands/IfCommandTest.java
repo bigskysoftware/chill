@@ -11,64 +11,58 @@ public class IfCommandTest {
     @Test
     public void basicIfCommand() {
         Assertions.assertEquals("foo\nbar\n", TestHelpers.renderTemplate(
-                """
-                        foo
-                        #if 1 == 1
-                        bar
-                        #end"""));
+                "foo\n" +
+                        "#if 1 == 1\n" +
+                        "bar\n" +
+                        "#end"));
         Assertions.assertEquals("foo\n", TestHelpers.renderTemplate(
-                """
-                        foo
-                        #if 1 != 1
-                        bar
-                        #end"""));
+                    "foo\n" +
+                        "#if 1 != 1\n" +
+                        "bar\n" +
+                        "#end"));
     }
 
     @Test
     public void elseCommand() {
         Assertions.assertEquals("foo\nbar\n", TestHelpers.renderTemplate(
-                """
-                        foo
-                        #if 1 == 1
-                        bar
-                        #else
-                        foo
-                        #end
-                        """
+                "foo\n" +
+                        "#if 1 == 1\n" +
+                        "bar\n" +
+                        "#else\n" +
+                        "foo\n" +
+                        "#end\n" +
+                        ""
         ));
         Assertions.assertEquals("foo\nfoo\n", TestHelpers.renderTemplate(
-                """
-                        foo
-                        #if 1 != 1
-                        bar
-                        #else
-                        foo
-                        #end
-                        """
+                        "foo\n" +
+                        "#if 1 != 1\n" +
+                        "bar\n" +
+                        "#else\n" +
+                        "foo\n" +
+                        "#end\n" +
+                        ""
         ));
     }
 
     @Test
     public void elseIfCommand() {
         Assertions.assertEquals("foo\nbar\n", TestHelpers.renderTemplate(
-                """
-                        foo
-                        #if 1 == 1
-                        bar
-                        #elseif 1 != 1
-                        foo
-                        #end
-                        """
+                        "foo\n" +
+                        "#if 1 == 1\n" +
+                        "bar\n" +
+                        "#elseif 1 != 1\n" +
+                        "foo\n" +
+                        "#end\n" +
+                        ""
         ));
         Assertions.assertEquals("foo\nfoo\n", TestHelpers.renderTemplate(
-                """
-                        foo
-                        #if 1 != 1
-                        bar
-                        #elseif 1 == 1
-                        foo
-                        #end
-                        """
+                        "foo\n" +
+                        "#if 1 != 1\n" +
+                        "bar\n" +
+                        "#elseif 1 == 1\n" +
+                        "foo\n" +
+                        "#end\n" +
+                        ""
         ));
     }
 

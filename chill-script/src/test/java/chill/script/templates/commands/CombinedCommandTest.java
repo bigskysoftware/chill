@@ -11,17 +11,13 @@ public class CombinedCommandTest {
 
     @Test
     public void ifThenFor() {
-        assertEquals("""
-                1
-                2
-                3
-                """, renderTemplate(
-                """
-                        #if lst
-                          #for x in lst
-                        ${x}
-                          #end
-                        #end""", "lst", List.of(1, 2, 3)));
+        assertEquals("\n1\n2\n3\n", renderTemplate(
+                "\n" +
+                        "#if lst\n" +
+                        "#for x in lst\n" +
+                        "${x}\n" +
+                        "#end\n" +
+                        "#end", "lst", List.of(1, 2, 3)));
     }
 
 }

@@ -106,19 +106,17 @@ public class ChillMigrations {
                 } else if (command.equals("exit")) {
                     return true;
                 } else if (command.equals("?") || command.equals("help")) {
-                    System.out.println("""
-                            help or ? - print this help message
-                            exit      - exit the tool
-                            status    - show current migration status
-                            pending   - show pending migration status
-                            up        - migrate up one step
-                            up:<n>    - migrate up n steps
-                            up:*      - migrate up all pending steps
-                            down      - migrate down one step
-                            down:<n>  - migrate down n steps
-                            skip      - migrate skip one step
-                            new       - generate code for a new migration
-                            """);
+                    System.out.println("help or ? - print this help message\n" +
+                            "exit      - exit the tool\n" +
+                            "status    - show current migration status\n" +
+                            "pending   - show pending migration status\n" +
+                            "up        - migrate up one step\n" +
+                            "up:<n>    - migrate up n steps\n" +
+                            "up:*      - migrate up all pending steps\n" +
+                            "down      - migrate down one step\n" +
+                            "down:<n>  - migrate down n steps\n" +
+                            "skip      - migrate skip one step\n" +
+                            "new       - generate code for a new migration\n");
                 } else if (command.equals("new")) {
                     generateNewMigration();
                 } else if (command.equals("status")) {
@@ -407,15 +405,14 @@ public class ChillMigrations {
 
     public static class MigrationRecord extends ChillRecord {
 
-        public static final String BOOTSTRAP_DDL = """
-                CREATE TABLE IF NOT EXISTS migrations (
-                  id INT AUTO_INCREMENT PRIMARY KEY,
-                  name VARCHAR(250),
-                  created_at VARCHAR(250),
-                  description VARCHAR(250),
-                  status VARCHAR(250)
-                );
-                """;
+        public static final String BOOTSTRAP_DDL = "CREATE TABLE IF NOT EXISTS migrations (\n" +
+                "              id INT AUTO_INCREMENT PRIMARY KEY,\n" +
+                "              name VARCHAR(250),\n" +
+                "              created_at VARCHAR(250),\n" +
+                "              description VARCHAR(250),\n" +
+                "              status VARCHAR(250)\n" +
+                "            );\n" +
+                "            ";
 
 
         public static void bootstrap() {

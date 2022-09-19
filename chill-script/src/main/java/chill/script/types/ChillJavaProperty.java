@@ -52,6 +52,11 @@ public class ChillJavaProperty implements ChillProperty {
         return getter != null && getter.isStatic();
     }
 
+    @Override
+    public ChillType getType() {
+        return TypeSystem.getType(getter.getType());
+    }
+
     public ChillJavaProperty(Class aClass, String propName) {
         this.getter = resolveGetter(aClass, propName);
         this.setter = getter == null ? null : getter.resolveSetter();

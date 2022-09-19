@@ -128,7 +128,8 @@ public class TokenList implements Iterable<Token> {
     public boolean matchSequence(Object... tokenSeq) {
         for (int i = 0; i < tokenSeq.length; i++) {
             Object o = tokenSeq[i];
-            if (o instanceof TokenType type) {
+            if (o instanceof TokenType) {
+                TokenType type = (TokenType) o;
                 if(!match(i, type)){
                     return false;
                 }

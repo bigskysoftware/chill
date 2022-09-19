@@ -32,7 +32,8 @@ public class ChillTemplateForCommand extends ChillTemplateCommand {
     public void render(ChillTemplateRuntime context) {
         Object iterable = expr.evaluate(context);
         if (iterable != null) {
-            if (iterable instanceof Object[] objArray) {
+            if (iterable instanceof Object[]) {
+                Object[] objArray = (Object[]) iterable;
                 iterable = List.of(objArray);
             }
             Iterable iter = (Iterable) iterable;

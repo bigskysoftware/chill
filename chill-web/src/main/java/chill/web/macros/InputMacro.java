@@ -10,8 +10,11 @@ import chill.script.types.ChillType;
 import chill.script.types.TypeSystem;
 import chill.utils.NiceMap;
 import chill.utils.TheMissingUtils;
+import chill.script.templates.HasDisplayString;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class InputMacro extends ChillTemplateMacro {
 
@@ -36,17 +39,21 @@ public class InputMacro extends ChillTemplateMacro {
 
     @Override
     public void render(ChillTemplateRuntime context) {
-        if (forExpr instanceof PropertyAccessExpression pae) {
+        if (forExpr instanceof PropertyAccessExpression) {
+            PropertyAccessExpression pae = (PropertyAccessExpression) forExpr;
             String name = "";
             String id = "";
-            String value = "";
+            Object value = null;
 
             Object rootVal = pae.getRoot().evaluate(context);
             ChillType runtimeType = TypeSystem.getRuntimeType(rootVal);
             ChillProperty property = runtimeType.getProperty(pae.getPropertyName());
+
             if (property == null) {
                 throw new IllegalStateException("No property '" + pae.getPropertyName() + "' found on " + rootVal);
             }
+
+            Class propertyClass = property.getType().getBackingClass();
 
             if (getArgs().containsKey("name")) {
                 name = String.valueOf(getArgs().get("name").evaluate(context));
@@ -61,27 +68,69 @@ public class InputMacro extends ChillTemplateMacro {
             }
 
             if (getArgs().containsKey("value")) {
-                value = String.valueOf(getArgs().get("value").evaluate(context));
+                value = getArgs().get("value").evaluate(context);
             } else {
-                value = String.valueOf(property.get(rootVal));
+                value = property.get(rootVal);
             }
 
+            Object labelValue = null;
             if (label != null) {
-                Object labelValue = label.evaluate(context);
-                if (!Boolean.FALSE.equals(labelValue)) {
-                    context.append("<label for=\"").append(id).append("\">").append(String.valueOf(labelValue)).append("</label>");
-                }
-            } else {
-                context.append("<label for=\"").append(id).append("\">").append(TheMissingUtils.capitalize(name)).append("</label>");
+                labelValue = label.evaluate(context);
             }
 
-            context.append("<input id=\"").append(id).append("\" name=\"").append(name).append("\" value=\"").append(value).append("\" ");
-            for (var arg : getArgs().entrySet()) {
-                context.append(arg.getKey()).append("=\"").append(String.valueOf(arg.getValue().evaluate(context))).append("\"");
+            if (!Boolean.FALSE.equals(labelValue)) {
+                if (labelValue instanceof String) {
+                    context.append("<label for=\"").append(id).append("\">").append(String.valueOf(labelValue)).append("</label>");
+                } else {
+                    context.append("<label for=\"").append(id).append("\">").append(TheMissingUtils.capitalize(name)).append("</label>");
+                }
             }
-            context.append(">");
+
+            if (Boolean.class.equals(propertyClass)) {
+                context.append("<input type=\"checkbox\" id=\"").append(id).append("\" name=\"").append(name).append("\" value=\"true\"");
+                if (Boolean.TRUE.equals(value)) {
+                    context.append("checked ");
+                }
+                appendAttributes(context, getArgs().entrySet());
+                context.append("/>");
+            } else if (propertyClass.isEnum()) {
+                context.append("<select id=\"").append(id).append("\" name=\"").append(name).append("\" ");
+                appendAttributes(context, getArgs().entrySet());
+                context.append(">");
+                for (Object enumConstant : propertyClass.getEnumConstants()) {
+                    Enum e = (Enum) enumConstant;
+                    context.append("<option value=\"").append(e.name()).append("\" ");
+                    if (e.equals(value)) {
+                        context.append(" selected");
+                    }
+                    context.append(">");
+                    if (e instanceof HasDisplayString) {
+                        HasDisplayString webDisplay = (HasDisplayString) e;
+                        context.append(webDisplay.getDisplayString());
+                    } else {
+                        context.append(e.toString());
+                    }
+                    context.append("</option>");
+                }
+                context.append("</select>");
+            } else {
+                if (value == null) {
+                    value = "";
+                }
+                context.append("<input id=\"").append(id).append("\" name=\"").append(name).append("\" value=\"").append(String.valueOf(value)).append("\" ");
+                appendAttributes(context, getArgs().entrySet());
+                context.append(">");
+            }
+
+
         } else {
             throw new IllegalStateException("TODO - handle non-property expressions or error on them");
+        }
+    }
+
+    private void appendAttributes(ChillTemplateRuntime context, Set<Map.Entry<String, Expression>> attributes) {
+        for (var arg : attributes) {
+            context.append(arg.getKey()).append("=\"").append(String.valueOf(arg.getValue().evaluate(context))).append("\"");
         }
     }
 

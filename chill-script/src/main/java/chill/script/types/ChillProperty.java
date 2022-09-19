@@ -8,5 +8,6 @@ public interface ChillProperty {
     Object get(Object root);
     void set(Object owner, Object val);
     boolean isStatic();
+    ChillType getType();
 
 }

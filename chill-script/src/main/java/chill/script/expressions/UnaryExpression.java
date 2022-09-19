@@ -33,7 +33,8 @@ public class UnaryExpression extends Expression {
     public Object evaluate(ChillScriptRuntime runtime) {
         Object rhsValue = rightHandSide.evaluate(runtime);
         if (operator.getStringValue().equals("-")) {
-            if (rhsValue instanceof BigDecimal bigDecimal) {
+            if (rhsValue instanceof BigDecimal) {
+                BigDecimal bigDecimal = (BigDecimal) rhsValue;
                 return bigDecimal.multiply(NEGATIVE_ONE);
             } else {
                 var bigDecimal = new BigDecimal(rhsValue.toString());

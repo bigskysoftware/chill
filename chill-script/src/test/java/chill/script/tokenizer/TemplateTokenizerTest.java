@@ -27,10 +27,7 @@ public class TemplateTokenizerTest {
 
     @Test
     public void commandsStartOfLine(){
-        assertTokensAre("""
-                #for x in lst
-                  ${x}
-                #end""", SHARP, SYMBOL, SYMBOL, SYMBOL, SYMBOL, TEMPLATE, DOLLAR, LEFT_BRACE, SYMBOL, RIGHT_BRACE, TEMPLATE, SHARP, SYMBOL, EOF);
+        assertTokensAre("#for x in lst\n ${x}\n #end", SHARP, SYMBOL, SYMBOL, SYMBOL, SYMBOL, TEMPLATE, DOLLAR, LEFT_BRACE, SYMBOL, RIGHT_BRACE, TEMPLATE, SHARP, SYMBOL, EOF);
     }
 
     @Test

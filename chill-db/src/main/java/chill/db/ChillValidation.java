@@ -23,7 +23,7 @@ public class ChillValidation<T> {
     public void validate(Errors errors, ChillField<T> field){
         T value = field.get();
         if (!validator.validate(value)) {
-            errors.addError(field, errorMessage.formatted(field.getColumnName(), value));
+            errors.addError(field, String.format(errorMessage, field.getColumnName(), value));
         }
     }
 
