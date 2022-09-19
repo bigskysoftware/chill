@@ -260,7 +260,19 @@ public class ChillMigrations {
         private String name;
         private Class ownerClass;
 
-        private record MigrationStep(String upScript, String downScript, MigrationStep previous) {
+        private static class MigrationStep {
+            private String upScript;
+            private String downScript;
+            private MigrationStep previous;
+
+            private MigrationStep() {}
+
+            public MigrationStep(String upScript, String downScript, MigrationStep previous) {
+                this.upScript = upScript;
+                this.downScript = downScript;
+                this.previous = previous;
+            }
+
             public boolean up() {
                 return execute(upScript);
             }

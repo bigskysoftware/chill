@@ -13,7 +13,7 @@ public class ScratchMigrationFile extends ChillMigrations {
     }
 
     public final ChillMigration migration_2022_03_08_16_02_26 = new ChillMigration("add user table"){
-        protected void up() {
+        protected void steps() {
             step("CREATE TABLE user (\n" +
                     "                      id INT AUTO_INCREMENT PRIMARY KEY,\n" +
                     "                      first_name VARCHAR(250),\n" +
@@ -26,7 +26,7 @@ public class ScratchMigrationFile extends ChillMigrations {
     };
 
     public final ChillMigration migration_2022_03_09_16_02_26 = new ChillMigration("add user2 table"){
-        protected void up() {
+        protected void steps() {
             step("CREATE TABLE user2 (\n" +
                     "                      id INT AUTO_INCREMENT PRIMARY KEY,\n" +
                     "                      first_name VARCHAR(250),\n" +
@@ -40,8 +40,8 @@ public class ScratchMigrationFile extends ChillMigrations {
 
 
     public final ChillMigration migration_2022_03_09_16_02_27 = new ChillMigration("add user3 table"){
-        protected void up() {
-            exec("CREATE TABLE user3 (\n" +
+        protected void steps() {
+            step("CREATE TABLE user3 (\n" +
                     "                      id INT AUTO_INCREMENT PRIMARY KEY,\n" +
                     "                      first_name VARCHAR(250),\n" +
                     "                      last_name VARCHAR(250),\n" +
