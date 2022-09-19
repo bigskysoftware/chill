@@ -2,6 +2,7 @@ package chill.db;
 
 import chill.utils.ChillLogs;
 import chill.utils.NiceList;
+import chill.utils.Pair;
 import chill.utils.TheMissingUtils;
 
 import java.io.InputStream;
@@ -293,7 +294,6 @@ public class ChillMigrations {
                     return false;
                 }
             }
-
         }
 
         private MigrationStep lastStep;
@@ -318,6 +318,21 @@ public class ChillMigrations {
         protected void step(String up, String down) {
             lastStep = new MigrationStep(up, down, lastStep);
         }
+
+        protected void step(AddColumnBuilder addColumnBuilder) {
+            Pair<String, String> pair = addColumnBuilder.build();
+            lastStep = new MigrationStep(pair.first,pair.second,lastStep);
+        }
+
+        protected void addColumnAlt(String tableName, String columnName, String dataType) {
+            addColumnAlt(tableName,columnName,dataType,null);
+        }
+
+        protected void addColumnAlt(String tableName, String columnName, String dataType, String defaultClause) {
+            step(String.format("ALTER TABLE %s add column %s %s %s;",tableName,columnName,dataType,defaultClause),"ALTER TABLE %s DROP COLUMN %s;");
+        }
+
+
 
         protected void file(String upFilePath, String downFilePath) {
             step(readStringFromFile(upFilePath), readStringFromFile(downFilePath));
@@ -413,6 +428,47 @@ public class ChillMigrations {
                 return null;
             }
         }
+    }
+
+    public static class AddColumnBuilder {
+        private String tableName;
+        private final String columnName;
+        private String dataType;
+        private String defaultValue;
+
+        public AddColumnBuilder(String columnName) {
+            this.columnName = columnName;
+        }
+
+        public AddColumnBuilder toTable(String tableName) {
+            this.tableName = tableName;
+            return this;
+        }
+
+
+        public AddColumnBuilder withDataType(String dataType) {
+            this.dataType = dataType;
+            return this;
+        }
+
+        public AddColumnBuilder withDefaultValue(String defaultValue) {
+            this.defaultValue = defaultValue;
+            return this;
+        }
+
+        public Pair<String,String> build() {
+
+            StringBuilder up = new StringBuilder(String.format("ALTER TABLE %s add column %s %s",tableName,columnName,dataType));
+            if (defaultValue != null)
+                up.append(" DEFAULT '").append(defaultValue).append("'");
+
+            return new Pair<>(up.append(";").toString(),
+                    String.format("ALTER TABLE %s DROP COLUMN %s;",tableName,columnName));
+        }
+    }
+
+    public static AddColumnBuilder addColumn(String columnName) {
+        return new AddColumnBuilder(columnName);
     }
 
     public static class MigrationRecord extends ChillRecord {

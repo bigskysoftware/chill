@@ -12,6 +12,17 @@ public class MultiStepMigrationFile1 extends ChillMigrations {
                       ");", "DROP TABLE user;");
             step("ALTER TABLE user add column first_name VARCHAR(250);", "ALTER TABLE user DROP COLUMN first_name;");
 
+            // Fluent style
+            step(
+                    addColumn("middle_name")
+                            .toTable("user")
+                            .withDataType("varchar(250)")
+                            .withDefaultValue("Snr")
+            );
+
+            // Constructor style
+            addColumnAlt("user","suffix","varchar(250)");
+
         }
     };
 

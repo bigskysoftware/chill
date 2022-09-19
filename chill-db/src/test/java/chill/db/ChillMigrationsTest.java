@@ -97,15 +97,17 @@ public class ChillMigrationsTest {
         ChillMigrations migrations = new ChillMigrations(MultiStepMigrationFile1.class.getName());
         migrations.up();
 
-        ChillRecord.executeUpdate("INSERT INTO user (first_name) VALUES ('Bob');");
+        ChillRecord.executeUpdate("INSERT INTO user (first_name,middle_name,suffix) VALUES ('Bob','Charles','Jnr');");
         LinkedList<LinkedHashMap<String, Object>> results = ChillRecord.executeQuery("SELECT * FROM user;");
         assertEquals(1,results.size());
         assertEquals("Bob",results.get(0).get("FIRST_NAME"));
+        assertEquals("Charles",results.get(0).get("MIDDLE_NAME"));
+        assertEquals("Jnr",results.get(0).get("SUFFIX"));
         assertEquals(1,migrations.pending().size());
 
         migrations.up();
         results = ChillRecord.executeQuery("SELECT * FROM user;");
-        assertEquals(2,results.get(0).size(),"There should only be two columns after the current migration failed.");
+        assertEquals(4,results.get(0).size(),"There should only be four columns after the current migration failed.");
         assertEquals(1,migrations.pending().size());
 
     }
