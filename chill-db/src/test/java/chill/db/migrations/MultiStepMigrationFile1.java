@@ -10,6 +10,8 @@ public class MultiStepMigrationFile1 extends ChillMigrations {
             step("CREATE TABLE user (\n" +
                         " id INT AUTO_INCREMENT PRIMARY KEY\n" +
                       ");", "DROP TABLE user;");
+
+            //Raw SQL style
             step("ALTER TABLE user add column first_name VARCHAR(250);", "ALTER TABLE user DROP COLUMN first_name;");
 
             // Fluent style
