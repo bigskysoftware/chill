@@ -3,10 +3,7 @@ package chill.utils;
 import org.bouncycastle.crypto.generators.Argon2BytesGenerator;
 import org.bouncycastle.crypto.params.Argon2Parameters;
 
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
+import java.lang.reflect.*;
 import java.security.SecureRandom;
 import java.util.*;
 import java.util.concurrent.Callable;
@@ -232,8 +229,8 @@ public class TheMissingUtils {
         return true;
     }
 
-    public static Object lazyStr(ToString toString){
-        return new Object(){
+    public static Object lazyStr(ToString toString) {
+        return new Object() {
             @Override
             public String toString() {
                 return toString.getString();
@@ -243,6 +240,29 @@ public class TheMissingUtils {
 
     public static boolean isEmpty(String selector) {
         return selector == null || "".equals(selector);
+    }
+
+    public static Object getFieldValue(Object obj, String field) {
+        if (obj != null) {
+            Class<?> aClass = obj.getClass();
+            Field actualField = getField(field, aClass);
+            if (actualField == null) return null;
+            return safely(() -> actualField.get(obj));
+        }
+        return null;
+    }
+
+    public static Field getField(String field, Class<?> aClass) {
+        if (aClass == null) {
+            return null;
+        }
+        try {
+            Field actualField = aClass.getDeclaredField(field);
+            actualField.setAccessible(true);
+            return actualField;
+        } catch (NoSuchFieldException e) {
+            return getField(field, aClass.getSuperclass());
+        }
     }
 
     public interface ToString {

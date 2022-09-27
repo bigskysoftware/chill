@@ -135,8 +135,8 @@ public class ChillEnvVar<T> {
     }
 
     private String resolveFromCmdLine(ChillApp cmdLine) {
-        // TODO implement
-        return null;
+        String val = cmdLine.getFieldValue(this.name.toLowerCase());
+        return val;
     }
 
     @Override

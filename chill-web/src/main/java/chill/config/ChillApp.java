@@ -6,6 +6,7 @@ import chill.env.ChillEnv;
 import chill.env.ChillMode;
 import chill.script.shell.ChillShell;
 import chill.util.DirectoryWatcher;
+import chill.utils.TheMissingUtils;
 import chill.web.ChillHelper;
 import chill.workers.Foreman;
 import picocli.CommandLine;
@@ -40,6 +41,9 @@ public class ChillApp {
 
     @Option(names = {"--migrations"}, arity = "0..1", description = "Execute a migration command or start the console", defaultValue = UNSET_VALUE, fallbackValue = "console")
     String migrationCommand;
+
+    @Option(names = {"--port"}, arity = "0..1", description = "Port to start the web application on", defaultValue = UNSET_VALUE, fallbackValue = "8800")
+    String port;
 
     @Option(names = {"-m", "--mode"}, description = "The mode that the system is started in")
     ChillMode mode;
@@ -155,5 +159,9 @@ public class ChillApp {
 
     public void chillConsole() {
         exec(new String[]{"--console", "simple"});
+    }
+
+    public String getFieldValue(String field) {
+        return (String) TheMissingUtils.getFieldValue(this, field);
     }
 }
