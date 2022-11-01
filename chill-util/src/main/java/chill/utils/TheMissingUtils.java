@@ -238,8 +238,18 @@ public class TheMissingUtils {
         };
     }
 
-    public static boolean isEmpty(String selector) {
-        return selector == null || "".equals(selector);
+    public static boolean isEmpty(Object val) {
+        if (val == null) {
+            return true;
+        } else if ("".equals(val)) {
+            return true;
+        } else if (val instanceof Object[]) {
+            return ((Object[]) val).length > 0;
+        } else if (val instanceof Collection) {
+            return ((Collection) val).size() > 0;
+        } else {
+            return false;
+        }
     }
 
     public static Object getFieldValue(Object obj, String field) {
@@ -263,6 +273,18 @@ public class TheMissingUtils {
         } catch (NoSuchFieldException e) {
             return getField(field, aClass.getSuperclass());
         }
+    }
+
+    public static <T> T valOrDefault(T val, T defaultVal) {
+        if (val == null) {
+            return defaultVal;
+        } else {
+            return val;
+        }
+    }
+
+    public static boolean hasContent(Object size) {
+        return !isEmpty(size);
     }
 
     public interface ToString {

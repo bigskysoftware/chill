@@ -68,7 +68,7 @@ public class ChillEnvVar<T> {
 
         // first resolve from the command line object
         String fromCmdLine = resolveFromCmdLine(cmdLine);
-        if (fromCmdLine != null) {
+        if (fromCmdLine != null && !fromCmdLine.equals("unset")) {
             this.source = "Command Line";
             this.value = convertFromString(fromCmdLine);
             this.valueSet = true;
