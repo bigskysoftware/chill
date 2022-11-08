@@ -1,5 +1,7 @@
 package chill.web;
 
+import chill.script.types.coercions.Coercion;
+import chill.utils.TheMissingUtils;
 import io.javalin.http.Context;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -126,5 +128,33 @@ public class UnifiedParams implements Map<String, String> {
     @Override
     public Set<Entry<String, String>> entrySet() {
         return getUnifiedParamMap().entrySet();
+    }
+
+    public String getOrDefault(String key, String defaultVal) {
+        String val = get(key);
+        if (TheMissingUtils.isEmpty(val)) {
+            return defaultVal;
+        } else {
+            return val;
+        }
+    }
+
+    public <T> T getAs(String key, Class<T> clazz) {
+        String val = get(key);
+        // special case for booleans from the web
+        if (Boolean.class.equals(clazz)) {
+            if (val != null && !"false".equals(val)) {
+                return (T) (Object) true;
+            } else {
+                return (T) (Object) false;
+            }
+        } else {
+            Coercion coercer = Coercion.resolve(String.class, clazz);
+            if (coercer == null) {
+                throw new IllegalStateException("Don't know how to convert a String to " + clazz.getName());
+            } else {
+                return (T) coercer.coerce(val);
+            }
+        }
     }
 }

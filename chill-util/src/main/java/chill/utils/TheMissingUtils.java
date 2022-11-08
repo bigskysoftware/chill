@@ -275,14 +275,6 @@ public class TheMissingUtils {
         }
     }
 
-    public static <T> T getOrDefault(T val, T defaultVal) {
-        if (isEmpty(val)) {
-            return defaultVal;
-        } else {
-            return val;
-        }
-    }
-
     public static boolean hasContent(Object size) {
         return !isEmpty(size);
     }
