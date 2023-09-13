@@ -20,10 +20,84 @@ public class ChillParserExpressionTest {
 
     @Test
     public void equality() {
-        assertEquals(true, eval("1 == 1"));
-        assertEquals(false, eval("1 != 1"));
-        assertEquals(false, eval("1 == 2"));
-        assertEquals(true, eval("1 != 2"));
+        assertEquals(true, eval("1 equals 1"));
+        assertEquals(true, eval("1 is equal to 1"));
+        assertEquals(true, eval("1 does equal 1"));
+        assertEquals(true, eval("1 like 1"));
+        assertEquals(true, eval("1 is similar to 1"));
+
+        assertEquals(false, eval("1 equals 2"));
+        assertEquals(false, eval("1 is equal to 2"));
+        assertEquals(false, eval("1 does equal 2"));
+        assertEquals(false, eval("1 like 2"));
+        assertEquals(false, eval("1 is similar to 2"));
+
+        assertEquals(false, eval("1 does not equal 1"));
+        assertEquals(false, eval("1 is not equal to 1"));
+        assertEquals(false, eval("1 is not similar to 1"));
+        assertEquals(false, eval("1 is not like 1"));
+        assertEquals(false, eval("1 is unlike 1"));
+
+        assertEquals(true, eval("1 does not equal 2"));
+        assertEquals(true, eval("1 is not equal to 2"));
+        assertEquals(true, eval("1 is not similar to 2"));
+        assertEquals(true, eval("1 is not like 2"));
+        assertEquals(true, eval("1 is unlike 2"));
+
+        assertEquals(true, eval("1 equals 2 is false"));
+        assertEquals(true, eval("1 equals 2 is not true"));
+    }
+
+    @Test
+    public void ordinal() {
+        assertEquals(true, eval("1 less than 2"));
+        assertEquals(true, eval("1 less than or equal to 2"));
+        assertEquals(true, eval("1 less than or equivalent to 2"));
+
+        assertEquals(true, eval("1 is less than 2"));
+        assertEquals(true, eval("1 is less than or equal to 2"));
+        assertEquals(true, eval("1 is less than or equivalent to 2"));
+
+        assertEquals(true, eval("1 smaller than 2"));
+        assertEquals(true, eval("1 smaller than or equal to 2"));
+        assertEquals(true, eval("1 smaller than or equivalent to 2"));
+
+        assertEquals(true, eval("1 is smaller than 2"));
+        assertEquals(true, eval("1 is smaller than or equal to 2"));
+        assertEquals(true, eval("1 is smaller than or equivalent to 2"));
+
+
+        assertEquals(false, eval("1 greater than 2"));
+        assertEquals(false, eval("1 greater than or equal to 2"));
+        assertEquals(false, eval("1 greater than or equivalent to 2"));
+
+        assertEquals(false, eval("1 is greater than 2"));
+        assertEquals(false, eval("1 is greater than or equal to 2"));
+        assertEquals(false, eval("1 is greater than or equivalent to 2"));
+
+        assertEquals(false, eval("1 larger than 2"));
+        assertEquals(false, eval("1 larger than or equal to 2"));
+        assertEquals(false, eval("1 larger than or equivalent to 2"));
+
+        assertEquals(false, eval("1 is larger than 2"));
+        assertEquals(false, eval("1 is larger than or equal to 2"));
+        assertEquals(false, eval("1 is larger than or equivalent to 2"));
+    }
+
+    @Test
+    public void collections() {
+        assertEquals(true, eval("[1, 2, 4] intersects [1, 5, 25]"));
+
+        assertEquals(true, eval("4 in [1, 2, 3, 4]"));
+        assertEquals(true, eval("5 not in [1, 2, 3, 4]"));
+        assertEquals(true, eval("3 is in [1, 2, 3, 4]"));
+        assertEquals(true, eval("0 is not in [1, 2, 3, 4]"));
+
+        assertEquals(true, eval("[1, 2, 3] are all in [1, 2, 3]"));
+        assertEquals(true, eval("[1, 2, 3] are not all in [1, 4, 5]"));
+
+        assertEquals(true, eval("[1, 2, 3] is distinct"));
+        assertEquals(false, eval("[1, 2, 3] intersects [4, 5, 6]"));
     }
 
     @Test
@@ -31,6 +105,11 @@ public class ChillParserExpressionTest {
         assertEquals(new BigDecimal("2"), eval("1 + 1"));
         assertEquals(new BigDecimal("3"), eval("1 + 1 + 1"));
         assertEquals("foo1", eval("'foo' + 1"));
+    }
+
+    @Test
+    public void ifExpression() {
+        assertEquals(4, eval("if 1 equals 1 then 4 else 5"));
     }
 
     @Test

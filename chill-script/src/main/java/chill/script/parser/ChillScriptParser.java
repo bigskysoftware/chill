@@ -138,9 +138,10 @@ public class ChillScriptParser {
     private void initExpressionCoreGrammar() {
         // Core grammar
         registerExpression("expression", this::parsePostfixExpressions);
-        registerExpression("equalityExpression", EqualityExpression::parse);
-        registerExpression("logicalExpression", LogicalExpression::parse);
-        registerExpression("comparisonExpression", ComparisonExpression::parse);
+        registerExpression("equalityExpression", parser -> ComparisonExpression.parse(parser, ComparisonExpression.Level.Equality));
+        registerExpression("logicalExpression", parser -> ComparisonExpression.parse(parser, ComparisonExpression.Level.Logical));
+        registerExpression("ordinalExpression", parser -> ComparisonExpression.parse(parser, ComparisonExpression.Level.Ordinal));
+        registerExpression("collectionExpression", parser -> ComparisonExpression.parse(parser, ComparisonExpression.Level.Collection));
         registerExpression("additiveExpression", AdditiveExpression::parse);
         registerExpression("factorExpression", (parser) -> parser.parse("unaryExpression"));
         registerExpression("unaryExpression", UnaryExpression::parse);
@@ -150,6 +151,8 @@ public class ChillScriptParser {
         // Core primary expressions
         registerPrimaryExpression("string", StringLiteralExpression::parse);
         registerPrimaryExpression("number", NumberLiteralExpression::parse);
+        registerPrimaryExpression("boolean", BooleanLiteralExpression::parse);
+        registerPrimaryExpression("if", IfExpression::parse);
         registerPrimaryExpression("identifier", IdentifierExpression::parse);
         registerPrimaryExpression("listLiteral", ListLiteralExpression::parse);
         registerPrimaryExpression("urlLiteral", URLLiteralExpression::parse);
@@ -341,5 +344,9 @@ public class ChillScriptParser {
 
     public String getSourcePath() {
         return srcPath;
+    }
+
+    public Token produceToken() {
+        return tokens.produceToken();
     }
 }

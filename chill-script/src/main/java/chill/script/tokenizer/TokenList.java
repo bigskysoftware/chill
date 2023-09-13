@@ -30,6 +30,10 @@ public class TokenList implements Iterable<Token> {
         return tokens.get(currentToken++);
     }
 
+    public Token produceToken() {
+        return tokens.get(currentToken--);
+    }
+
     public boolean match(String identifier) {
         return match(0, identifier);
     }
