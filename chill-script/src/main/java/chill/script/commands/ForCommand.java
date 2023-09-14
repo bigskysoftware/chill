@@ -37,7 +37,7 @@ public class ForCommand extends Command {
 
         rv.setBody(parser.parseCommandList("end"));
 
-        rv.setEnd(parser.consumeToken());
+        parser.require("end", rv, "'end' expected");
 
         return rv;
     }
