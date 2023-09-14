@@ -3,6 +3,7 @@ package chill.script.expressions;
 import chill.script.parser.ChillScriptParser;
 import chill.script.parser.ErrorType;
 import chill.script.runtime.ChillScriptRuntime;
+import chill.script.runtime.Container;
 import org.bouncycastle.crypto.modes.OpenPGPCFBBlockCipher;
 
 import java.util.Objects;
@@ -157,12 +158,18 @@ public class ComparisonExpression extends Expression {
                 }
                 return false;
             } else if (operator == Operator.Contains) {
-                Iterable<?> right = (Iterable<?>) rhs;
-
-                for (Object rightItem : right) {
-                    if (lhs.equals(rightItem)) {
-                        return true;
+                if (rhs instanceof Container right) {
+                    return right.contains(lhs);
+                } else if (rhs instanceof Iterable<?> right) {
+                    for (Object rightItem : right) {
+                        if (lhs.equals(rightItem)) {
+                            return true;
+                        }
                     }
+                } else if (rhs instanceof String right) {
+                    return right.contains((CharSequence) lhs);
+                } else {
+                    throw new RuntimeException("Unknown type: " + rhs.getClass());
                 }
                 return false;
             } else if (operator == Operator.NotContains) {

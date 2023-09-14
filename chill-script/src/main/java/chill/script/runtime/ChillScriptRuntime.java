@@ -30,7 +30,6 @@ public class ChillScriptRuntime {
         scopes.push(initialScope); // push root scope
     }
 
-    // TODO - scope semantics
     public Object getSymbol(String symbol) {
         Iterator<Map<String, Object>> mapIterator = scopes.iterator();
         while (mapIterator.hasNext()) {
@@ -55,10 +54,10 @@ public class ChillScriptRuntime {
         scopes.getFirst().put(symbol, value);
     }
     public void pushScope(){
-        scopes.push(new HashMap<>());
+        scopes.addFirst(new HashMap<>());
     }
     public void popScope(){
-        scopes.pop();
+        scopes.removeFirst();
     }
 
     public <T> T getMetaData(TypedMap.Key<T> key) {

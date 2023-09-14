@@ -20,6 +20,7 @@ public class ChillParserExpressionTest {
 
     @Test
     public void equality() {
+        assertEquals(true, eval("1 is 1"));
         assertEquals(true, eval("1 equals 1"));
         assertEquals(true, eval("1 is equal to 1"));
         assertEquals(true, eval("1 does equal 1"));
@@ -105,11 +106,6 @@ public class ChillParserExpressionTest {
         assertEquals(new BigDecimal("2"), eval("1 + 1"));
         assertEquals(new BigDecimal("3"), eval("1 + 1 + 1"));
         assertEquals("foo1", eval("'foo' + 1"));
-    }
-
-    @Test
-    public void ifExpression() {
-        assertEquals(4, eval("if 1 equals 1 then 4 else 5"));
     }
 
     @Test

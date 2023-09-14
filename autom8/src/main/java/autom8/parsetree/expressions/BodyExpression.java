@@ -20,8 +20,11 @@ public class BodyExpression extends Expression {
     }
 
     public static Expression parse(ChillScriptParser chillTestsParser) {
+        var the = chillTestsParser.matchAndConsume("the");
         if (chillTestsParser.match("body")) {
             return new BodyExpression(chillTestsParser.consumeToken());
+        } else if (the) {
+            chillTestsParser.produceToken();
         }
         return null;
     }

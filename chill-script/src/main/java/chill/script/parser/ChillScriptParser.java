@@ -53,9 +53,10 @@ public class ChillScriptParser {
         }
     }
 
-    public Expression parseExpression(String src) {
-        initTokens(src);
-        Expression expression = parse("expression");
+    public static Expression parseExpression(String src) {
+        ChillScriptParser parser = new ChillScriptParser();
+        parser.initTokens(src);
+        Expression expression = parser.parse("expression");
         if (expression.isValid()) {
             return expression;
         } else {
@@ -152,7 +153,6 @@ public class ChillScriptParser {
         registerPrimaryExpression("string", StringLiteralExpression::parse);
         registerPrimaryExpression("number", NumberLiteralExpression::parse);
         registerPrimaryExpression("boolean", BooleanLiteralExpression::parse);
-        registerPrimaryExpression("if", IfExpression::parse);
         registerPrimaryExpression("identifier", IdentifierExpression::parse);
         registerPrimaryExpression("listLiteral", ListLiteralExpression::parse);
         registerPrimaryExpression("urlLiteral", URLLiteralExpression::parse);
