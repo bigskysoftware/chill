@@ -145,4 +145,13 @@ public class TokenList implements Iterable<Token> {
         }
         return true;
     }
+
+    public int getCurrentTokenIndex() {
+        return currentToken;
+    }
+
+    public void setCurrentTokenIndex(int index) {
+        assert index >= 0 && index < tokens.size();
+        currentToken = index;
+    }
 }

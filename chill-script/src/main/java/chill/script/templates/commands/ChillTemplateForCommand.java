@@ -1,11 +1,9 @@
 package chill.script.templates.commands;
 
-import chill.script.runtime.ChillScriptRuntime;
 import chill.script.templates.ChillTemplateRuntime;
 import chill.script.tokenizer.Token;
 import chill.script.expressions.Expression;
 
-import java.io.IOException;
 import java.util.List;
 
 public class ChillTemplateForCommand extends ChillTemplateCommand {
@@ -42,9 +40,9 @@ public class ChillTemplateForCommand extends ChillTemplateCommand {
             context.pushScope();
             {
                 for (Object value : iter) {
-                    context.declareSymbol(identifier.getStringValue(), value);
+                    context.setSymbol(identifier.getStringValue(), value);
                     if (indexIdentifier != null) {
-                        context.declareSymbol(indexIdentifier.getStringValue(), index);
+                        context.setSymbol(indexIdentifier.getStringValue(), index);
                     }
                     for (ChillTemplateCommand elt : body) {
                         elt.render(context);

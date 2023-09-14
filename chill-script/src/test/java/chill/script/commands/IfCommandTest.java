@@ -23,7 +23,7 @@ public class IfCommandTest {
     public void handlesObviouslyTruthyValues() {
         assertEquals(
                 "4",
-                TestUtils.programOutput("if 1 == 1 print 4 end")
+                TestUtils.programOutput("if 1 equals 1 print 4 end")
         );
 
         assertEquals(

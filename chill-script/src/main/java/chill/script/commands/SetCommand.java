@@ -26,6 +26,22 @@ public class SetCommand extends Command {
             setCommand.setValue(parser.requireExpression(setCommand, "expression"));
             setCommand.setEnd(parser.lastMatch());
             return setCommand;
+        } else if (parser.match("let")) {
+            SetCommand setCommand = new SetCommand();
+            setCommand.setStart(parser.consumeToken());
+            setCommand.setSymbol((IdentifierExpression) parser.requireExpression(setCommand, "identifier"));
+
+            if (parser.match(TokenType.EQUAL)) setCommand.addError(parser.consumeToken(), "Use 'be' or 'equal' when using let-variables");
+
+            if (!parser.match("be", "equal")) {
+                setCommand.addError(parser.consumeToken(), "Expected a 'be' or 'equal'");
+            } else {
+                parser.consumeToken();
+            }
+
+            setCommand.setValue(parser.requireExpression(setCommand, "expression"));
+            setCommand.setEnd(parser.lastMatch());
+            return setCommand;
         }
         return null;
     }

@@ -19,7 +19,7 @@ public class Autom8Runtime extends ChillScriptRuntime {
     public Autom8Runtime() {
         super();
         _screenshots = new HashMap<>();
-        declareSymbol("body", new Autom8Body(this));
+        setSymbol("body", new Autom8Body(this));
     }
 
     @Override

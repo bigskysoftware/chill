@@ -1,5 +1,6 @@
 package chill.script.expressions;
 
+import chill.script.commands.FunctionCommand;
 import chill.script.parser.ChillScriptParser;
 import chill.script.runtime.BoundChillMethod;
 import chill.script.runtime.UninvokableException;
@@ -52,6 +53,8 @@ public class MethodCallExpression extends Expression {
             } else if(rootVal instanceof ChillJavaMethod){
                 ChillJavaMethod unboundMethod = (ChillJavaMethod) rootVal;
                 return unboundMethod.invoke(null, argValues);
+            } else if (rootVal instanceof FunctionCommand.Capture func) {
+                return func.invoke(runtime, argValues);
             } else if(rootVal instanceof Runnable){
                 Runnable runnable = (Runnable) rootVal;
                 runnable.run();
@@ -75,9 +78,8 @@ public class MethodCallExpression extends Expression {
         if (parser.matchAndConsume(TokenType.LEFT_PAREN) ) {
 
             // mark root as favoring methods
-            if (root instanceof CanFavorMethods) {
-                CanFavorMethods canFavorMethods = (CanFavorMethods) root;
-                canFavorMethods.favorMethods();
+            if (root instanceof CanFavorMethods cfm) {
+                cfm.favorMethods();
             }
 
             MethodCallExpression mce = new MethodCallExpression();

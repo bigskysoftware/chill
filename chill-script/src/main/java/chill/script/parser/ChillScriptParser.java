@@ -11,6 +11,17 @@ import chill.utils.Pair;
 import java.util.*;
 
 public class ChillScriptParser {
+    public static final class Location {
+        private final int index;
+
+        public Location(int index) {
+            this.index = index;
+        }
+
+        public int getIndex() {
+            return index;
+        }
+    }
 
     private final Map<String, CommandParser> commands;
     private final Map<String, ExpressionParser> expressions;
@@ -111,6 +122,15 @@ public class ChillScriptParser {
             match("then"); // optional 'then' divider
             return command;
         } else {
+            Location location = this.getCurrentLocation();
+            try {
+                Expression expression = this.parse("expression");
+                if (expression != null) {
+                    return new ExpressionCommand(expression);
+                }
+            } catch (Throwable ignored) {}
+            this.restoreLocation(location);
+
             if (currentToken().getType() == TokenType.SYMBOL) {
                 return new ErrorCommand("Unknown command: " + currentToken().getStringValue(), currentToken());
             } else {
@@ -118,6 +138,14 @@ public class ChillScriptParser {
 
             }
         }
+    }
+
+    private Location getCurrentLocation() {
+        return new Location(tokens.getCurrentTokenIndex());
+    }
+
+    public void restoreLocation(Location location) {
+        tokens.setCurrentTokenIndex(location.getIndex());
     }
 
     private CommandParser getCommandParser(TokenList tokens) {
@@ -131,9 +159,11 @@ public class ChillScriptParser {
     private void initCoreCommands() {
         registerCommand("print", PrintCommand::parse);
         registerCommand("set", SetCommand::parse);
+        registerCommand("let", SetCommand::parse);
         registerCommand("if", IfCommand::parse);
         registerCommand("for", ForCommand::parse);
         registerCommand("repeat", RepeatCommand::parse);
+        registerCommand("function", FunctionCommand::parse);
     }
 
     private void initExpressionCoreGrammar() {
