@@ -1,20 +1,9 @@
 package chill.script.expressions;
 
 import chill.script.parser.ChillScriptParser;
-import chill.script.types.ChillMethod;
-import chill.script.types.ChillType;
-import chill.script.types.TypeSystem;
-import chill.utils.TheMissingUtils;
 import org.junit.jupiter.api.Test;
 
-import java.math.BigDecimal;
-import java.net.URL;
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.List;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
 
 public class MethodCallExpressionTest {
 

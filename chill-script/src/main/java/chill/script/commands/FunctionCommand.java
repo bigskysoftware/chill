@@ -17,8 +17,8 @@ public class FunctionCommand extends Command {
 
     @Override
     public void execute(ChillScriptRuntime runtime) {
-        var capture = new Capture();
-        runtime.setSymbol(name.getStringValue(), capture); // we do this first so that the function can call itself recursively
+        var capture = new Closure();
+        runtime.setSymbol(getName().getStringValue(), capture);
         capture.setCapturedScope(runtime.getCurrentScope());
     }
 
@@ -43,20 +43,19 @@ public class FunctionCommand extends Command {
     }
 
     public static FunctionCommand parse(ChillScriptParser parser) {
-        if (!parser.match("function")) return null;
+        if (!parser.match("fun")) return null;
 
         var rv = new FunctionCommand();
         rv.setStart(parser.consumeToken());
 
         rv.setName(parser.require(TokenType.SYMBOL, rv, "Function name expected"));
 
-        if (parser.matchAndConsume(TokenType.LEFT_PAREN)) {
-            while (parser.moreTokens() && !parser.match(TokenType.RIGHT_PAREN)) {
-                var name = parser.require(TokenType.SYMBOL, rv, "Parameter name expected");
-                rv.addArg(name);
-            }
-            parser.require(TokenType.RIGHT_PAREN, rv, "Expected ')'");
+        parser.require(TokenType.LEFT_PAREN, rv, "Expected '(' for function parameters");
+        while (parser.moreTokens() && !parser.match(TokenType.RIGHT_PAREN)) {
+            var name = parser.require(TokenType.SYMBOL, rv, "Parameter name expected");
+            rv.addArg(name);
         }
+        parser.require(TokenType.RIGHT_PAREN, rv, "Expected ')'");
 
         var body = parser.parseCommandList("end");
         for (var cmd : body) {
@@ -69,17 +68,11 @@ public class FunctionCommand extends Command {
         return rv;
     }
 
-    public Capture capture(ChillScriptRuntime chillScriptRuntime) {
-        var out = new Capture();
-        out.setCapturedScope(chillScriptRuntime.getCurrentScope());
-        return out;
-    }
-
-    public class Capture {
+    public class Closure {
         LinkedList<ChillScriptRuntime.ScopeFrame> scope;
 
         public FunctionCommand getFunction() {
-            return FunctionCommand.this; // what the flying f* is this semantic nonsense?
+            return FunctionCommand.this; // what the flying f* is this syntax?
         }
 
         public LinkedList<ChillScriptRuntime.ScopeFrame> getScope() {
@@ -98,6 +91,7 @@ public class FunctionCommand extends Command {
                 throw new RuntimeException("Expected " + argNames.size() + " arguments but got " + argValues.size());
             }
             runtime.pushFrame(this);
+            runtime.pushScope();
             for (int i = 0; i < argNames.size(); i++) {
                 runtime.setSymbol(argNames.get(i).getStringValue(), argValues.get(i));
             }
@@ -107,8 +101,10 @@ public class FunctionCommand extends Command {
                 }
             } catch (ReturnInterrupt ri) {
                 return ri.getValue();
+            } finally {
+                runtime.popScope();
+                runtime.popFrame();
             }
-            runtime.popFrame();
             return null;
         }
     }

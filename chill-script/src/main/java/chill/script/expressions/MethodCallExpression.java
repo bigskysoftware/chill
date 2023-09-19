@@ -11,7 +11,6 @@ import chill.script.types.*;
 import chill.utils.Pair;
 import chill.utils.TheMissingUtils;
 
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -32,8 +31,8 @@ public class MethodCallExpression extends Expression {
 
     @Override
     public Object evaluate(ChillScriptRuntime runtime) {
-        Object rootVal = root.evaluate(runtime);
-        if (rootVal == null) {
+        Object functor = root.evaluate(runtime);
+        if (functor == null) {
             Expression actualRoot = root;
             if(actualRoot instanceof PropertyAccessExpression) {
                 PropertyAccessExpression pae = (PropertyAccessExpression) actualRoot;
@@ -47,20 +46,20 @@ public class MethodCallExpression extends Expression {
                 argValues.add(arg.evaluate(runtime));
             }
 
-            if(rootVal instanceof BoundChillMethod){
-                BoundChillMethod boundMethod = ((BoundChillMethod) rootVal);
+            if(functor instanceof BoundChillMethod){
+                BoundChillMethod boundMethod = ((BoundChillMethod) functor);
                 return boundMethod.invoke(argValues);
-            } else if(rootVal instanceof ChillJavaMethod){
-                ChillJavaMethod unboundMethod = (ChillJavaMethod) rootVal;
+            } else if(functor instanceof ChillJavaMethod){
+                ChillJavaMethod unboundMethod = (ChillJavaMethod) functor;
                 return unboundMethod.invoke(null, argValues);
-            } else if (rootVal instanceof FunctionCommand.Capture func) {
+            } else if (functor instanceof FunctionCommand.Closure func) {
                 return func.invoke(runtime, argValues);
-            } else if(rootVal instanceof Runnable){
-                Runnable runnable = (Runnable) rootVal;
+            } else if(functor instanceof Runnable){
+                Runnable runnable = (Runnable) functor;
                 runnable.run();
                 return null;
-            } else if(rootVal instanceof Callable){
-                Callable callable = (Callable) rootVal;
+            } else if(functor instanceof Callable){
+                Callable callable = (Callable) functor;
                 try {
                     return callable.call();
                 } catch (Exception e) {

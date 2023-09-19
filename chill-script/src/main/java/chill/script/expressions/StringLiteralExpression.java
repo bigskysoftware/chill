@@ -6,23 +6,22 @@ import chill.script.tokenizer.Token;
 import chill.script.tokenizer.TokenType;
 
 public class StringLiteralExpression extends Expression {
-    private final String stringValue;
+    private final Token token;
 
-    public StringLiteralExpression(String value) {
-        this.stringValue = value;
+    public StringLiteralExpression(Token token) {
+        this.token = token;
+        setToken(token);
     }
 
     @Override
-    public Object evaluate(ChillScriptRuntime runtime) {
-        return stringValue;
+    public String evaluate(ChillScriptRuntime runtime) {
+        return token.getStringValue();
     }
 
     public static Expression parse(ChillScriptParser parser) {
         if (parser.match(TokenType.STRING)) {
             Token token = parser.consumeToken();
-            var expr = new StringLiteralExpression(token.getStringValue());
-            expr.setToken(token);
-            return expr;
+            return new StringLiteralExpression(token);
         }
         return null;
     }

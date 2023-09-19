@@ -23,6 +23,7 @@ public class TestUtils {
         var program = parser.parseProgram(programSrc);
         rt.beforeExecute(program);
         program.execute(rt);
+        rt.afterExecute(program);
 
         return rt.logs();
     }

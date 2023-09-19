@@ -2,25 +2,36 @@ package chill.script.runtime;
 
 import chill.script.commands.Command;
 import chill.script.commands.FunctionCommand;
+import chill.script.commands.DependOnCommand;
+import chill.script.parser.ChillScriptProgram;
+import chill.script.parser.ParseElement;
 import chill.script.types.ChillType;
-import chill.script.types.TypeSystem;
+import chill.utils.NiceList;
 import chill.utils.TheMissingUtils;
 import chill.utils.TypedMap;
+import org.apache.ivy.core.module.id.ModuleRevisionId;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.util.*;
+import java.util.regex.Pattern;
 
 import static java.lang.Boolean.FALSE;
 
 public class ChillScriptRuntime {
 
+    static {
+        System.setProperty("log4j.logger.org.apache.ivy", "OFF");
+    }
+
     public static final Object UNDEFINED = new Object();
 
     TypedMap metadata = new TypedMap();
+    IvyClassLoader classLoader = null;
 
     LinkedList<Frame> frames = new LinkedList<>();
     LinkedList<ScopeFrame> scopes = new LinkedList<>();
-
-    private List<String> imports = new LinkedList<>();
+    IvyClassLoader ivyClassLoader;
 
     public ChillScriptRuntime(Object... rootValues) {
         this(TheMissingUtils.mapFrom(rootValues));
@@ -28,6 +39,8 @@ public class ChillScriptRuntime {
 
     public ChillScriptRuntime(Map<String, Object> initialScope) {
         scopes.push(new ScopeFrame(initialScope)); // push root scope
+
+        putMetaData(Sqlite.RT_KEY, new Sqlite());
     }
 
     public Object getSymbol(String symbol) {
@@ -83,6 +96,58 @@ public class ChillScriptRuntime {
     }
 
     public void beforeExecute(Command command) {
+        if (command instanceof ChillScriptProgram program && !program.getChildren().isEmpty()) {
+            NiceList<DependOnCommand> imports = new NiceList<>();
+            classLoader = new IvyClassLoader();
+
+            for (ParseElement child : program.getChildren()) {
+                if (child instanceof DependOnCommand importCommand) {
+                    ModuleRevisionId mrid = ModuleRevisionId.newInstance(importCommand.getUri(), importCommand.getName(), importCommand.getVersion());
+                    classLoader.resolve(mrid);
+                    imports.add(importCommand);
+                }
+            }
+
+            classLoader.load();
+            for (DependOnCommand importCommand : imports) {
+                for (Command selector : importCommand.getSelectors()) {
+                    resolveImportSelector(selector, classLoader);
+                }
+            }
+        }
+    }
+
+    public void resolveImportSelector(Command selector, ClassLoader loader) {
+        if (selector instanceof DependOnCommand.UseCommand use) {
+            for (String className : use.getLinks()) {
+                try {
+                    Class<?> clazz = loader.loadClass(className);
+                    setSymbol(className.substring(className.lastIndexOf(".") + 1), clazz);
+                } catch (ClassNotFoundException e) {
+                    throw new RuntimeException("Could not load class: " + className, e);
+                }
+            }
+        } else if (selector instanceof DependOnCommand.FromCommand from) {
+            if (from.getSymbols().size() == 1 && from.getSymbols().get(0).equals("*")) {
+                var items = classLoader.getResourceAsStream(from.getUri().replaceAll(Pattern.quote("."), "/"));
+                BufferedReader reader = new BufferedReader(new InputStreamReader(items));
+                reader.lines().forEach(line -> {
+                    System.out.printf("line in " + from.getUri() + ": %s\n", line);
+                });
+            } else {
+                for (String symbol : from.getSymbols()) {
+                    String className = from.getUri() + "." + symbol;
+                    try {
+                        Class<?> clazz = loader.loadClass(className);
+                        setSymbol(symbol, clazz);
+                    } catch (ClassNotFoundException e) {
+                        throw new RuntimeException("Could not load class: " + className, e);
+                    }
+                }
+            }
+        } else {
+            throw new RuntimeException("Unknown import selector: " + selector);
+        }
     }
 
     public void afterExecute(Command command) {
@@ -93,29 +158,25 @@ public class ChillScriptRuntime {
     }
 
     public ChillType resolveType(String name) {
-        for (String anImport : imports) {
-            if (anImport.endsWith("*")) {
-                try {
-                    return TypeSystem.getType(Class.forName(anImport.substring(0, anImport.length() - 1) + name));
-                } catch (Exception e) {
-                    // ignore
-                }
-            }
-            if (anImport.endsWith("." + name)) {
-                try {
-                    return TypeSystem.getType(Class.forName(anImport));
-                } catch (Exception e) {
-                    // ignore
-                }
-            }
-        }
+//        for (String anImport : imports) {
+//            if (anImport.endsWith("*")) {
+//                try {
+//                    return TypeSystem.getType(Class.forName(anImport.substring(0, anImport.length() - 1) + name));
+//                } catch (Exception e) {
+//                    // ignore
+//                }
+//            }
+//            if (anImport.endsWith("." + name)) {
+//                try {
+//                    return TypeSystem.getType(Class.forName(anImport));
+//                } catch (Exception e) {
+//                    // ignore
+//                }
+//            }
+//        }
         return null;
-    }
 
-    public void addImport(String importStr) {
-        imports.add(importStr);
     }
-
     public boolean isTruthy(Object value) {
         return value != null &&
                 !FALSE.equals(value) &&
@@ -126,7 +187,7 @@ public class ChillScriptRuntime {
         return frames.isEmpty() && scopes.size() == 1;
     }
 
-    public void pushFrame(FunctionCommand.Capture function) {
+    public void pushFrame(FunctionCommand.Closure function) {
         frames.addFirst(new Frame(function, function.getScope()));
     }
 
@@ -205,7 +266,7 @@ public class ChillScriptRuntime {
             }
         }
 
-        void setSymbol(String symbol, Object value) {
+        public void setSymbol(String symbol, Object value) {
             if (symbols.containsKey(symbol)) {
                 symbols.get(symbol).value(value);
             } else {
@@ -233,7 +294,7 @@ public class ChillScriptRuntime {
     }
 
     public static class Entry {
-        private Object value;
+        Object value;
 
         public Entry(Object value) {
             this.value = value;

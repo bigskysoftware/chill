@@ -1,15 +1,21 @@
 package chill.script.expressions;
 
+import chill.script.commands.Command;
 import chill.script.parser.ChillScriptParser;
+import chill.script.runtime.ChillScriptRuntime;
+import chill.script.runtime.Sqlite;
+import chill.script.shell.ChillShell;
 import chill.script.types.ChillMethod;
 import chill.script.types.ChillType;
 import chill.script.types.TypeSystem;
 import chill.utils.TheMissingUtils;
 import org.junit.jupiter.api.Test;
 
+import java.io.*;
 import java.math.BigDecimal;
-import java.net.MalformedURLException;
 import java.net.URL;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
@@ -207,11 +213,62 @@ public class ChillParserExpressionTest {
         assertNull(eval("foo[3]", "foo", new Object[]{1, 2, 3}));
     }
 
+    @Test
+    public void testSql() {
+        ChillScriptRuntime runtime = new ChillScriptRuntime();
+
+        eval(runtime, """
+                sql
+                    DROP TABLE IF EXISTS users;
+                    CREATE TABLE IF NOT EXISTS users (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        name TEXT NOT NULL,
+                        email TEXT NOT NULL UNIQUE,
+                        password TEXT NOT NULL,
+                        CONSTRAINT email_unique UNIQUE (email)
+                    )
+                end""");
+
+        var count = eval(runtime, """
+                sql
+                    INSERT INTO users (name, email, password) VALUES
+                    ('foo', 'foo@mail.com', 'ihatepasswords'),
+                    ('bar', 'bar@mail.com', 'ilovepasswords'),
+                    ('baz', 'baz@mail.com', 'password');
+                end""");
+        assertEquals(count, 3);
+
+        exec(runtime, """
+                let [[id1, email1], [id2, email2], [id3, email3]] be sql
+                    SELECT id, email FROM users
+                        WHERE email LIKE '%@mail.com'
+                        ORDER BY id ASC
+                end""");
+
+        assertEquals(runtime.getSymbol("id1"), 1);
+        assertEquals(runtime.getSymbol("email1"), "foo@mail.com");
+
+        assertEquals(runtime.getSymbol("id2"), 2);
+        assertEquals(runtime.getSymbol("email2"), "bar@mail.com");
+
+        assertEquals(runtime.getSymbol("id3"), 3);
+        assertEquals(runtime.getSymbol("email3"), "baz@mail.com");
+    }
+
     public static Object eval(String src, Object... args) {
-        ChillScriptParser parser = new ChillScriptParser();
-        Expression expr = parser.parseExpression(src);
+        Expression expr = ChillScriptParser.parseExpression(src);
         Object value = expr.run(args);
         return value;
+    }
+
+    public static Object eval(ChillScriptRuntime runtime, String src) {
+        Expression expr = ChillScriptParser.parseExpression(src);
+        return expr.evaluate(runtime);
+    }
+
+    public static void exec(ChillScriptRuntime runtime, String src) {
+        Command command = ChillScriptParser.parseCommand(src);
+        command.execute(runtime);
     }
 
     public static String staticFunction(){

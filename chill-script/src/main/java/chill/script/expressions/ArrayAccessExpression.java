@@ -2,18 +2,14 @@ package chill.script.expressions;
 
 import chill.script.parser.ChillScriptParser;
 import chill.script.runtime.ChillScriptRuntime;
-import chill.script.tokenizer.Token;
 import chill.script.tokenizer.TokenType;
 import chill.script.types.ChillProperty;
 import chill.script.types.ChillType;
-import chill.script.types.NoSuchChillPropertyException;
 import chill.script.types.TypeSystem;
 import chill.utils.Pair;
-import chill.utils.TheMissingUtils;
 
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicReference;
 
 public class ArrayAccessExpression extends Expression {
 

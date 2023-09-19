@@ -1,8 +1,5 @@
 package chill.script.types;
 
-import chill.script.expressions.Expression;
-
-import java.util.Collection;
 import java.util.List;
 
 public interface ChillMethod {

@@ -3,7 +3,6 @@ package chill.script.expressions;
 import chill.script.parser.ChillScriptParser;
 import chill.script.runtime.ChillScriptRuntime;
 import chill.script.tokenizer.Token;
-import chill.script.tokenizer.TokenType;
 
 import static chill.script.tokenizer.TokenType.LEFT_PAREN;
 import static chill.script.tokenizer.TokenType.RIGHT_PAREN;

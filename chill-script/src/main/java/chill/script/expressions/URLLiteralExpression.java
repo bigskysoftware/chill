@@ -10,20 +10,24 @@ import java.net.URL;
 
 public class URLLiteralExpression extends Expression {
 
-    private final String _value;
+    private final Token token;
+    private URL value;
 
     public URLLiteralExpression(Token token) {
-        _value = token.getStringValue();
+        this.token = token;
         setToken(token);
     }
 
     @Override
-    public Object evaluate(ChillScriptRuntime chillTests) {
-        try {
-            return new URL(_value);
-        } catch (MalformedURLException e) {
-            throw new RuntimeException(e);
+    public URL evaluate(ChillScriptRuntime chillTests) {
+        if (value == null) {
+            try {
+                value = new URL(token. getStringValue());
+            } catch (MalformedURLException e) {
+                throw new RuntimeException(e);
+            }
         }
+        return value;
     }
 
     public static Expression parse(ChillScriptParser parser) {

@@ -19,8 +19,7 @@ public class IdentifierExpression extends Expression {
     public Object evaluate(ChillScriptRuntime runtime) {
         Object symbol = runtime.getSymbol(identifier.getStringValue());
         if (symbol == ChillScriptRuntime.UNDEFINED) {
-            ChillType type = runtime.resolveType(getName());
-            return type;
+            return runtime.resolveType(getName());
         } else if (symbol instanceof ChillProperty) {
             ChillProperty prop = (ChillProperty) symbol;
             return prop.get(null); // TODO - support "this" notion?

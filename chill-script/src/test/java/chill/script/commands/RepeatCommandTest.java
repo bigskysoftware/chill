@@ -63,7 +63,7 @@ public class RepeatCommandTest {
     public void indexIdentifierWorks() {
         assertEquals(
                 "01",
-                programOutput("set i to 0   repeat while i != 2 index j set i to i + 1 print j end")
+                programOutput("set i to 0   repeat while i is not 2 index j set i to i + 1 print j end")
         );
 
         assertEquals(

@@ -1,26 +1,33 @@
 package chill.script.commands;
 
+import chill.script.pattern.Pattern;
 import chill.script.expressions.Expression;
-import chill.script.expressions.IdentifierExpression;
 import chill.script.parser.ChillScriptParser;
 import chill.script.runtime.ChillScriptRuntime;
 import chill.script.tokenizer.TokenType;
 
 public class SetCommand extends Command {
 
-    Expression value;
-    private IdentifierExpression symbol;
+    private Pattern pattern;
+    private Expression value;
 
     @Override
     public void execute(ChillScriptRuntime runtime) {
-        runtime.setSymbol(symbol.getName(), value.evaluate(runtime));
+        pattern.bind(runtime, value.evaluate(runtime));
     }
 
     public static Command parse(ChillScriptParser parser) {
         if (parser.match("set")) {
             SetCommand setCommand = new SetCommand();
             setCommand.setStart(parser.consumeToken());
-            setCommand.setSymbol((IdentifierExpression) parser.requireExpression(setCommand, "identifier"));
+
+            Pattern pattern = Pattern.parsePattern(parser);
+            if (pattern != null) {
+                setCommand.setPattern(pattern);
+            } else {
+                setCommand.addError(parser.lastMatch(), "Expected pattern");
+            }
+
             if (parser.match(TokenType.EQUAL)) setCommand.addError(parser.consumeToken(), "Use 'to' when setting variables");
             parser.require("to", setCommand, "Expected a 'to'");
             setCommand.setValue(parser.requireExpression(setCommand, "expression"));
@@ -29,7 +36,13 @@ public class SetCommand extends Command {
         } else if (parser.match("let")) {
             SetCommand setCommand = new SetCommand();
             setCommand.setStart(parser.consumeToken());
-            setCommand.setSymbol((IdentifierExpression) parser.requireExpression(setCommand, "identifier"));
+
+            Pattern pattern = Pattern.parsePattern(parser);
+            if (pattern != null) {
+                setCommand.setPattern(pattern);
+            } else {
+                setCommand.addError(parser.lastMatch(), "Expected pattern");
+            }
 
             if (parser.match(TokenType.EQUAL)) setCommand.addError(parser.consumeToken(), "Use 'be' or 'equal' when using let-variables");
 
@@ -46,11 +59,11 @@ public class SetCommand extends Command {
         return null;
     }
 
-    private void setSymbol(IdentifierExpression identifier) {
-        this.symbol = identifier;
-    }
-
     private void setValue(Expression expression) {
         value = addChild(expression);
+    }
+
+    private void setPattern(Pattern pattern) {
+        this.pattern = addChild(pattern);
     }
 }

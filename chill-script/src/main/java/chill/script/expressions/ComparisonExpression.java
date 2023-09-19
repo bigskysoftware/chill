@@ -4,9 +4,7 @@ import chill.script.parser.ChillScriptParser;
 import chill.script.parser.ErrorType;
 import chill.script.runtime.ChillScriptRuntime;
 import chill.script.runtime.Container;
-import org.bouncycastle.crypto.modes.OpenPGPCFBBlockCipher;
 
-import java.util.Objects;
 import java.util.Set;
 
 public class ComparisonExpression extends Expression {

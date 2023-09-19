@@ -2,11 +2,12 @@ package chill.script.expressions;
 
 import chill.script.parser.ChillScriptParser;
 import chill.script.runtime.ChillScriptRuntime;
+import chill.script.runtime.op.Negate;
+import chill.script.runtime.op.Not;
 import chill.script.tokenizer.Token;
 import chill.script.tokenizer.TokenType;
 
 import java.math.BigDecimal;
-import java.math.BigInteger;
 
 public class UnaryExpression extends Expression {
 
@@ -33,15 +34,22 @@ public class UnaryExpression extends Expression {
     public Object evaluate(ChillScriptRuntime runtime) {
         Object rhsValue = rightHandSide.evaluate(runtime);
         if (operator.getStringValue().equals("-")) {
-            if (rhsValue instanceof BigDecimal) {
-                BigDecimal bigDecimal = (BigDecimal) rhsValue;
-                return bigDecimal.multiply(NEGATIVE_ONE);
+            if (rhsValue instanceof BigDecimal rvalue) {
+                return rvalue.multiply(NEGATIVE_ONE);
+            } else if (rhsValue instanceof Negate negate) {
+                return negate.negate(runtime);
             } else {
                 var bigDecimal = new BigDecimal(rhsValue.toString());
                 return bigDecimal.multiply(NEGATIVE_ONE);
             }
         } else if (operator.getStringValue().equals("not")) {
-            return !runtime.isTruthy(rhsValue);
+            if (rhsValue instanceof Boolean rvalue) {
+                return !rvalue;
+            } else if (rhsValue instanceof Not rvalue) {
+                return rvalue.not(runtime);
+            } else {
+                throw new UnsupportedOperationException("not operator only works on booleans");
+            }
         }
         throw new UnsupportedOperationException(operator.getStringValue() + " not implemented for this type yet");
     }

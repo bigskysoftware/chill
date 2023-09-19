@@ -5,7 +5,6 @@ import chill.script.commands.Command;
 import chill.script.expressions.Expression;
 import chill.script.parser.ChillScriptParser;
 import chill.script.runtime.ChillScriptRuntime;
-import org.openqa.selenium.WebElement;
 
 
 public class ExpectCommand extends Command {

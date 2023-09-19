@@ -4,9 +4,6 @@ import chill.script.parser.ChillScriptParser;
 import chill.script.parser.ErrorType;
 import chill.script.runtime.ChillScriptRuntime;
 import chill.script.tokenizer.Token;
-import chill.script.tokenizer.TokenType;
-
-import java.util.Objects;
 
 public class LogicalExpression extends Expression {
 
@@ -46,17 +43,9 @@ public class LogicalExpression extends Expression {
     public Object evaluate(ChillScriptRuntime runtime) {
         Object lhsValue = leftHandSide.evaluate(runtime);
         if (isAnd()) {
-            if (runtime.isTruthy(lhsValue)) {
-                return rightHandSide.evaluate(runtime);
-            } else {
-                return false;
-            }
+            return runtime.isTruthy(lhsValue) && runtime.isTruthy(rightHandSide.evaluate(runtime));
         } else {
-            if (runtime.isTruthy(lhsValue)) {
-                return lhsValue;
-            } else {
-                return rightHandSide.evaluate(runtime);
-            }
+            return runtime.isTruthy(lhsValue) || runtime.isTruthy(rightHandSide.evaluate(runtime));
         }
     }
 

@@ -68,10 +68,11 @@ public class EqualityExpression extends Expression {
     public Object evaluate(ChillScriptRuntime runtime) {
         Object lhsValue = leftHandSide.evaluate(runtime);
         Object rhsValue = rightHandSide.evaluate(runtime);
+        boolean isEqual = Objects.equals(lhsValue, rhsValue);
         if (isEqual()) {
-            return Objects.equals(lhsValue, rhsValue);
+            return isEqual;
         } else {
-            return !Objects.equals(lhsValue, rhsValue);
+            return !isEqual;
         }
     }
 }
