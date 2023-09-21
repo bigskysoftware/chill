@@ -20,8 +20,10 @@ public class TestUtils {
     public static String programOutput(String programSrc) {
         var rt = new TestRuntime();
         var parser = new ChillScriptParser();
-
-        parser.parseProgram(programSrc).execute(rt);
+        var program = parser.parseProgram(programSrc);
+        rt.beforeExecute(program);
+        program.execute(rt);
+        rt.afterExecute(program);
 
         return rt.logs();
     }

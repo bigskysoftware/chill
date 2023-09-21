@@ -44,6 +44,22 @@ public class ChillShell {
         });
     }
 
+    public void drive(InputStreamReader source) {
+        safely(() -> {
+            var reader = new BufferedReader(source);
+            while (true) {
+                // Reading data using readLine
+                String line = reader.readLine();
+                if (line == null) {
+                    break;
+                }
+                if (execLine(line)){
+                    break;
+                }
+            }
+        });
+    }
+
     private boolean execLine(String line) {
         try {
             String stripped = line.strip();
@@ -83,11 +99,6 @@ public class ChillShell {
                 }
             }
         });
-    }
-
-    public ChillShell withImport(String path) {
-        runtime.addImport(path);
-        return this;
     }
 
     private void print(String prompt) {

@@ -27,7 +27,23 @@ public class TokenList implements Iterable<Token> {
     }
 
     public Token consumeToken() {
-        return tokens.get(currentToken++);
+        lastMatch = tokens.get(currentToken);
+        currentToken++;
+        return lastMatch;
+    }
+
+    public void advance(int n) {
+        assert n > 0;
+        currentToken += n;
+        lastMatch = tokens.get(currentToken - 1);
+    }
+
+    public Token produceToken() {
+        currentToken--;
+        if (currentToken - 1 >= 0) {
+            lastMatch = tokens.get(currentToken - 1);
+        }
+        return tokens.get(currentToken);
     }
 
     public boolean match(String identifier) {
@@ -140,5 +156,14 @@ public class TokenList implements Iterable<Token> {
             }
         }
         return true;
+    }
+
+    public int getCurrentTokenIndex() {
+        return currentToken;
+    }
+
+    public void setCurrentTokenIndex(int index) {
+        assert index >= 0 && index < tokens.size();
+        currentToken = index;
     }
 }

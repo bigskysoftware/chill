@@ -102,10 +102,15 @@ public class PropertyAccessExpression extends Expression implements CanFavorMeth
         if (parser.matchAndConsume(TokenType.DOT)) {
             Expression root = parserAndRoot.second;
             PropertyAccessExpression propAccess = new PropertyAccessExpression();
-            Token propertyName = parser.require(TokenType.SYMBOL, propAccess, "Expected symbol here!");
-            propAccess.setProperty(propertyName);
-            propAccess.setRoot(root);
-            propAccess.setEnd(propertyName);
+            if (parser.match(TokenType.SYMBOL, TokenType.STRING)) {
+                Token propertyName = parser.require(TokenType.SYMBOL, propAccess, "Expected symbol here!");
+                propAccess.setProperty(propertyName);
+                propAccess.setRoot(root);
+                propAccess.setEnd(propertyName);
+            } else {
+                propAccess.addError(parser.consumeToken(), "Expected symbol here!");
+                propAccess.setEnd(parser.lastMatch());
+            }
             return propAccess;
         }
         return null;

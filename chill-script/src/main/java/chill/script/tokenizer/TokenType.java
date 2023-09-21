@@ -13,12 +13,15 @@ public class TokenType {
     public static final  TokenType LEFT_BRACKET = new TokenType("LEFT_BRACKET");
     public static final  TokenType RIGHT_BRACKET = new TokenType("RIGHT_BRACKET");
     public static final  TokenType COLON = new TokenType("COLON");
+    public static final TokenType SEMICOLON = new TokenType("SEMICOLON");
     public static final  TokenType COMMA = new TokenType("COMMA");
+    public static final TokenType DOT_DOT = new TokenType("DOT_DOT");
     public static final  TokenType DOT = new TokenType("DOT");
     public static final  TokenType MINUS = new TokenType("MINUS");
     public static final  TokenType PLUS = new TokenType("PLUS");
     public static final  TokenType SLASH = new TokenType("SLASH");
     public static final  TokenType STAR = new TokenType("STAR");
+    public static final  TokenType PERCENT = new TokenType("PERCENT");
     public static final  TokenType BANG_EQUAL = new TokenType("BANG_EQUAL");
     public static final  TokenType EQUAL = new TokenType("EQUAL");
     public static final  TokenType EQUAL_EQUAL = new TokenType("EQUAL_EQUAL");

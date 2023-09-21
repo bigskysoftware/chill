@@ -6,8 +6,6 @@ import chill.script.runtime.ChillScriptRuntime;
 import chill.script.tokenizer.Token;
 import chill.script.tokenizer.TokenType;
 
-import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
@@ -71,8 +69,8 @@ public class RepeatCommand extends Command {
             runtime.pushScope();
             {
                 var value = iter.next();
-                if (identifier != null) runtime.declareSymbol(identifier.getStringValue(), value);
-                if (indexIdentifier != null) runtime.declareSymbol(indexIdentifier.getStringValue(), i++);
+                if (identifier != null) runtime.setSymbol(identifier.getStringValue(), value);
+                if (indexIdentifier != null) runtime.setSymbol(indexIdentifier.getStringValue(), i++);
 
                 for (Command elt : body) {
                     elt.execute(runtime);

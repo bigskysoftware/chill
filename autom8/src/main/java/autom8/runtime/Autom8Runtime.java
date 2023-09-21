@@ -17,14 +17,16 @@ public class Autom8Runtime extends ChillScriptRuntime {
     private final Map<String, byte[]> _screenshots;
 
     public Autom8Runtime() {
+        super();
         _screenshots = new HashMap<>();
+        setSymbol("body", new Autom8Body(this));
     }
 
     @Override
     public void beforeExecute(Command command) {
         if (command instanceof ChillScriptProgram) {
             ChromeOptions options = new ChromeOptions();
-            options.setHeadless(true);
+//            options.setHeadless(true);
             options.addArguments("--no-sandbox", "--disable-dev-shm-usage");
             driver = new ChromeDriver(options);
         }

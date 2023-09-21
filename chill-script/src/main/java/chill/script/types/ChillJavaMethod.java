@@ -33,7 +33,7 @@ public class ChillJavaMethod implements ChillMethod {
     @Override
     public Object invoke(Object rootVal, List<Object> args) {
         try {
-            if (javaMethods.size() == 0) {
+            if (javaMethods.isEmpty()) {
                 throw new NoSuchMethodException("No methods named " + this.name + " were found on " + backingClass.getName());
             }
             Method method = bestMatch(args);

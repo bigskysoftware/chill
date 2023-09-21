@@ -15,7 +15,7 @@ public class NumberLiteralExpression extends Expression {
     }
 
     @Override
-    public Object evaluate(ChillScriptRuntime runtime) {
+    public BigDecimal evaluate(ChillScriptRuntime runtime) {
         return value;
     }
 

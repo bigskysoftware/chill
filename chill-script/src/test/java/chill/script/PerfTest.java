@@ -1,7 +1,6 @@
 package chill.script;
 
 import chill.script.expressions.Expression;
-import chill.script.expressions.PropertyAccessExpression;
 import chill.script.parser.ChillScriptParser;
 import chill.script.runtime.ChillScriptRuntime;
 import chill.script.templates.ChillTemplate;

@@ -15,10 +15,14 @@ public class PrintCommand extends Command {
     }
 
     public static Command parse(ChillScriptParser parser) {
-        if (parser.match("print")) {
+        if (parser.match("print", "println")) {
             PrintCommand printCommand = new PrintCommand();
             printCommand.setStart(parser.consumeToken());
-            printCommand.setValue(parser.requireExpression(printCommand, "expression"));
+            Expression expression = parser.requireExpression(printCommand, "expression");
+            if (printCommand.getStart().getStringValue().equals("println")) {
+                expression = new Newline(expression);
+            }
+            printCommand.setValue(expression);
             printCommand.setEnd(parser.lastMatch());
             return printCommand;
         }
@@ -27,5 +31,24 @@ public class PrintCommand extends Command {
 
     private void setValue(Expression expression) {
         value = addChild(expression);
+    }
+
+    private static final class Newline extends Expression {
+        Expression value;
+
+        public Newline(Expression value) {
+            this.value = addChild(value);
+            this.setStart(value.getStart());
+            this.setEnd(value.getEnd());
+        }
+
+        @Override
+        public Object evaluate(ChillScriptRuntime runtime) {
+            return String.valueOf(value.evaluate(runtime)) + "\n";
+        }
+        @Override
+        public String toString() {
+            return "(" + value + " + '\\n')";
+        }
     }
 }

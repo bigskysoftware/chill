@@ -6,7 +6,6 @@ import chill.script.runtime.ChillScriptRuntime;
 import chill.script.tokenizer.Token;
 import chill.script.tokenizer.TokenType;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class ForCommand extends Command {
@@ -37,7 +36,7 @@ public class ForCommand extends Command {
 
         rv.setBody(parser.parseCommandList("end"));
 
-        rv.setEnd(parser.consumeToken());
+        parser.require("end", rv, "'end' expected");
 
         return rv;
     }
@@ -56,9 +55,9 @@ public class ForCommand extends Command {
             context.pushScope();
             {
                 for (Object value : iter) {
-                    context.declareSymbol(identifier.getStringValue(), value);
+                    context.setSymbol(identifier.getStringValue(), value);
                     if (indexIdentifier != null) {
-                        context.declareSymbol(indexIdentifier.getStringValue(), index);
+                        context.setSymbol(indexIdentifier.getStringValue(), index);
                     }
                     for (Command elt : body) {
                         elt.execute(context);

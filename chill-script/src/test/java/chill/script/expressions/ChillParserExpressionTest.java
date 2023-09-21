@@ -1,15 +1,21 @@
 package chill.script.expressions;
 
+import chill.script.commands.Command;
 import chill.script.parser.ChillScriptParser;
+import chill.script.runtime.ChillScriptRuntime;
+import chill.script.runtime.Sqlite;
+import chill.script.shell.ChillShell;
 import chill.script.types.ChillMethod;
 import chill.script.types.ChillType;
 import chill.script.types.TypeSystem;
 import chill.utils.TheMissingUtils;
 import org.junit.jupiter.api.Test;
 
+import java.io.*;
 import java.math.BigDecimal;
-import java.net.MalformedURLException;
 import java.net.URL;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
@@ -20,10 +26,85 @@ public class ChillParserExpressionTest {
 
     @Test
     public void equality() {
-        assertEquals(true, eval("1 == 1"));
-        assertEquals(false, eval("1 != 1"));
-        assertEquals(false, eval("1 == 2"));
-        assertEquals(true, eval("1 != 2"));
+        assertEquals(true, eval("1 is 1"));
+        assertEquals(true, eval("1 equals 1"));
+        assertEquals(true, eval("1 is equal to 1"));
+        assertEquals(true, eval("1 does equal 1"));
+        assertEquals(true, eval("1 like 1"));
+        assertEquals(true, eval("1 is similar to 1"));
+
+        assertEquals(false, eval("1 equals 2"));
+        assertEquals(false, eval("1 is equal to 2"));
+        assertEquals(false, eval("1 does equal 2"));
+        assertEquals(false, eval("1 like 2"));
+        assertEquals(false, eval("1 is similar to 2"));
+
+        assertEquals(false, eval("1 does not equal 1"));
+        assertEquals(false, eval("1 is not equal to 1"));
+        assertEquals(false, eval("1 is not similar to 1"));
+        assertEquals(false, eval("1 is not like 1"));
+        assertEquals(false, eval("1 is unlike 1"));
+
+        assertEquals(true, eval("1 does not equal 2"));
+        assertEquals(true, eval("1 is not equal to 2"));
+        assertEquals(true, eval("1 is not similar to 2"));
+        assertEquals(true, eval("1 is not like 2"));
+        assertEquals(true, eval("1 is unlike 2"));
+
+        assertEquals(true, eval("1 equals 2 is false"));
+        assertEquals(true, eval("1 equals 2 is not true"));
+    }
+
+    @Test
+    public void ordinal() {
+        assertEquals(true, eval("1 less than 2"));
+        assertEquals(true, eval("1 less than or equal to 2"));
+        assertEquals(true, eval("1 less than or equivalent to 2"));
+
+        assertEquals(true, eval("1 is less than 2"));
+        assertEquals(true, eval("1 is less than or equal to 2"));
+        assertEquals(true, eval("1 is less than or equivalent to 2"));
+
+        assertEquals(true, eval("1 smaller than 2"));
+        assertEquals(true, eval("1 smaller than or equal to 2"));
+        assertEquals(true, eval("1 smaller than or equivalent to 2"));
+
+        assertEquals(true, eval("1 is smaller than 2"));
+        assertEquals(true, eval("1 is smaller than or equal to 2"));
+        assertEquals(true, eval("1 is smaller than or equivalent to 2"));
+
+
+        assertEquals(false, eval("1 greater than 2"));
+        assertEquals(false, eval("1 greater than or equal to 2"));
+        assertEquals(false, eval("1 greater than or equivalent to 2"));
+
+        assertEquals(false, eval("1 is greater than 2"));
+        assertEquals(false, eval("1 is greater than or equal to 2"));
+        assertEquals(false, eval("1 is greater than or equivalent to 2"));
+
+        assertEquals(false, eval("1 larger than 2"));
+        assertEquals(false, eval("1 larger than or equal to 2"));
+        assertEquals(false, eval("1 larger than or equivalent to 2"));
+
+        assertEquals(false, eval("1 is larger than 2"));
+        assertEquals(false, eval("1 is larger than or equal to 2"));
+        assertEquals(false, eval("1 is larger than or equivalent to 2"));
+    }
+
+    @Test
+    public void collections() {
+        assertEquals(true, eval("[1, 2, 4] intersects [1, 5, 25]"));
+
+        assertEquals(true, eval("4 in [1, 2, 3, 4]"));
+        assertEquals(true, eval("5 not in [1, 2, 3, 4]"));
+        assertEquals(true, eval("3 is in [1, 2, 3, 4]"));
+        assertEquals(true, eval("0 is not in [1, 2, 3, 4]"));
+
+        assertEquals(true, eval("[1, 2, 3] are all in [1, 2, 3]"));
+        assertEquals(true, eval("[1, 2, 3] are not all in [1, 4, 5]"));
+
+        assertEquals(true, eval("[1, 2, 3] is distinct"));
+        assertEquals(false, eval("[1, 2, 3] intersects [4, 5, 6]"));
     }
 
     @Test
@@ -132,11 +213,62 @@ public class ChillParserExpressionTest {
         assertNull(eval("foo[3]", "foo", new Object[]{1, 2, 3}));
     }
 
+    @Test
+    public void testSql() {
+        ChillScriptRuntime runtime = new ChillScriptRuntime();
+
+        eval(runtime, """
+                sql
+                    DROP TABLE IF EXISTS users;
+                    CREATE TABLE IF NOT EXISTS users (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        name TEXT NOT NULL,
+                        email TEXT NOT NULL UNIQUE,
+                        password TEXT NOT NULL,
+                        CONSTRAINT email_unique UNIQUE (email)
+                    )
+                end""");
+
+        var count = eval(runtime, """
+                sql
+                    INSERT INTO users (name, email, password) VALUES
+                    ('foo', 'foo@mail.com', 'ihatepasswords'),
+                    ('bar', 'bar@mail.com', 'ilovepasswords'),
+                    ('baz', 'baz@mail.com', 'password');
+                end""");
+        assertEquals(count, 3);
+
+        exec(runtime, """
+                let [[id1, email1], [id2, email2], [id3, email3]] be sql
+                    SELECT id, email FROM users
+                        WHERE email LIKE '%@mail.com'
+                        ORDER BY id ASC
+                end""");
+
+        assertEquals(runtime.getSymbol("id1"), 1);
+        assertEquals(runtime.getSymbol("email1"), "foo@mail.com");
+
+        assertEquals(runtime.getSymbol("id2"), 2);
+        assertEquals(runtime.getSymbol("email2"), "bar@mail.com");
+
+        assertEquals(runtime.getSymbol("id3"), 3);
+        assertEquals(runtime.getSymbol("email3"), "baz@mail.com");
+    }
+
     public static Object eval(String src, Object... args) {
-        ChillScriptParser parser = new ChillScriptParser();
-        Expression expr = parser.parseExpression(src);
+        Expression expr = ChillScriptParser.parseExpression(src);
         Object value = expr.run(args);
         return value;
+    }
+
+    public static Object eval(ChillScriptRuntime runtime, String src) {
+        Expression expr = ChillScriptParser.parseExpression(src);
+        return expr.evaluate(runtime);
+    }
+
+    public static void exec(ChillScriptRuntime runtime, String src) {
+        Command command = ChillScriptParser.parseCommand(src);
+        command.execute(runtime);
     }
 
     public static String staticFunction(){

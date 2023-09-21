@@ -1,6 +1,8 @@
 package chill.script.expressions;
 
 import chill.script.runtime.ChillScriptRuntime;
+import chill.script.runtime.op.Add;
+import chill.script.runtime.op.Sub;
 import chill.script.tokenizer.Token;
 import chill.script.tokenizer.TokenType;
 import chill.script.parser.ChillScriptParser;
@@ -36,12 +38,32 @@ public class AdditiveExpression extends Expression {
     public Object evaluate(ChillScriptRuntime runtime) {
         Object lhsValue = leftHandSide.evaluate(runtime);
         Object rhsValue = rightHandSide.evaluate(runtime);
-        if (lhsValue instanceof BigDecimal && rhsValue instanceof BigDecimal) {
-            var lhsBD = (BigDecimal) lhsValue;
-            var rhsBD = (BigDecimal) rhsValue;
-            return lhsBD.add(rhsBD);
+        if (operator.getType() == TokenType.PLUS) {
+            if (lhsValue instanceof String || rhsValue instanceof String) {
+                return lhsValue.toString() + rhsValue.toString();
+            } else if (lhsValue instanceof BigDecimal || rhsValue instanceof BigDecimal) {
+                return new BigDecimal(lhsValue.toString()).add(new BigDecimal(rhsValue.toString()));
+            } else if (lhsValue instanceof Integer || rhsValue instanceof Integer) {
+                return Integer.parseInt(lhsValue.toString()) + Integer.parseInt(rhsValue.toString());
+            } else if (lhsValue instanceof Double || rhsValue instanceof Double) {
+                return Double.parseDouble(lhsValue.toString()) + Double.parseDouble(rhsValue.toString());
+            } else if (lhsValue instanceof Add add) {
+                return add.add(runtime, rhsValue);
+            } else {
+                throw new UnsupportedOperationException("Cannot add " + lhsValue.getClass().getName() + " and " + rhsValue.getClass().getName());
+            }
         } else {
-            return String.valueOf(lhsValue) + String.valueOf(rhsValue);
+            if (lhsValue instanceof BigDecimal || rhsValue instanceof BigDecimal) {
+                return new BigDecimal(lhsValue.toString()).subtract(new BigDecimal(rhsValue.toString()));
+            } else if (lhsValue instanceof Integer || rhsValue instanceof Integer) {
+                return Integer.parseInt(lhsValue.toString()) - Integer.parseInt(rhsValue.toString());
+            } else if (lhsValue instanceof Double || rhsValue instanceof Double) {
+                return Double.parseDouble(lhsValue.toString()) - Double.parseDouble(rhsValue.toString());
+            } else if (lhsValue instanceof Sub sub) {
+                return sub.sub(runtime, rhsValue);
+            } else {
+                throw new UnsupportedOperationException("Cannot subtract " + lhsValue.getClass().getName() + " and " + rhsValue.getClass().getName());
+            }
         }
     }
 

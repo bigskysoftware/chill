@@ -1,7 +1,5 @@
 package chill.script.types;
 
-import chill.script.expressions.Expression;
-
 public interface ChillProperty {
     String getName();
     String getCanonicalName();

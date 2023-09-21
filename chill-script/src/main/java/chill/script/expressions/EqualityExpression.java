@@ -1,30 +1,53 @@
 package chill.script.expressions;
 
-import chill.script.parser.ChillScriptParser;
 import chill.script.runtime.ChillScriptRuntime;
-import chill.script.tokenizer.Token;
-import chill.script.tokenizer.TokenType;
 
 import java.util.Objects;
 
 public class EqualityExpression extends Expression {
+    public enum Operator {
+        Equals,
+        NotEquals;
 
-    private final Token operator;
-    private final Expression leftHandSide;
-    private final Expression rightHandSide;
-
-    public EqualityExpression(Token operator, Expression leftHandSide, Expression rightHandSide) {
-        this.leftHandSide = addChild(leftHandSide);
-        this.rightHandSide = addChild(rightHandSide);
-        this.operator = operator;
+        public String getStringValue() {
+            if (this == Equals) {
+                return "==";
+            } else if (this == NotEquals) {
+                return "!=";
+            } else {
+                throw new RuntimeException("Unknown op: " + this);
+            }
+        }
     }
+
+    private Operator operator;
+    private Expression leftHandSide;
+    private Expression rightHandSide;
+
+    public EqualityExpression() {}
 
     public Expression getLeftHandSide() {
         return leftHandSide;
     }
 
+    public void setLeftHandSide(Expression leftHandSide) {
+        this.leftHandSide = leftHandSide;
+    }
+
     public Expression getRightHandSide() {
         return rightHandSide;
+    }
+
+    public void setRightHandSide(Expression rightHandSide) {
+        this.rightHandSide = rightHandSide;
+    }
+
+    public Operator getOperator() {
+        return operator;
+    }
+
+    public void setOperator(Operator operator) {
+        this.operator = operator;
     }
 
     @Override
@@ -33,7 +56,7 @@ public class EqualityExpression extends Expression {
     }
 
     public boolean isEqual() {
-        return operator.getType().equals(TokenType.EQUAL_EQUAL) || operator.getStringValue().equals("is");
+        return operator == Operator.Equals;
     }
 
 
@@ -45,23 +68,11 @@ public class EqualityExpression extends Expression {
     public Object evaluate(ChillScriptRuntime runtime) {
         Object lhsValue = leftHandSide.evaluate(runtime);
         Object rhsValue = rightHandSide.evaluate(runtime);
+        boolean isEqual = Objects.equals(lhsValue, rhsValue);
         if (isEqual()) {
-            return Objects.equals(lhsValue, rhsValue);
+            return isEqual;
         } else {
-            return !Objects.equals(lhsValue, rhsValue);
+            return !isEqual;
         }
-    }
-
-    public static Expression parse(ChillScriptParser parser) {
-        Expression expression = parser.parse("logicalExpression");
-        while (parser.match(TokenType.EQUAL_EQUAL, TokenType.BANG_EQUAL) || parser.match("is")) {
-            Token operator = parser.consumeToken();
-            final Expression rightHandSide = parser.parse("logicalExpression");
-            EqualityExpression equalityExpression = new EqualityExpression(operator, expression, rightHandSide);
-            equalityExpression.setStart(expression.getStart());
-            equalityExpression.setEnd(rightHandSide.getEnd());
-            expression = equalityExpression;
-        }
-        return expression;
     }
 }

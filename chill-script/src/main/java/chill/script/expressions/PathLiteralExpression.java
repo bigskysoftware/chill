@@ -7,16 +7,16 @@ import chill.script.tokenizer.TokenType;
 
 public class PathLiteralExpression extends Expression {
 
-    private final String _value;
+    private final Token token;
 
     public PathLiteralExpression(Token token) {
-        _value = token.getStringValue();
+        this.token = token;
         setToken(token);
     }
 
     @Override
-    public Object evaluate(ChillScriptRuntime chillTests) {
-        return _value;
+    public String evaluate(ChillScriptRuntime chillTests) {
+        return token.getStringValue();
     }
 
     public static Expression parse(ChillScriptParser parser) {

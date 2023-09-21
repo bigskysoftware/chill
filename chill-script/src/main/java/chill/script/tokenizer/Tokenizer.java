@@ -263,13 +263,26 @@ public class Tokenizer {
     }
 
     private boolean scanIdentifier() {
-        if( isAlpha(peek())) {
+        if (isAlpha(peek())) {
             int start = position;
             while (isAlphaNumeric(peek())) {
                 takeChar();
             }
             String value = src.substring(start, position);
             tokenList.addToken(SYMBOL, value, start, position, line, lineOffset);
+            return true;
+        } else if (peek() == '`') {
+            int start = position;
+            takeChar();
+            while (!tokenizationEnd() && peek() != '`' && peek() != '\n') {
+                takeChar();
+            }
+            if (peek() == '`') {
+                tokenList.addToken(SYMBOL, src.substring(start + 1, position), start, position, line, lineOffset);
+                takeChar(); // consume the closing `
+            } else {
+                tokenList.addToken(ERROR, src.substring(start + 1, position), start, position, line, lineOffset);
+            }
             return true;
         } else {
             return false;
@@ -315,10 +328,16 @@ public class Tokenizer {
             tokenList.addToken(SHARP, "#", start, position, line, lineOffset);
         } else if(matchAndConsume(':')) {
             tokenList.addToken(COLON, ":", start, position, line, lineOffset);
+        } else if (matchAndConsume(';')) {
+            tokenList.addToken(SEMICOLON, ";", start, position, line, lineOffset);
         } else if(matchAndConsume(',')) {
             tokenList.addToken(COMMA, ",", start, position, line, lineOffset);
         } else if(matchAndConsume('.')) {
-            tokenList.addToken(DOT, ".", start, position, line, lineOffset);
+            if (matchAndConsume('.')) {
+                tokenList.addToken(DOT_DOT, "..", start, position, line, lineOffset);
+            } else {
+                tokenList.addToken(DOT, ".", start, position, line, lineOffset);
+            }
         } else if(matchAndConsume('+')) {
             tokenList.addToken(PLUS, "+", start, position, line, lineOffset);
         } else if(matchAndConsume('-')) {
@@ -332,6 +351,8 @@ public class Tokenizer {
             } else {
                 tokenList.addToken(SLASH, "/", start, position, line, lineOffset);
             }
+        } else if (matchAndConsume('%')) {
+            tokenList.addToken(PERCENT, "%", start, position, line, lineOffset);
         } else if(matchAndConsume('!')) {
             if (matchAndConsume('=')) {
                 tokenList.addToken(BANG_EQUAL, "!=", start, position, line, lineOffset);

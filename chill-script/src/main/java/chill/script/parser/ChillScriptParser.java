@@ -11,6 +11,17 @@ import chill.utils.Pair;
 import java.util.*;
 
 public class ChillScriptParser {
+    public static final class Location {
+        private final int index;
+
+        public Location(int index) {
+            this.index = index;
+        }
+
+        public int getIndex() {
+            return index;
+        }
+    }
 
     private final Map<String, CommandParser> commands;
     private final Map<String, ExpressionParser> expressions;
@@ -19,6 +30,7 @@ public class ChillScriptParser {
     private final List<String> primaryExpressions = new LinkedList<>();
 
     private TokenList tokens;
+    private String src;
     private String srcPath;
 
     public ChillScriptParser() {
@@ -44,7 +56,14 @@ public class ChillScriptParser {
         initTokens(src);
         ChillScriptProgram program = new ChillScriptProgram();
         program.setStart(currentToken());
-        program.setBody(parseCommandList());
+
+        List<Command> children = new LinkedList<>();
+        while (matchSequence("depend", "on")) {
+            children.add(DependOnCommand.parse(this));
+        }
+
+        children.addAll(parseCommandList());
+        program.setBody(children);
         program.setEnd(lastMatch());
         if (program.isValid()) {
             return program;
@@ -53,9 +72,10 @@ public class ChillScriptParser {
         }
     }
 
-    public Expression parseExpression(String src) {
-        initTokens(src);
-        Expression expression = parse("expression");
+    public static Expression parseExpression(String src) {
+        ChillScriptParser parser = new ChillScriptParser();
+        parser.initTokens(src);
+        Expression expression = parser.parse("expression");
         if (expression.isValid()) {
             return expression;
         } else {
@@ -63,8 +83,20 @@ public class ChillScriptParser {
         }
     }
 
+    public static Command parseCommand(String src) {
+        ChillScriptParser parser = new ChillScriptParser();
+        parser.initTokens(src);
+        Command command = parser.parseCommand();
+        if (command.isValid()) {
+            return command;
+        } else {
+            throw new ChillScriptParseException(command);
+        }
+    }
+
     protected final void initTokens(String src) {
         Tokenizer tokenizer = getTokenizer(src);
+        this.src = src;
         this.tokens = tokenizer.getTokens();
     }
 
@@ -107,16 +139,35 @@ public class ChillScriptParser {
         var commandParser = getCommandParser(tokens);
         if (commandParser != null) {
             Command command = commandParser.parse(this);
+            if (command == null) {
+                return new ErrorCommand("Command parser returned null", currentToken());
+            }
             match("then"); // optional 'then' divider
             return command;
         } else {
+            Location location = this.getCurrentLocation();
+            try {
+                Expression expression = this.parse("expression");
+                if (expression != null) {
+                    return new ExpressionCommand(expression);
+                }
+            } catch (Throwable ignored) {}
+            this.restoreLocation(location);
+
             if (currentToken().getType() == TokenType.SYMBOL) {
                 return new ErrorCommand("Unknown command: " + currentToken().getStringValue(), currentToken());
             } else {
                 return new ErrorCommand("Unexpected token: " + currentToken().getStringValue(), currentToken());
-
             }
         }
+    }
+
+    public Location getCurrentLocation() {
+        return new Location(tokens.getCurrentTokenIndex());
+    }
+
+    public void restoreLocation(Location location) {
+        tokens.setCurrentTokenIndex(location.getIndex());
     }
 
     private CommandParser getCommandParser(TokenList tokens) {
@@ -129,20 +180,25 @@ public class ChillScriptParser {
 
     private void initCoreCommands() {
         registerCommand("print", PrintCommand::parse);
+        registerCommand("println", PrintCommand::parse);
         registerCommand("set", SetCommand::parse);
+        registerCommand("let", SetCommand::parse);
         registerCommand("if", IfCommand::parse);
         registerCommand("for", ForCommand::parse);
         registerCommand("repeat", RepeatCommand::parse);
+        registerCommand("fun", FunctionCommand::parse);
+        registerCommand("return", ReturnCommand::parse);
     }
 
     private void initExpressionCoreGrammar() {
         // Core grammar
         registerExpression("expression", this::parsePostfixExpressions);
-        registerExpression("equalityExpression", EqualityExpression::parse);
-        registerExpression("logicalExpression", LogicalExpression::parse);
-        registerExpression("comparisonExpression", ComparisonExpression::parse);
+        registerExpression("equalityExpression", parser -> ComparisonExpression.parse(parser, ComparisonExpression.Level.Equality));
+        registerExpression("logicalExpression", parser -> ComparisonExpression.parse(parser, ComparisonExpression.Level.Logical));
+        registerExpression("ordinalExpression", parser -> ComparisonExpression.parse(parser, ComparisonExpression.Level.Ordinal));
+        registerExpression("collectionExpression", parser -> ComparisonExpression.parse(parser, ComparisonExpression.Level.Collection));
         registerExpression("additiveExpression", AdditiveExpression::parse);
-        registerExpression("factorExpression", (parser) -> parser.parse("unaryExpression"));
+        registerExpression("factorExpression", FactorExpression::parse);
         registerExpression("unaryExpression", UnaryExpression::parse);
         registerExpression("indirectExpression", this::parseIndirectExpressions);
         registerExpression("primaryExpression", (parser) -> parser.parse(primaryExpressions));
@@ -150,8 +206,12 @@ public class ChillScriptParser {
         // Core primary expressions
         registerPrimaryExpression("string", StringLiteralExpression::parse);
         registerPrimaryExpression("number", NumberLiteralExpression::parse);
+        registerPrimaryExpression("boolean", BooleanLiteralExpression::parse);
+        registerPrimaryExpression("constructor", ConstructorExpression::parse);
+        registerPrimaryExpression("sql", SqlExpression::parse);
         registerPrimaryExpression("identifier", IdentifierExpression::parse);
         registerPrimaryExpression("listLiteral", ListLiteralExpression::parse);
+        registerPrimaryExpression("mapLiteral", MapLiteralExpression::parse);
         registerPrimaryExpression("urlLiteral", URLLiteralExpression::parse);
         registerPrimaryExpression("pathLiteral", PathLiteralExpression::parse);
         registerPrimaryExpression("parenthesizedExpression", ParenthesizedExpression::parse);
@@ -239,7 +299,7 @@ public class ChillScriptParser {
     public Expression parse(String... expressionTypes) {
         for (String exprType : expressionTypes) {
             ExpressionParser exprParser = expressions.get(exprType);
-            Expression expr = exprParser.parse(this);
+            Expression expr = exprParser.parseExpression(this);
             if (expr != null) {
                 return expr;
             }
@@ -249,7 +309,7 @@ public class ChillScriptParser {
 
     public Expression parse(List<String> expressionTypes) {
         for (String exprType : expressionTypes) {
-            Expression expr = expressions.get(exprType).parse(this);
+            Expression expr = expressions.get(exprType).parseExpression(this);
             if (expr != null) {
                 return expr;
             }
@@ -290,6 +350,10 @@ public class ChillScriptParser {
         return tokens.consumeToken();
     }
 
+    public void advance(int n) {
+        tokens.advance(n);
+    }
+
     public boolean matchAndConsume(String type) {
         if (match(type)) {
             consumeToken();
@@ -322,7 +386,7 @@ public class ChillScriptParser {
             return tokens.consumeToken();
         } else {
             elt.addError(currentToken(), errorMessage);
-            return currentToken();
+            return consumeToken();
         }
     }
 
@@ -341,5 +405,22 @@ public class ChillScriptParser {
 
     public String getSourcePath() {
         return srcPath;
+    }
+
+    public Token produceToken() {
+        return tokens.produceToken();
+    }
+
+    public String getSubstringBetween(Token start, Token end) {
+        return src.substring(start.getStart(), end.getStart());
+    }
+
+    public boolean matchAndConsumeSequence(Object... items) {
+        if (matchSequence(items)) {
+            advance(items.length);
+            return true;
+        } else {
+            return false;
+        }
     }
 }
