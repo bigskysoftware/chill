@@ -11,13 +11,17 @@ import java.sql.*;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static chill.utils.TheMissingUtils.*;
 
 @SuppressWarnings("rawtypes")
 public class ChillRecord {
-
+    protected static void codegen() {
+        new RuntimeException()
+                .printStackTrace();
+    }
     public static ConnectionSource connectionSource = null;
 
     private static int SHOULD_LOG = 0;
@@ -74,13 +78,14 @@ public class ChillRecord {
         return connectionSource.getConnection();
     }
 
-    public static void inTransaction(Runnable run){
+    public static <T> T inTransaction(Supplier<T> run){
         ChillTransaction currentTransaction = ChillTransaction.getCurrentTransaction();
         if (currentTransaction == null) {
-            ChillTransaction transaction = ChillTransaction.start(safely(() -> getRawConnection()));
+            ChillTransaction transaction = ChillTransaction.start(safely(ChillRecord::getRawConnection));
             try {
-                run.run();
+                var result = run.get();
                 transaction.commit();
+                return result;
             } catch (Exception e) {
                 transaction.rollback();
                 throw forceThrow(e);
@@ -89,7 +94,7 @@ public class ChillRecord {
             }
         } else {
             currentTransaction.join();
-            run.run();
+            return run.get();
         }
     }
 
@@ -515,6 +520,9 @@ public class ChillRecord {
         public ChillQuery<T> where(Object... conditions) {
             return new ChillQuery<T>(clazz).where(conditions);
         }
+        public ChillQuery<T> select(ChillField<?>... args) {
+            return new ChillQuery<T>(clazz).select(args);
+        }
 
         public T one(Object... conditions) {
             return new ChillQuery<T>(clazz).where(conditions).first();
@@ -547,8 +555,8 @@ public class ChillRecord {
     }
 
     public static SafeAutoCloseable quietly() {
-        SHOULD_LOG++;
-        return () -> SHOULD_LOG--;
+//        SHOULD_LOG++;
+        return () -> {};
     }
 
     //=====================================

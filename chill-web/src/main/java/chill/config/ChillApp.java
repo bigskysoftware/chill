@@ -124,7 +124,7 @@ public class ChillApp {
         }
 
         if (!UNSET_VALUE.equals(console)) {
-            ChillShell chillShell = new ChillShell().withImport("model.*");
+            ChillShell chillShell = new ChillShell();
             if ("jline".equals(console)) {
                 chillShell.jline();
             } else {

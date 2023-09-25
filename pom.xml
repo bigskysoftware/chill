@@ -12,6 +12,7 @@
     <module>chill-web</module>
     <module>autom8</module>
       <module>chill-job</module>
+      <module>chill-tool</module>
   </modules>
   <properties>
     <maven.compiler.source>17</maven.compiler.source>

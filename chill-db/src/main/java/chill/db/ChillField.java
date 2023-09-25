@@ -5,6 +5,7 @@ import chill.utils.TheMissingUtils;
 
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
+import java.sql.Timestamp;
 import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.function.Consumer;
@@ -44,7 +45,9 @@ public class ChillField<T> {
         this.columnName = columnName;
         this.synthetic = columnName == null;
         this.type = type;
-        record.fields.add(this);
+        if (!Objects.equals(columnName, "*")) {
+            record.fields.add(this);
+        }
         this.lastSavedValue = null;
         this.value = null;
         beforeSets = new LinkedList<>();
@@ -167,6 +170,18 @@ public class ChillField<T> {
                 value = valueFromDB;
             }
         });
+    }
+
+    private T coerceDbValue(Object valueFromDB, Class<?> type) {
+        if (type.equals(Timestamp.class)) {
+            if (valueFromDB instanceof String s) {
+                return (T) new Timestamp(Long.parseLong(s));
+            } else {
+                return (T) valueFromDB;
+            }
+        } else {
+            return (T) valueFromDB;
+        }
     }
 
     public void fromHashMap(Map<String, Object> map) {

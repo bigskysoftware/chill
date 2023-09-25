@@ -66,6 +66,19 @@ public class ChillMigrations {
         }
     }
 
+    public <T extends ChillMigrations> ChillMigrations(Class<T> migrations) {
+        try {
+            migrationsFile = TheMissingUtils.newInstance(migrations);
+            allMigrations = getMigrations();
+            bootstrap();
+        } catch (Exception e) {
+            // TODO better error state checking here
+            allMigrations = new NiceList<>();
+            e.printStackTrace();
+            LOG.error("Unable to load migrations file", e);
+        }
+    }
+
     public static void generateNewMigration() {
         Scanner scanner = new Scanner(System.in);
         System.out.print("Please enter a brief description of the migration: ");
@@ -234,16 +247,15 @@ public class ChillMigrations {
     }
 
     public void up() {
-        ChillMigration first = pending().first();
-        if (first != null) {
-            first.migrateUp();
+        for (ChillMigration migration : pending()) {
+            migration.migrateUp();
         }
     }
 
     public void down() {
-        ChillMigration first = applied().last();
-        if (first != null) {
-            first.migrateDown();
+        var migrations = applied();
+        for (int i = migrations.size() - 1; i >= 0; i--) {
+            migrations.get(i).migrateDown();
         }
     }
 

@@ -22,6 +22,7 @@ public class ChillQuery<T extends ChillRecord> implements Iterable<T> {
 
     private final Class<T> clazz;
     private final T protoInstance;
+    private final NiceList<ChillField<?>> selectors = new NiceList<>();
     private final StringBuilder whereClause = new StringBuilder();
     private final LinkedList queryArguments = new LinkedList();
     private final Map<String, Object> colValues = new LinkedHashMap<>();
@@ -68,6 +69,7 @@ public class ChillQuery<T extends ChillRecord> implements Iterable<T> {
         this.tableName = from.tableName;
         this.joins.addAll(from.joins);
         this.orders.addAll(from.orders);
+        this.selectors.addAll(from.selectors);
         this.limit = from.limit;
         this.page = from.page;
     }
@@ -78,6 +80,10 @@ public class ChillQuery<T extends ChillRecord> implements Iterable<T> {
 
     public ChillQuery<T> where(Object... conditions) {
         return new ChillQuery<T>(this).where$(conditions);
+    }
+
+    public ChillQuery<T> select(ChillField<?>... args) {
+        return new ChillQuery<>(this).select$(args);
     }
 
     // TODO this needs to be int and we need a coercion layer in chill script
@@ -96,7 +102,8 @@ public class ChillQuery<T extends ChillRecord> implements Iterable<T> {
     public ChillQuery<T> join(ChillField.FK foreignKey) {
         instantiatable = false;
         ChillQuery<T> ts = new ChillQuery<>(this);
-        ts.joins.add(new Join(foreignKey));
+        boolean thisIsForeignType = getClass().isAssignableFrom(foreignKey.getType());
+        ts.joins.add(new Join(foreignKey, !thisIsForeignType));
         return ts;
     }
 
@@ -184,6 +191,15 @@ public class ChillQuery<T extends ChillRecord> implements Iterable<T> {
         return this;
     }
 
+    public ChillQuery<T> select$(ChillField<?>... args) {
+        if (args.length == 0) {
+            throw new IllegalArgumentException("Must select at least one column");
+        }
+        selectors.addAll(Arrays.asList(args));
+        instantiatable = false;
+        return this;
+    }
+
     public T newRecord() {
         if (instantiatable) {
             T t = makeInstance();
@@ -199,8 +215,7 @@ public class ChillQuery<T extends ChillRecord> implements Iterable<T> {
     }
 
     public String sql() {
-        var fields = getFields();
-        var sql = "SELECT " + fields.map(field -> getTableName() + "." + field.getColumnName()).join(", ") + "\n" +
+        var sql = "SELECT " + buildSelectSentence() + "\n" +
                 "FROM " + getTableName();
         for (Join join : joins) {
             sql += "\n" + join.sql();
@@ -239,9 +254,11 @@ public class ChillQuery<T extends ChillRecord> implements Iterable<T> {
     }
 
     public String firstSQL() {
-        var fields = getFields();
-        String sql = "SELECT " + fields.map(ChillField::getColumnName).join(", ") + "\n" +
+        String sql = "SELECT " + buildSelectSentence() + "\n" +
                 "FROM " + getTableName();
+        for (Join join : joins) {
+            sql += "\n" + join.sql();
+        }
         if (whereClause.length() > 0) {
             sql = sql + "\nWHERE " + whereClause;
         }
@@ -250,7 +267,10 @@ public class ChillQuery<T extends ChillRecord> implements Iterable<T> {
     }
 
     public String deleteSQL() {
-        String sql = "DELETE  FROM " + getTableName();
+        String sql = "DELETE FROM " + getTableName();
+        for (Join join : joins) {
+            sql += "\n" + join.sql();
+        }
         if (whereClause.length() > 0) {
             sql = sql + "\nWHERE " + whereClause;
         }
@@ -301,6 +321,45 @@ public class ChillQuery<T extends ChillRecord> implements Iterable<T> {
         return findWhere(Arrays.asList(uuidField.getColumnName(), uuid).toArray());
     }
 
+    private String buildSelectSentence() {
+        if (selectors.isEmpty()) {
+            var fields = getFields();
+            return fields.map(field -> getTableName() + "." + field.getColumnName()).join(", ");
+        } else {
+            var builder = new StringBuilder();
+            for (var s : selectors) {
+                if (!builder.isEmpty()) {
+                    builder.append(", ");
+                }
+                if (s.getColumnName().equals("*")) {
+                    for (var field : s.getRecord().getFields()) {
+                        if (!builder.isEmpty()) {
+                            builder.append(", ");
+                        }
+                        builder
+                                .append(s.getRecord().getTableName())
+                                .append('.')
+                                .append(field.getColumnName())
+                                .append(" AS ")
+                                .append(s.getRecord().getTableName())
+                                .append('_')
+                                .append(field.getColumnName());
+                    }
+                } else {
+                    builder
+                            .append(s.getRecord().getTableName())
+                            .append('.')
+                            .append(s.getColumnName())
+                            .append(" AS ")
+                            .append(s.getRecord().getTableName())
+                            .append('_')
+                            .append(s.getColumnName());
+                }
+            }
+            return builder.toString();
+        }
+    }
+
     private T findWhere(Object[] objects) {
         return TheMissingUtils.safely(() -> {
             try (var resultSetAndConnection = where(objects).executeQuery()) {
@@ -316,6 +375,9 @@ public class ChillQuery<T extends ChillRecord> implements Iterable<T> {
     }
 
     public T first() {
+        if (!selectors.isEmpty()) {
+            throw new UnsupportedOperationException("cannot use custom selects with first(), use firstWithExtra() instead");
+        }
         String sql = firstSQL();
         if (ChillRecord.shouldLog()) {
             log.info(ChillRecord.makeQueryLog("QUERY", sql, args()));
@@ -332,6 +394,31 @@ public class ChillQuery<T extends ChillRecord> implements Iterable<T> {
                     T t = makeInstance();
                     ChillRecord.populateFromResultSet(t, resultSet);
                     return t;
+                } else {
+                    return null;
+                }
+            }
+        });
+    }
+
+    public ChillQueryResult firstWithExtra() {
+        if (selectors.isEmpty()) {
+            throw new UnsupportedOperationException("cannot use firstWithExtra() without a custom select");
+        }
+        String sql = firstSQL();
+        if (ChillRecord.shouldLog()) {
+            log.info(ChillRecord.makeQueryLog("QUERY", sql, args()));
+        }
+        return TheMissingUtils.safely(() -> {
+            try (Connection connection = ChillRecord.connectionSource.getConnection()) {
+                PreparedStatement preparedStatement = connection.prepareStatement(sql);
+                int col = 1;
+                for (Object value : args()) {
+                    preparedStatement.setObject(col++, value);
+                }
+                ResultSet resultSet = preparedStatement.executeQuery();
+                if (resultSet.next()) {
+                    return new ChillQueryResult(selectors, resultSet);
                 } else {
                     return null;
                 }
@@ -474,10 +561,25 @@ public class ChillQuery<T extends ChillRecord> implements Iterable<T> {
         String to;
 
         public Join(ChillField.FK foreignKey) {
-            T prototype = (T) ChillRecord.getPrototype(foreignKey.getType());
-            table = prototype.tableName;
-            from = foreignKey.getRecord().getTableName() + "." + foreignKey.getColumnName();
-            to = table + "." + foreignKey.getForeignColumn();
+            this(foreignKey, false);
+        }
+
+        public Join(ChillField.FK foreignKey, boolean reverse) {
+//            T prototype = (T) ChillRecord.getPrototype(foreignKey.getType());
+//            table = prototype.tableName;
+//            from = foreignKey.getRecord().getTableName() + "." + foreignKey.getColumnName();
+//            to = table + "." + foreignKey.getForeignColumn();
+
+            T foreignType = (T) ChillRecord.getPrototype(foreignKey.getType());
+            if (reverse) {
+                table = foreignKey.getRecord().getTableName();
+                from = table + "." + foreignKey.getColumnName();
+                to = foreignType.getTableName() + "." + foreignKey.getForeignColumn();
+            } else {
+                table = foreignType.tableName;
+                from = foreignType.getTableName() + "." + foreignKey.getForeignColumn();
+                to = foreignKey.getRecord().getTableName() + "." + foreignKey.getColumnName();
+            }
         }
 
         public String sql() {

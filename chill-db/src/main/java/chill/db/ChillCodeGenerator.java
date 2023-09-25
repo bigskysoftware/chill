@@ -29,61 +29,34 @@ public class ChillCodeGenerator {
             throw new IllegalStateException("Could not determine class to code gen for!");
         }
         String code = generateCodeForPackage(templateClass.getPackageName());
-        if (!updateCodeInline(code)) {
+        Path generatedFilePath = Path.of("src", "main", "java",
+                templateClass.getName().replace(".", File.separator) + ".java");
+        if (!updateCodeInline(code, generatedFilePath)) {
             System.out.println("Unable to update the code inline, here is the generated code:\n\n" + code);
         }
     }
 
-    private static boolean updateCodeInline(String code) {
-
-        Path[] srcDir = new Path[1];
+    private static boolean updateCodeInline(String code, Path generatedTargetPath) {
+        System.out.println("Updating " + generatedTargetPath);
         try {
-            Files.walkFileTree(Path.of(".").toAbsolutePath(), Collections.emptySet(), 2, new SimpleFileVisitor<>(){
-                @Override
-                public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
-                    Path fileName = dir.getFileName();
-                    if (fileName.startsWith(".") && !dir.toFile().getName().equals(".")) {
-                        return FileVisitResult.SKIP_SUBTREE;
-                    } else {
-                        return FileVisitResult.CONTINUE;
-                    }
-                }
-                @Override
-                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                    File fileFile = file.toFile();
-                    if (fileFile.getName().equals("src")) {
-                        srcDir[0] = file;
-                        return FileVisitResult.TERMINATE;
-                    }
-                    return FileVisitResult.CONTINUE;
-                }
-            });
-            if (srcDir[0] != null) {
-                Path src = srcDir[0];
-                System.out.println("Found source directory: " + src.toAbsolutePath());
-                Path generatedFilePath = src.resolve("main/java/model/_generated.java");
-                File generatedFile = generatedFilePath.toFile();
-                if (generatedFile.exists()) {
-                    System.out.println("Found generated java file: " + generatedFilePath.toAbsolutePath());
-                    String currentSource = Files.readString(generatedFilePath);
-                    int codeGenBoundary = currentSource.indexOf(CODE_GEN_BOUNDARY);
-                    if (codeGenBoundary > 0) {
-                        String currentHeader = currentSource.substring(0, codeGenBoundary);
-                        Files.writeString(generatedFilePath, currentHeader + code + "\n}\n");
-                        System.out.println("Updated " + generatedFile);
-                        return true;
-                    } else {
-                        System.out.println("Could not find code gen boundary in " + generatedFile);
-                    }
+            if (generatedTargetPath.toFile().exists()) {
+                System.out.println("Found generated java file: " + generatedTargetPath.toAbsolutePath());
+                String currentSource = Files.readString(generatedTargetPath);
+                int codeGenBoundary = currentSource.indexOf(CODE_GEN_BOUNDARY);
+                if (codeGenBoundary > 0) {
+                    String currentHeader = currentSource.substring(0, codeGenBoundary);
+                    Files.writeString(generatedTargetPath, currentHeader + code + "\n}\n");
+                    System.out.println("Updated " + generatedTargetPath);
+                    return true;
                 } else {
-                    System.out.println("Could not find generated java file: " + generatedFilePath.toAbsolutePath());
+                    System.out.println("Could not find code gen boundary in " + generatedTargetPath);
                 }
-
+            } else {
+                System.out.println("Could not find generated java file: " + generatedTargetPath.toAbsolutePath());
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-
         return false;
     }
 
@@ -224,12 +197,17 @@ public class ChillCodeGenerator {
                 .append(newLine);
 
         sb.append("public static chill.db.ChillQuery<").append(className).append("> where(Object... args) {").append(newLine)
-                .append("  return find.where(args);")
+                .append("  return find.where(args);").append(newLine)
                 .append("}").append(newLine)
                 .append(newLine);
 
         sb.append("public static chill.db.ChillQuery<").append(className).append("> join(chill.db.ChillField.FK fk) {").append(newLine)
-                .append("  return find.join(fk);")
+                .append("  return find.join(fk);").append(newLine)
+                .append("}").append(newLine)
+                .append(newLine);
+
+        sb.append("public static chill.db.ChillQuery<").append(className).append("> select(chill.db.ChillField... fields) {").append(newLine)
+                .append("  return find.select(fields);").append(newLine)
                 .append("}").append(newLine)
                 .append(newLine);
 
@@ -241,6 +219,25 @@ public class ChillCodeGenerator {
         }
         sb.append("}").append(newLine)
         .append(newLine);
+
+        sb.append("public static class column {").append(newLine)
+                .append("  private static final ").append(className).append(" instance = to.instance;").append(newLine)
+                .append("  public static final chill.db.ChillField<").append(className)
+                    .append("> ALL = new ChillField<>(instance, \"*\", ").append(className).append(".class) {};").append(newLine);
+
+        for (java.lang.reflect.Field javaField : classFields) {
+            if (ChillField.class.isAssignableFrom(javaField.getType())) {
+                javaField.setAccessible(true);
+                ChillField chillField = (ChillField) safely(() -> javaField.get(instance));
+                String capitalizedFieldName = TheMissingUtils.capitalize(javaField.getName());
+
+                sb.append("  public static final chill.db.ChillField<")
+                        .append(chillField.getTypeName())
+                        .append("> ").append(capitalizedFieldName).append(" = instance.").append(javaField.getName()).append(";").append(newLine);
+            }
+        }
+        sb.append("}").append(newLine)
+                .append(newLine);
 
         sb.append("}").append(newLine);
     }
