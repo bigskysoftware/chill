@@ -4,6 +4,8 @@ import chill.db.ChillField;
 import chill.db.ChillRecord;
 import chill.job.ChillJob;
 
+import java.util.concurrent.atomic.AtomicReference;
+
 public class JobEntity extends _generated.AbstractJobEntity {
     public enum Status {
         PENDING,
@@ -23,14 +25,15 @@ public class JobEntity extends _generated.AbstractJobEntity {
     ChillField<String> jobClass = field("job_class", String.class).required();
 
     public static ChillJob dequeue() {
-        return ChillRecord.inTransaction(() -> {
+        AtomicReference<ChillJob> job = new AtomicReference<>();
+        ChillRecord.inTransaction(() -> {
             var results = JobEntity
-                    .select(column.ALL, QueueEntity.column.Id)
+                    .select(JobEntity.column.ALL, QueueEntity.column.Id)
                     .join(QueueEntity.to.jobId)
-                    .firstWithExtra();
+                    .first();
 
             if (results == null) {
-                return null;
+                return;
             }
 
             Long queueId = results.one(QueueEntity.column.Id);
@@ -41,7 +44,8 @@ public class JobEntity extends _generated.AbstractJobEntity {
                 throw new RuntimeException("Failed to delete queue entry, must've been stolen");
             }
 
-            return ChillJob.fromRecord(results.one(column.ALL));
+            job.set(ChillJob.fromRecord(results.one(column.ALL)));
         });
+        return job.get();
     }
 }

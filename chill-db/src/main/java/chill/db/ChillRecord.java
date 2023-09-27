@@ -11,17 +11,12 @@ import java.sql.*;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static chill.utils.TheMissingUtils.*;
 
 @SuppressWarnings("rawtypes")
 public class ChillRecord {
-    protected static void codegen() {
-        new RuntimeException()
-                .printStackTrace();
-    }
     public static ConnectionSource connectionSource = null;
 
     private static int SHOULD_LOG = 0;
@@ -78,14 +73,13 @@ public class ChillRecord {
         return connectionSource.getConnection();
     }
 
-    public static <T> T inTransaction(Supplier<T> run){
+    public static void inTransaction(Runnable run){
         ChillTransaction currentTransaction = ChillTransaction.getCurrentTransaction();
         if (currentTransaction == null) {
             ChillTransaction transaction = ChillTransaction.start(safely(ChillRecord::getRawConnection));
             try {
-                var result = run.get();
+                run.run();
                 transaction.commit();
-                return result;
             } catch (Exception e) {
                 transaction.rollback();
                 throw forceThrow(e);
@@ -94,7 +88,7 @@ public class ChillRecord {
             }
         } else {
             currentTransaction.join();
-            return run.get();
+            run.run();
         }
     }
 

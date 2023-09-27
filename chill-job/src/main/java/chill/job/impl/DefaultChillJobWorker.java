@@ -2,12 +2,24 @@ package chill.job.impl;
 
 import chill.db.ChillMigrations;
 import chill.job.ChillJob;
+import chill.job.ChillJobId;
+import chill.job.ChillJobRunner;
 import chill.job.ChillJobWorker;
 import chill.job.model.JobEntity;
 import chill.job.model.Migrations;
+import chill.utils.TheMissingUtils;
 import com.google.gson.Gson;
 
+import java.util.concurrent.Future;
+
 public class DefaultChillJobWorker extends ChillJobWorker {
+    private static DefaultChillJobWorker worker = null;
+
+    public static DefaultChillJobWorker getInstance() {
+        if (worker == null) worker = new DefaultChillJobWorker();
+        return worker;
+    }
+
     private static ChillMigrations migrations;
 
     public DefaultChillJobWorker() {
@@ -30,6 +42,7 @@ public class DefaultChillJobWorker extends ChillJobWorker {
     }
 
     protected void worker() {
+        ChillJobRunner runner = new DefaultChillJobRunner();
         while (true) {
             if (isPaused()) {
                 try {
@@ -39,20 +52,21 @@ public class DefaultChillJobWorker extends ChillJobWorker {
                 }
             }
 
+            long start = System.currentTimeMillis();
             System.out.println("getting job");
             ChillJob job = JobEntity.dequeue();
             System.out.println("got job: " + job);
             if (job != null) {
-                long start = System.currentTimeMillis();
+                runner.handle(job);
+            }
+            long waitingPeriod = Math.max(0, System.currentTimeMillis() - start);
 
-                String error = null;
+            if (waitingPeriod > 0) {
                 try {
-                    job.run();
-                } catch (Exception e) {
-                    error = e.toString();
+                    // todo: optimize?
+                    Thread.sleep(waitingPeriod);
+                } catch (Exception ignored) {
                 }
-
-                long waitingPeriod = Math.max(0, System.currentTimeMillis() - start);
             }
         }
     }
@@ -72,6 +86,16 @@ public class DefaultChillJobWorker extends ChillJobWorker {
         if (entity != null) {
             entity.setStatus(JobEntity.Status.CANCELLED);
             entity.update();
+        }
+    }
+
+    @Override
+    public ChillJob fetchJob(ChillJobId id) {
+        var entity = JobEntity.find.byPrimaryKey(id.toString());
+        if (entity == null) {
+            return null;
+        } else {
+            return ChillJob.fromRecord(entity);
         }
     }
 }

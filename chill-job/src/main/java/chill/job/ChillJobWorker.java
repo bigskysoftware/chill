@@ -1,8 +1,6 @@
 package chill.job;
 
-import chill.db.ChillMigrations;
 import chill.job.model.JobEntity;
-import chill.job.model.Migrations;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -38,4 +36,13 @@ public abstract class ChillJobWorker {
     public abstract void submit(ChillJob job);
 
     public abstract void cancel(ChillJob job);
+
+    public abstract ChillJob fetchJob(ChillJobId id);
+
+    public JobEntity.Status getJobStatus(ChillJobId jobId) {
+        var results = JobEntity.select(JobEntity.column.Status)
+                .where("id = ?", jobId.toString())
+                .firstWithExtra();
+        return results.one(JobEntity.column.Status);
+    }
 }

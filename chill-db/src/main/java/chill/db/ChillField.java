@@ -4,7 +4,6 @@ import chill.utils.NiceList;
 import chill.utils.TheMissingUtils;
 
 import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
 import java.sql.Timestamp;
 import java.util.*;
 import java.util.concurrent.Callable;

@@ -1,7 +1,6 @@
 package test.model;
 
 import chill.db.ChillField;
-import chill.db.ChillQuery;
 
 public class User extends _generated.AbstractUser {
 

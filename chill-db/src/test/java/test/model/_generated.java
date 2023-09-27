@@ -2,6 +2,7 @@ package test.model;
 
 import chill.db.ChillCodeGenerator;
 import chill.db.ChillRecord;
+import chill.db.ChillQuery;
 
 public class _generated extends ChillCodeGenerator {
 
@@ -110,16 +111,16 @@ public class _generated extends ChillCodeGenerator {
             return self;
         }
 
-        public chill.db.ChillQuery<test.model.Vehicle> getVehicles() {
+        public ChillQuery<Vehicle> getVehicles() {
             return self.vehicles.get();
         }
 
         public static final chill.db.ChillRecord.Finder<User> find = finder(User.class);
 
-        public static chill.db.ChillQuery<User> where(Object... args) {
+        public static ChillQuery<User> where(Object... args) {
             return find.where(args);}
 
-        public static chill.db.ChillQuery<User> join(chill.db.ChillField.FK fk) {
+        public static ChillQuery<User> join(chill.db.ChillField.FK fk) {
             return find.join(fk);}
 
         public static class to {
@@ -225,16 +226,16 @@ public class _generated extends ChillCodeGenerator {
             return self;
         }
 
-        public static chill.db.ChillQuery<Vehicle> forUser(User user) {
+        public static ChillQuery<Vehicle> forUser(User user) {
             return new Vehicle().user.reverse(user);
         }
 
         public static final chill.db.ChillRecord.Finder<Vehicle> find = finder(Vehicle.class);
 
-        public static chill.db.ChillQuery<Vehicle> where(Object... args) {
+        public static ChillQuery<Vehicle> where(Object... args) {
             return find.where(args);}
 
-        public static chill.db.ChillQuery<Vehicle> join(chill.db.ChillField.FK fk) {
+        public static ChillQuery<Vehicle> join(chill.db.ChillField.FK fk) {
             return find.join(fk);}
 
         public static class to {

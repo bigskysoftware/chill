@@ -17,7 +17,8 @@ public class Migrations extends ChillMigrations {
                         updated_at TIMESTAMP NOT NULL,
                         started_at TIMESTAMP,
                         completed_at TIMESTAMP,
-                        job_json TEXT NOT NULL
+                        job_json TEXT NOT NULL,
+                        job_class TEXT NOT NULL
                     )""");
         }
         protected void down() {

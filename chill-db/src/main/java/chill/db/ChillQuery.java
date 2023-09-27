@@ -401,31 +401,6 @@ public class ChillQuery<T extends ChillRecord> implements Iterable<T> {
         });
     }
 
-    public ChillQueryResult firstWithExtra() {
-        if (selectors.isEmpty()) {
-            throw new UnsupportedOperationException("cannot use firstWithExtra() without a custom select");
-        }
-        String sql = firstSQL();
-        if (ChillRecord.shouldLog()) {
-            log.info(ChillRecord.makeQueryLog("QUERY", sql, args()));
-        }
-        return TheMissingUtils.safely(() -> {
-            try (Connection connection = ChillRecord.connectionSource.getConnection()) {
-                PreparedStatement preparedStatement = connection.prepareStatement(sql);
-                int col = 1;
-                for (Object value : args()) {
-                    preparedStatement.setObject(col++, value);
-                }
-                ResultSet resultSet = preparedStatement.executeQuery();
-                if (resultSet.next()) {
-                    return new ChillQueryResult(selectors, resultSet);
-                } else {
-                    return null;
-                }
-            }
-        });
-    }
-
     public int delete() {
         String sql = deleteSQL();
         if (ChillRecord.shouldLog()) {

@@ -2,8 +2,7 @@ package test.model.many;
 
 import chill.db.ChillCodeGenerator;
 import chill.db.ChillRecord;
-import test.model.User;
-import test.model.Vehicle;
+import chill.db.ChillQuery;
 
 public class _generated extends ChillCodeGenerator {
 
@@ -42,20 +41,20 @@ public class _generated extends ChillCodeGenerator {
             return self.id.get();
         }
 
-        public chill.db.ChillQuery<test.model.many.ManyB> getManyBs() {
+        public ChillQuery<ManyB> getManyBs() {
             return self.manyBs.get();
         }
 
-        public chill.db.ChillQuery<test.model.many.ManyC> getManyCs() {
+        public ChillQuery<ManyC> getManyCs() {
             return self.manyCs.get();
         }
 
         public static final chill.db.ChillRecord.Finder<ManyA> find = finder(ManyA.class);
 
-        public static chill.db.ChillQuery<ManyA> where(Object... args) {
+        public static ChillQuery<ManyA> where(Object... args) {
             return find.where(args);}
 
-        public static chill.db.ChillQuery<ManyA> join(chill.db.ChillField.FK fk) {
+        public static ChillQuery<ManyA> join(chill.db.ChillField.FK fk) {
             return find.join(fk);}
 
         public static class to {
@@ -110,20 +109,20 @@ public class _generated extends ChillCodeGenerator {
             return self;
         }
 
-        public static chill.db.ChillQuery<ManyB> forManyA(ManyA parentA) {
+        public static ChillQuery<ManyB> forManyA(ManyA parentA) {
             return new ManyB().parentA.reverse(parentA);
         }
 
-        public chill.db.ChillQuery<test.model.many.ManyC> getManyCs() {
+        public ChillQuery<ManyC> getManyCs() {
             return self.manyCs.get();
         }
 
         public static final chill.db.ChillRecord.Finder<ManyB> find = finder(ManyB.class);
 
-        public static chill.db.ChillQuery<ManyB> where(Object... args) {
+        public static ChillQuery<ManyB> where(Object... args) {
             return find.where(args);}
 
-        public static chill.db.ChillQuery<ManyB> join(chill.db.ChillField.FK fk) {
+        public static ChillQuery<ManyB> join(chill.db.ChillField.FK fk) {
             return find.join(fk);}
 
         public static class to {
@@ -179,16 +178,16 @@ public class _generated extends ChillCodeGenerator {
             return self;
         }
 
-        public static chill.db.ChillQuery<ManyC> forManyB(ManyB parentB) {
+        public static ChillQuery<ManyC> forManyB(ManyB parentB) {
             return new ManyC().parentB.reverse(parentB);
         }
 
         public static final chill.db.ChillRecord.Finder<ManyC> find = finder(ManyC.class);
 
-        public static chill.db.ChillQuery<ManyC> where(Object... args) {
+        public static ChillQuery<ManyC> where(Object... args) {
             return find.where(args);}
 
-        public static chill.db.ChillQuery<ManyC> join(chill.db.ChillField.FK fk) {
+        public static ChillQuery<ManyC> join(chill.db.ChillField.FK fk) {
             return find.join(fk);}
 
         public static class to {
