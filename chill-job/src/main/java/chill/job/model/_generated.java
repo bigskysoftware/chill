@@ -11,6 +11,7 @@ public class _generated extends ChillCodeGenerator {
     }
 
 
+
 //=================== GENERATED CODE ========================
 
 
@@ -96,31 +97,45 @@ public class _generated extends ChillCodeGenerator {
 
         public static final chill.db.ChillRecord.Finder<JobEntity> find = finder(JobEntity.class);
 
-        public static ChillQuery<JobEntity> where(Object... args) {
+        private static final JobEntity instance = new JobEntity();
+
+        public static chill.db.ChillQuery<JobEntity> where(Object... args) {
             return find.where(args);
         }
 
-        public static ChillQuery<JobEntity> join(chill.db.ChillField.FK fk) {
+        public static chill.db.ChillQuery<JobEntity> join(chill.db.ChillField.FK fk) {
             return find.join(fk);
         }
 
-        public static ChillQuery<JobEntity> select(chill.db.ChillField... fields) {
+        public static chill.db.ChillQuery<JobEntity> select(chill.db.ChillField... fields) {
             return find.select(fields);
         }
 
         public static class to {
-            private static final JobEntity instance = new JobEntity();
         }
 
-        public static class column {
-            private static final JobEntity instance = to.instance;
-            public static final chill.db.ChillField<JobEntity> ALL = new ChillField<>(instance, "*", JobEntity.class) {};
-            public static final chill.db.ChillField<java.lang.String> Id = instance.id;
-            public static final chill.db.ChillField<chill.job.model.JobEntity.Status> Status = instance.status;
-            public static final chill.db.ChillField<java.lang.String> JobJson = instance.jobJson;
-            public static final chill.db.ChillField<java.lang.String> JobClass = instance.jobClass;
+        public static class field {
+            public static final chill.db.ChillField<JobEntity> ALL = new chill.db.ChillField<>(instance, "*", JobEntity.class);
+            public static final chill.db.ChillField<java.lang.String> id = instance.id;
+            public static final chill.db.ChillField<chill.job.model.JobEntity.Status> status = instance.status;
+            public static final chill.db.ChillField<java.lang.String> jobJson = instance.jobJson;
+            public static final chill.db.ChillField<java.lang.String> jobClass = instance.jobClass;
         }
-
+        public static chill.db.ChillField<JobEntity> allFields() {
+            return field.ALL;
+        }
+        public static chill.db.ChillField<java.lang.String> id() {
+            return instance.id;
+        }
+        public static chill.db.ChillField<chill.job.model.JobEntity.Status> status() {
+            return instance.status;
+        }
+        public static chill.db.ChillField<java.lang.String> jobJson() {
+            return instance.jobJson;
+        }
+        public static chill.db.ChillField<java.lang.String> jobClass() {
+            return instance.jobClass;
+        }
     }
 
     public static abstract class AbstractQueueEntity extends ChillRecord {
@@ -168,7 +183,7 @@ public class _generated extends ChillCodeGenerator {
             return self;
         }
 
-        public static ChillQuery<QueueEntity> forJobEntity(JobEntity jobId) {
+        public static chill.db.ChillQuery<QueueEntity> forJobEntity(JobEntity jobId) {
             return new QueueEntity().jobId.reverse(jobId);
         }
 
@@ -187,30 +202,41 @@ public class _generated extends ChillCodeGenerator {
 
         public static final chill.db.ChillRecord.Finder<QueueEntity> find = finder(QueueEntity.class);
 
-        public static ChillQuery<QueueEntity> where(Object... args) {
+        private static final QueueEntity instance = new QueueEntity();
+
+        public static chill.db.ChillQuery<QueueEntity> where(Object... args) {
             return find.where(args);
         }
 
-        public static ChillQuery<QueueEntity> join(chill.db.ChillField.FK fk) {
+        public static chill.db.ChillQuery<QueueEntity> join(chill.db.ChillField.FK fk) {
             return find.join(fk);
         }
 
-        public static ChillQuery<QueueEntity> select(chill.db.ChillField... fields) {
+        public static chill.db.ChillQuery<QueueEntity> select(chill.db.ChillField... fields) {
             return find.select(fields);
         }
 
         public static class to {
-            private static final QueueEntity instance = new QueueEntity();
             public static final chill.db.ChillField.FK jobId = instance.jobId;
         }
 
-        public static class column {
-            private static final QueueEntity instance = to.instance;
-            public static final chill.db.ChillField<QueueEntity> ALL = new ChillField<>(instance, "*", QueueEntity.class) {};
-            public static final chill.db.ChillField<java.lang.Long> Id = instance.id;
-            public static final chill.db.ChillField<chill.job.model.JobEntity> JobId = instance.jobId;
-            public static final chill.db.ChillField<java.sql.Timestamp> Timestamp = instance.timestamp;
+        public static class field {
+            public static final chill.db.ChillField<QueueEntity> ALL = new chill.db.ChillField<>(instance, "*", QueueEntity.class);
+            public static final chill.db.ChillField<java.lang.Long> id = instance.id;
+            public static final chill.db.ChillField<chill.job.model.JobEntity> jobId = instance.jobId;
+            public static final chill.db.ChillField<java.sql.Timestamp> timestamp = instance.timestamp;
         }
-
+        public static chill.db.ChillField<QueueEntity> allFields() {
+            return field.ALL;
+        }
+        public static chill.db.ChillField<java.lang.Long> id() {
+            return instance.id;
+        }
+        public static chill.db.ChillField<chill.job.model.JobEntity> jobId() {
+            return instance.jobId;
+        }
+        public static chill.db.ChillField<java.sql.Timestamp> timestamp() {
+            return instance.timestamp;
+        }
     }
 }

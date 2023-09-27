@@ -27,16 +27,16 @@ public class JobEntity extends _generated.AbstractJobEntity {
     public static ChillJob dequeue() {
         AtomicReference<ChillJob> job = new AtomicReference<>();
         ChillRecord.inTransaction(() -> {
-            var results = JobEntity
-                    .select(JobEntity.column.ALL, QueueEntity.column.Id)
+            JobEntity jobEntity = JobEntity
+                    .select(JobEntity.allFields(), QueueEntity.id())
                     .join(QueueEntity.to.jobId)
                     .first();
 
-            if (results == null) {
+            if (jobEntity == null) {
                 return;
             }
 
-            Long queueId = results.one(QueueEntity.column.Id);
+            Long queueId = jobEntity.getAdditionalField(QueueEntity.field.id);
             var count = QueueEntity
                     .where("id = ?", queueId)
                     .delete();
@@ -44,7 +44,7 @@ public class JobEntity extends _generated.AbstractJobEntity {
                 throw new RuntimeException("Failed to delete queue entry, must've been stolen");
             }
 
-            job.set(ChillJob.fromRecord(results.one(column.ALL)));
+            job.set(ChillJob.fromRecord(jobEntity));
         });
         return job.get();
     }

@@ -17,6 +17,7 @@ import static chill.utils.TheMissingUtils.*;
 
 @SuppressWarnings("rawtypes")
 public class ChillRecord {
+
     public static ConnectionSource connectionSource = null;
 
     private static int SHOULD_LOG = 0;
@@ -28,6 +29,7 @@ public class ChillRecord {
     /* package */ boolean persisted;
     private Timestamp currentTimestamp;
     private boolean prototype = false;
+    NiceMap<Object, Object> additionalData = new NiceMap<>();
 
     LinkedList<ChillField.Many> manys = new LinkedList<>();
 
@@ -76,7 +78,7 @@ public class ChillRecord {
     public static void inTransaction(Runnable run){
         ChillTransaction currentTransaction = ChillTransaction.getCurrentTransaction();
         if (currentTransaction == null) {
-            ChillTransaction transaction = ChillTransaction.start(safely(ChillRecord::getRawConnection));
+            ChillTransaction transaction = ChillTransaction.start(safely(() -> getRawConnection()));
             try {
                 run.run();
                 transaction.commit();
@@ -469,6 +471,10 @@ public class ChillRecord {
         query.reload(this);
     }
 
+    protected <T> T getAdditionalField(ChillField<T> id) {
+        return (T) additionalData.get(id);
+    }
+
     public interface ConnectionSource {
         Connection getConnection() throws SQLException;
     }
@@ -514,8 +520,8 @@ public class ChillRecord {
         public ChillQuery<T> where(Object... conditions) {
             return new ChillQuery<T>(clazz).where(conditions);
         }
-        public ChillQuery<T> select(ChillField<?>... args) {
-            return new ChillQuery<T>(clazz).select(args);
+        public ChillQuery<T> select(ChillField... fields) {
+            return new ChillQuery<T>(clazz).select(fields);
         }
 
         public T one(Object... conditions) {
@@ -549,8 +555,8 @@ public class ChillRecord {
     }
 
     public static SafeAutoCloseable quietly() {
-//        SHOULD_LOG++;
-        return () -> {};
+        SHOULD_LOG++;
+        return () -> SHOULD_LOG--;
     }
 
     //=====================================

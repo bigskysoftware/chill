@@ -40,9 +40,10 @@ public abstract class ChillJobWorker {
     public abstract ChillJob fetchJob(ChillJobId id);
 
     public JobEntity.Status getJobStatus(ChillJobId jobId) {
-        var results = JobEntity.select(JobEntity.column.Status)
-                .where("id = ?", jobId.toString())
-                .firstWithExtra();
-        return results.one(JobEntity.column.Status);
+//        var results = JobEntity.select(JobEntity.column.Status)
+//                .where("id = ?", jobId.toString())
+//                .firstWithExtra();
+//        return results.one(JobEntity.column.Status);
+        return null;
     }
 }

@@ -10,6 +10,10 @@ public class _generated extends ChillCodeGenerator {
         generateCodeForMyPackage();
     }
 
+
+//=================== GENERATED CODE ========================
+
+
     public static abstract class AbstractUser extends ChillRecord {
 
         protected final User self = (User) (Object) this;
@@ -111,24 +115,60 @@ public class _generated extends ChillCodeGenerator {
             return self;
         }
 
-        public ChillQuery<Vehicle> getVehicles() {
+        public chill.db.ChillQuery<test.model.Vehicle> getVehicles() {
             return self.vehicles.get();
         }
 
         public static final chill.db.ChillRecord.Finder<User> find = finder(User.class);
 
-        public static ChillQuery<User> where(Object... args) {
-            return find.where(args);}
+        private static final User instance = new User();
 
-        public static ChillQuery<User> join(chill.db.ChillField.FK fk) {
-            return find.join(fk);}
-
-        public static class to {
-            private static final User instance = new User();
+        public static chill.db.ChillQuery<User> where(Object... args) {
+            return find.where(args);
         }
 
-    }
+        public static chill.db.ChillQuery<User> join(chill.db.ChillField.FK fk) {
+            return find.join(fk);
+        }
 
+        public static chill.db.ChillQuery<User> select(chill.db.ChillField... fields) {
+            return find.select(fields);
+        }
+
+        public static class to {
+        }
+
+        public static class field {
+            public static final chill.db.ChillField<User> ALL = new chill.db.ChillField<>(instance, "*", User.class);
+            public static final chill.db.ChillField<java.lang.Long> id = instance.id;
+            public static final chill.db.ChillField<java.lang.String> firstName = instance.firstName;
+            public static final chill.db.ChillField<java.lang.String> lastName = instance.lastName;
+            public static final chill.db.ChillField<java.lang.String> email = instance.email;
+            public static final chill.db.ChillField<java.lang.String> password = instance.password;
+            public static final chill.db.ChillField<java.lang.Integer> age = instance.age;
+        }
+        public static chill.db.ChillField<User> allFields() {
+            return field.ALL;
+        }
+        public static chill.db.ChillField<java.lang.Long> id() {
+            return instance.id;
+        }
+        public static chill.db.ChillField<java.lang.String> firstName() {
+            return instance.firstName;
+        }
+        public static chill.db.ChillField<java.lang.String> lastName() {
+            return instance.lastName;
+        }
+        public static chill.db.ChillField<java.lang.String> email() {
+            return instance.email;
+        }
+        public static chill.db.ChillField<java.lang.String> password() {
+            return instance.password;
+        }
+        public static chill.db.ChillField<java.lang.Integer> age() {
+            return instance.age;
+        }
+    }
 
     public static abstract class AbstractVehicle extends ChillRecord {
 
@@ -226,22 +266,69 @@ public class _generated extends ChillCodeGenerator {
             return self;
         }
 
-        public static ChillQuery<Vehicle> forUser(User user) {
+        public static chill.db.ChillQuery<Vehicle> forUser(User user) {
             return new Vehicle().user.reverse(user);
         }
 
         public static final chill.db.ChillRecord.Finder<Vehicle> find = finder(Vehicle.class);
 
-        public static ChillQuery<Vehicle> where(Object... args) {
-            return find.where(args);}
+        private static final Vehicle instance = new Vehicle();
 
-        public static ChillQuery<Vehicle> join(chill.db.ChillField.FK fk) {
-            return find.join(fk);}
+        public static chill.db.ChillQuery<Vehicle> where(Object... args) {
+            return find.where(args);
+        }
+
+        public static chill.db.ChillQuery<Vehicle> join(chill.db.ChillField.FK fk) {
+            return find.join(fk);
+        }
+
+        public static chill.db.ChillQuery<Vehicle> select(chill.db.ChillField... fields) {
+            return find.select(fields);
+        }
 
         public static class to {
-            private static final Vehicle instance = new Vehicle();
             public static final chill.db.ChillField.FK user = instance.user;
         }
 
+        public static class field {
+            public static final chill.db.ChillField<Vehicle> ALL = new chill.db.ChillField<>(instance, "*", Vehicle.class);
+            public static final chill.db.ChillField<java.lang.Long> id = instance.id;
+            public static final chill.db.ChillField<java.sql.Timestamp> createdAt = instance.createdAt;
+            public static final chill.db.ChillField<java.sql.Timestamp> updatedAt = instance.updatedAt;
+            public static final chill.db.ChillField<java.lang.String> make = instance.make;
+            public static final chill.db.ChillField<java.lang.String> model = instance.model;
+            public static final chill.db.ChillField<java.lang.String> uuid = instance.uuid;
+            public static final chill.db.ChillField<java.lang.Integer> year = instance.year;
+            public static final chill.db.ChillField<test.model.User> user = instance.user;
+        }
+        public static chill.db.ChillField<Vehicle> allFields() {
+            return field.ALL;
+        }
+        public static chill.db.ChillField<java.lang.Long> id() {
+            return instance.id;
+        }
+        public static chill.db.ChillField<java.sql.Timestamp> createdAt() {
+            return instance.createdAt;
+        }
+        public static chill.db.ChillField<java.sql.Timestamp> updatedAt() {
+            return instance.updatedAt;
+        }
+        public static chill.db.ChillField<java.lang.String> make() {
+            return instance.make;
+        }
+        public static chill.db.ChillField<java.lang.String> model() {
+            return instance.model;
+        }
+        public static chill.db.ChillField<java.lang.String> uuid() {
+            return instance.uuid;
+        }
+        public static chill.db.ChillField<java.lang.Integer> year() {
+            return instance.year;
+        }
+        public static chill.db.ChillField<test.model.User> user() {
+            return instance.user;
+        }
     }
+
+
 }

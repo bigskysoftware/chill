@@ -51,7 +51,7 @@ public abstract class ChillJob {
     }
 
     public void submit() {
-        DefaultChillJobWorker.getInstance().submit(this);
+        getWorker().submit(this);
     }
 
     public abstract void run() throws Exception;

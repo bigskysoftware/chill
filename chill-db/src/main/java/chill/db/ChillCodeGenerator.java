@@ -37,7 +37,7 @@ public class ChillCodeGenerator {
     }
 
     private static boolean updateCodeInline(String code, Path generatedTargetPath) {
-        System.out.println("Updating " + generatedTargetPath);
+        System.out.println("Updating " + generatedTargetPath.toAbsolutePath());
         try {
             if (generatedTargetPath.toFile().exists()) {
                 System.out.println("Found generated java file: " + generatedTargetPath.toAbsolutePath());
@@ -195,6 +195,8 @@ public class ChillCodeGenerator {
         }
         sb.append("public static final chill.db.ChillRecord.Finder<").append(className).append("> find = finder(").append(className).append(".class);").append(newLine)
                 .append(newLine);
+        sb.append("private static final ").append(className).append(" instance = new ").append(className).append("();").append(newLine)
+                .append(newLine);
 
         sb.append("public static chill.db.ChillQuery<").append(className).append("> where(Object... args) {").append(newLine)
                 .append("  return find.where(args);").append(newLine)
@@ -211,33 +213,39 @@ public class ChillCodeGenerator {
                 .append("}").append(newLine)
                 .append(newLine);
 
-        sb.append("public static class to {").append(newLine)
-                .append("  private static final ").append(className).append(" instance = new ").append(className).append("();").append(newLine);
-
+        sb.append("public static class to {").append(newLine);
         for (Field fk : fks) {
             sb.append("  public static final chill.db.ChillField.FK ").append(fk.getName()).append(" = instance.").append(fk.getName()).append(";").append(newLine);
         }
         sb.append("}").append(newLine)
         .append(newLine);
 
-        sb.append("public static class column {").append(newLine)
-                .append("  private static final ").append(className).append(" instance = to.instance;").append(newLine)
-                .append("  public static final chill.db.ChillField<").append(className)
-                    .append("> ALL = new ChillField<>(instance, \"*\", ").append(className).append(".class) {};").append(newLine);
-
-        for (java.lang.reflect.Field javaField : classFields) {
-            if (ChillField.class.isAssignableFrom(javaField.getType())) {
-                javaField.setAccessible(true);
-                ChillField chillField = (ChillField) safely(() -> javaField.get(instance));
-                String capitalizedFieldName = TheMissingUtils.capitalize(javaField.getName());
-
-                sb.append("  public static final chill.db.ChillField<")
-                        .append(chillField.getTypeName())
-                        .append("> ").append(capitalizedFieldName).append(" = instance.").append(javaField.getName()).append(";").append(newLine);
+        sb.append("public static class field {").append(newLine);
+        sb.append("  public static final chill.db.ChillField<").append(className)
+                .append("> ALL = new chill.db.ChillField<>(instance, \"*\", ")
+                .append(className).append(".class);").append(newLine);
+        for (var field : classFields) {
+            if (ChillField.class.isAssignableFrom(field.getType())) {
+                ChillField chillField = (ChillField) safely(() -> field.get(instance));
+                sb.append("  public static final chill.db.ChillField<").append(chillField.getTypeName())
+                        .append("> ").append(field.getName()).append(" = instance.").append(field.getName()).append(";").append(newLine);
             }
         }
-        sb.append("}").append(newLine)
-                .append(newLine);
+        sb.append("}").append(newLine);
+
+        sb.append("public static chill.db.ChillField<").append(className)
+                .append("> allFields() {").append(newLine)
+                .append("  return field.ALL;").append(newLine)
+                .append("}").append(newLine);
+        for (var field : classFields) {
+            if (ChillField.class.isAssignableFrom(field.getType())) {
+                ChillField chillField = (ChillField) safely(() -> field.get(instance));
+                sb.append("public static chill.db.ChillField<").append(chillField.getTypeName()).append(">").append(" ")
+                        .append(field.getName()).append("() {").append(newLine)
+                        .append("  return instance.").append(field.getName()).append(";").append(newLine);
+                sb.append("}").append(newLine);
+            }
+        }
 
         sb.append("}").append(newLine);
     }

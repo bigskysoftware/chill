@@ -8,9 +8,12 @@ import chill.utils.TheMissingUtils;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @SuppressWarnings("unchecked")
 public class ChillQuery<T extends ChillRecord> implements Iterable<T> {
@@ -22,13 +25,13 @@ public class ChillQuery<T extends ChillRecord> implements Iterable<T> {
 
     private final Class<T> clazz;
     private final T protoInstance;
-    private final NiceList<ChillField<?>> selectors = new NiceList<>();
     private final StringBuilder whereClause = new StringBuilder();
     private final LinkedList queryArguments = new LinkedList();
     private final Map<String, Object> colValues = new LinkedHashMap<>();
     private final String tableName;
     private final ChillLogs.LogCategory log;
     private NiceList<Pair<String, Direction>> orders = new NiceList<>();
+    private LinkedHashSet<ChillField> selectors = new LinkedHashSet<>();
 
     private NiceList<Join> joins = new NiceList<>();
 
@@ -68,8 +71,8 @@ public class ChillQuery<T extends ChillRecord> implements Iterable<T> {
         this.instantiatable = from.instantiatable;
         this.tableName = from.tableName;
         this.joins.addAll(from.joins);
-        this.orders.addAll(from.orders);
         this.selectors.addAll(from.selectors);
+        this.orders.addAll(from.orders);
         this.limit = from.limit;
         this.page = from.page;
     }
@@ -82,8 +85,8 @@ public class ChillQuery<T extends ChillRecord> implements Iterable<T> {
         return new ChillQuery<T>(this).where$(conditions);
     }
 
-    public ChillQuery<T> select(ChillField<?>... args) {
-        return new ChillQuery<>(this).select$(args);
+    public ChillQuery<T> select(ChillField<?>... fields) {
+        return new ChillQuery<>(this).select$(fields);
     }
 
     // TODO this needs to be int and we need a coercion layer in chill script
@@ -191,12 +194,8 @@ public class ChillQuery<T extends ChillRecord> implements Iterable<T> {
         return this;
     }
 
-    public ChillQuery<T> select$(ChillField<?>... args) {
-        if (args.length == 0) {
-            throw new IllegalArgumentException("Must select at least one column");
-        }
-        selectors.addAll(Arrays.asList(args));
-        instantiatable = false;
+    public ChillQuery<T> select$(ChillField... fields) {
+        selectors.addAll(Arrays.asList(fields));
         return this;
     }
 
@@ -240,6 +239,28 @@ public class ChillQuery<T extends ChillRecord> implements Iterable<T> {
             }
         }
         return sql;
+    }
+
+    private String buildSelectSentence() {
+        Stream<ChillField> selectors;
+        if (this.selectors.isEmpty()) {
+            selectors = getFields().stream();
+        } else {
+            selectors = this.selectors.stream();
+        }
+        return selectors
+                .flatMap(field -> {
+                    if (field.getColumnName().equals("*")) {
+                        return field.getRecord().getFields().stream();
+                    } else {
+                        return Stream.of(field);
+                    }
+                })
+                .map(field -> {
+                    var selector = field.getRecord().getTableName() + "." + field.getColumnName();
+                    return selector + " as \"" + selector + "\"";
+                })
+                .collect(Collectors.joining(", "));
     }
 
     public String countSQL() {
@@ -321,45 +342,6 @@ public class ChillQuery<T extends ChillRecord> implements Iterable<T> {
         return findWhere(Arrays.asList(uuidField.getColumnName(), uuid).toArray());
     }
 
-    private String buildSelectSentence() {
-        if (selectors.isEmpty()) {
-            var fields = getFields();
-            return fields.map(field -> getTableName() + "." + field.getColumnName()).join(", ");
-        } else {
-            var builder = new StringBuilder();
-            for (var s : selectors) {
-                if (!builder.isEmpty()) {
-                    builder.append(", ");
-                }
-                if (s.getColumnName().equals("*")) {
-                    for (var field : s.getRecord().getFields()) {
-                        if (!builder.isEmpty()) {
-                            builder.append(", ");
-                        }
-                        builder
-                                .append(s.getRecord().getTableName())
-                                .append('.')
-                                .append(field.getColumnName())
-                                .append(" AS ")
-                                .append(s.getRecord().getTableName())
-                                .append('_')
-                                .append(field.getColumnName());
-                    }
-                } else {
-                    builder
-                            .append(s.getRecord().getTableName())
-                            .append('.')
-                            .append(s.getColumnName())
-                            .append(" AS ")
-                            .append(s.getRecord().getTableName())
-                            .append('_')
-                            .append(s.getColumnName());
-                }
-            }
-            return builder.toString();
-        }
-    }
-
     private T findWhere(Object[] objects) {
         return TheMissingUtils.safely(() -> {
             try (var resultSetAndConnection = where(objects).executeQuery()) {
@@ -375,9 +357,6 @@ public class ChillQuery<T extends ChillRecord> implements Iterable<T> {
     }
 
     public T first() {
-        if (!selectors.isEmpty()) {
-            throw new UnsupportedOperationException("cannot use custom selects with first(), use firstWithExtra() instead");
-        }
         String sql = firstSQL();
         if (ChillRecord.shouldLog()) {
             log.info(ChillRecord.makeQueryLog("QUERY", sql, args()));
@@ -390,15 +369,42 @@ public class ChillQuery<T extends ChillRecord> implements Iterable<T> {
                     preparedStatement.setObject(col++, value);
                 }
                 ResultSet resultSet = preparedStatement.executeQuery();
-                if (resultSet.next()) {
-                    T t = makeInstance();
-                    ChillRecord.populateFromResultSet(t, resultSet);
-                    return t;
-                } else {
-                    return null;
-                }
+                return populateFromResultSet(resultSet);
             }
         });
+    }
+
+    private T populateFromResultSet(ResultSet resultSet) throws SQLException {
+        if (!resultSet.next()) {
+            return null;
+        }
+
+        T t = makeInstance();
+        if (selectors.isEmpty()) {
+            ChillRecord.populateFromResultSet(t, resultSet);
+        } else {
+            Map<String, ChillField> localFields = t.getFields().toMap(ChillField::getColumnName);
+            for (var selector : selectors) {
+                if (selector.getRecord().getTableName().equals(t.getTableName())) {
+                    var columnName = selector.getColumnName();
+                    var field = localFields.get(columnName);
+                    if (field == null) {
+                        throw new IllegalStateException("Field " + columnName + " not found on " + t);
+                    }
+                    field.set(resultSet.getObject(columnName));
+                } else {
+                    if (selector.getColumnName().equals("*")) {
+                        ChillRecord record = TheMissingUtils.newInstance(selector.getRecord().getClass());
+                        ChillRecord.populateFromResultSet(record, resultSet);
+                        t.additionalData.put(selector, record);
+                    } else {
+                        t.additionalData.put(selector, resultSet.getObject(selector.getColumnName()));
+                    }
+                }
+            }
+        }
+
+        return t;
     }
 
     public int delete() {

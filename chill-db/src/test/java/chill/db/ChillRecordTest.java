@@ -379,4 +379,31 @@ public class ChillRecordTest {
         System.out.println("Iterations: " + iterations + " took " + time + "ms");
     }
 
+    @Test
+    public void selectTest() {
+        var user = new User()
+                .withFirstName("Dillon")
+                .withLastName("Shaffer")
+                .withEmail("junior@example.com")
+                .saveOrThrow();
+
+        user.getVehicles()
+                .newRecord()
+                .withMake("Toyota")
+                .withModel("LandCruiser")
+                .withYear(1983)
+                .saveOrThrow();
+
+        // select first_name, last_name, make, model, year
+        // from user
+        // inner join vehicle on vehicle.user_id = user.id
+        // where user.user_id = 1
+
+//        User
+//                .select(User.field)
+//                .join(Vehicle.to.user)
+//                .where("user.id = ?", user.getId())
+//                .find();
+
+    }
 }
