@@ -7,9 +7,11 @@ import chill.job.ChillJobRunner;
 import chill.job.ChillJobWorker;
 import chill.job.model.JobEntity;
 import chill.job.model.Migrations;
+import chill.job.model.QueueEntity;
 import chill.utils.TheMissingUtils;
 import com.google.gson.Gson;
 
+import java.sql.Timestamp;
 import java.util.concurrent.Future;
 
 public class DefaultChillJobWorker extends ChillJobWorker {
@@ -53,10 +55,9 @@ public class DefaultChillJobWorker extends ChillJobWorker {
             }
 
             long start = System.currentTimeMillis();
-            System.out.println("getting job");
             ChillJob job = JobEntity.dequeue();
-            System.out.println("got job: " + job);
             if (job != null) {
+                System.out.println("got job: " + job);
                 runner.handle(job);
             }
             long waitingPeriod = Math.max(0, System.currentTimeMillis() - start);
@@ -73,11 +74,16 @@ public class DefaultChillJobWorker extends ChillJobWorker {
 
     @Override
     public void submit(ChillJob job) {
-        JobEntity entity = new JobEntity();
-        entity.setStatus(JobEntity.Status.PENDING);
-        entity.setId(job.getJobId().toString());
-        entity.setJobJson(new Gson().toJson(job));
-        entity.createOrThrow();
+        var jobEntity = new JobEntity()
+                .withStatus(JobEntity.Status.PENDING)
+                .withId(job.getJobId().toString())
+                .withJobJson(new Gson().toJson(job))
+                .withJobClass(job.getClass().getName())
+                .createOrThrow();
+
+        new QueueEntity()
+                .withJobId(jobEntity)
+                .createOrThrow();
     }
 
     @Override

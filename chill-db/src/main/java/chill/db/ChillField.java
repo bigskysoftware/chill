@@ -373,8 +373,8 @@ public class ChillField<T> {
             return this;
         }
 
-        public Long fkValue() {
-            return (Long) rawValue();
+        public Object fkValue() {
+            return rawValue();
         }
 
         @Override
@@ -383,8 +383,8 @@ public class ChillField<T> {
             if (cachedRecord != null) {
                 return (T) cachedRecord;
             } else {
-                var aLong = fkValue();
-                var query = new ChillQuery(getType()).where(foreignColumn, aLong);
+                var fkey = fkValue();
+                var query = new ChillQuery(getType()).where(foreignColumn, fkey);
                 valueToReturn = (T) query.first();
             }
             for (var beforeReturn : beforeReturns) {

@@ -9,6 +9,7 @@ import org.junit.jupiter.api.TestInstance;
 
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.sql.Statement;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class ChillJobManagerTests {
@@ -66,12 +67,13 @@ public class ChillJobManagerTests {
         @Override
         public void run() throws Exception {
             try (var conn = ChillRecord.connectionSource.getConnection();
-                 var stmt = conn.prepareStatement(INSERT)) {
+                 var stmt = conn.prepareStatement(INSERT, Statement.RETURN_GENERATED_KEYS)) {
                 stmt.setObject(1, timeout);
 
                 assert stmt.executeUpdate() == 1;
                 var keys = stmt.getGeneratedKeys();
                 keys.next();
+                System.out.println("pkey: " + keys.getObject(1));
                 pkey = keys.getLong(1);
             }
 
@@ -94,8 +96,9 @@ public class ChillJobManagerTests {
     @Test
     public void test() throws InterruptedException {
         var jobId = submitJob(1000);
-        Thread.sleep(2000);
+        Thread.sleep(3000);
 
-        var job = worker.getJobStatus(jobId);
+        var status = worker.getJobStatus(jobId);
+        System.out.println("Test got status: " + status);
     }
 }

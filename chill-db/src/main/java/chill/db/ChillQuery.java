@@ -39,6 +39,8 @@ public class ChillQuery<T extends ChillRecord> implements Iterable<T> {
 
     private Integer limit;
     private Integer page;
+    private boolean forUpdate = false;
+    private boolean skipLocked = false;
 
     public ChillQuery(Class<T> clazz) {
         this.clazz = clazz;
@@ -75,6 +77,8 @@ public class ChillQuery<T extends ChillRecord> implements Iterable<T> {
         this.orders.addAll(from.orders);
         this.limit = from.limit;
         this.page = from.page;
+        this.forUpdate = from.forUpdate;
+        this.skipLocked = from.skipLocked;
     }
 
     public ChillQuery<T> and(Object... conditions) {
@@ -127,6 +131,18 @@ public class ChillQuery<T extends ChillRecord> implements Iterable<T> {
 
     public ChillQuery<T> descendingBy(String col) {
         return new ChillQuery<T>(this).orderBy$(col, Direction.DESCENDING);
+    }
+
+    public ChillQuery<T> forUpdate() {
+        ChillQuery<T> ts = new ChillQuery<>(this);
+        ts.forUpdate = true;
+        return ts;
+    }
+
+    public ChillQuery<T> skipLocked() {
+        ChillQuery<T> ts = new ChillQuery<>(this);
+        ts.skipLocked = true;
+        return ts;
     }
 
     private ChillQuery<T> orderBy$(String col, Direction direction) {
@@ -238,6 +254,12 @@ public class ChillQuery<T extends ChillRecord> implements Iterable<T> {
                 sql += "\nOFFSET " + limit * (page - 1);
             }
         }
+        if (forUpdate) {
+            sql += "\nFOR UPDATE";
+            if (skipLocked) {
+                sql += " SKIP LOCKED";
+            }
+        }
         return sql;
     }
 
@@ -284,6 +306,12 @@ public class ChillQuery<T extends ChillRecord> implements Iterable<T> {
             sql = sql + "\nWHERE " + whereClause;
         }
         sql = sql + "\nLIMIT 1";
+        if (forUpdate) {
+            sql += "\nFOR UPDATE";
+            if (skipLocked) {
+                sql += " SKIP LOCKED";
+            }
+        }
         return sql;
     }
 
@@ -386,19 +414,24 @@ public class ChillQuery<T extends ChillRecord> implements Iterable<T> {
             Map<String, ChillField> localFields = t.getFields().toMap(ChillField::getColumnName);
             for (var selector : selectors) {
                 if (selector.getRecord().getTableName().equals(t.getTableName())) {
-                    var columnName = selector.getColumnName();
-                    var field = localFields.get(columnName);
-                    if (field == null) {
-                        throw new IllegalStateException("Field " + columnName + " not found on " + t);
+                    if (selector.getColumnName().equals("*")) {
+                        ChillRecord.populateFromResultSet(t, resultSet);
+                    } else {
+                        var columnName = selector.getColumnName();
+                        var field = localFields.get(columnName);
+                        if (field == null) {
+                            throw new IllegalStateException("Field " + columnName + " not found on " + t);
+                        }
+                        field.fromResultSet(resultSet);
                     }
-                    field.set(resultSet.getObject(columnName));
                 } else {
                     if (selector.getColumnName().equals("*")) {
                         ChillRecord record = TheMissingUtils.newInstance(selector.getRecord().getClass());
                         ChillRecord.populateFromResultSet(record, resultSet);
                         t.additionalData.put(selector, record);
                     } else {
-                        t.additionalData.put(selector, resultSet.getObject(selector.getColumnName()));
+                        var key = selector.getRecord().getTableName() + "." + selector.getColumnName();
+                        t.additionalData.put(selector, resultSet.getObject(key));
                     }
                 }
             }

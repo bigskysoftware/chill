@@ -30,6 +30,8 @@ public class JobEntity extends _generated.AbstractJobEntity {
             JobEntity jobEntity = JobEntity
                     .select(JobEntity.allFields(), QueueEntity.id())
                     .join(QueueEntity.to.jobId)
+                    .forUpdate()
+                    .skipLocked()
                     .first();
 
             if (jobEntity == null) {
@@ -40,8 +42,8 @@ public class JobEntity extends _generated.AbstractJobEntity {
             var count = QueueEntity
                     .where("id = ?", queueId)
                     .delete();
-            if (count == 0) {
-                throw new RuntimeException("Failed to delete queue entry, must've been stolen");
+            if (count == 0) { // for update, skip locked should prevent this but isn't infallible
+                return;
             }
 
             job.set(ChillJob.fromRecord(jobEntity));
