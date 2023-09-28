@@ -5,10 +5,7 @@ import chill.utils.NiceList;
 import chill.utils.Pair;
 import chill.utils.TheMissingUtils;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -41,6 +38,7 @@ public class ChillQuery<T extends ChillRecord> implements Iterable<T> {
     private Integer page;
     private boolean forUpdate = false;
     private boolean skipLocked = false;
+    private Integer top = null;
 
     public ChillQuery(Class<T> clazz) {
         this.clazz = clazz;
@@ -79,6 +77,13 @@ public class ChillQuery<T extends ChillRecord> implements Iterable<T> {
         this.page = from.page;
         this.forUpdate = from.forUpdate;
         this.skipLocked = from.skipLocked;
+        this.top = top;
+    }
+
+    public ChillQuery<T> top(int limit) {
+        ChillQuery<T> ts = new ChillQuery<>(this);
+        ts.top = limit;
+        return ts;
     }
 
     public ChillQuery<T> and(Object... conditions) {
@@ -93,7 +98,6 @@ public class ChillQuery<T extends ChillRecord> implements Iterable<T> {
         return new ChillQuery<>(this).select$(fields);
     }
 
-    // TODO this needs to be int and we need a coercion layer in chill script
     public ChillQuery<T> limit(int limit) {
         ChillQuery<T> ts = new ChillQuery<>(this);
         ts.limit = limit;
@@ -119,6 +123,26 @@ public class ChillQuery<T extends ChillRecord> implements Iterable<T> {
         ts.orders = new NiceList<>();
         return ts.orderBy$(col, Direction.ASCENDING);
     }
+
+    public ChillQuery<T> reorder(ChillField field) {
+        ChillQuery<T> ts = new ChillQuery<>(this);
+        ts.orders = new NiceList<>();
+        return ts.orderBy$(field, Direction.ASCENDING);
+    }
+
+    public ChillQuery<T> orderBy(Object... fields) {
+        ChillQuery<T> ts = new ChillQuery<>(this);
+        ts.orders = new NiceList<>();
+        for (Object field : fields) {
+            if (field instanceof ChillField chillField) {
+                ts.orderBy$(chillField, Direction.ASCENDING);
+            } else {
+                ts.orderBy$(String.valueOf(field), Direction.ASCENDING);
+            }
+        }
+        return ts;
+    }
+
     public ChillQuery<T> reorderDescending(String col) {
         ChillQuery<T> ts = new ChillQuery<>(this);
         ts.orders = new NiceList<>();
@@ -147,6 +171,11 @@ public class ChillQuery<T extends ChillRecord> implements Iterable<T> {
 
     private ChillQuery<T> orderBy$(String col, Direction direction) {
         orders.add(Pair.of(col, direction));
+        return this;
+    }
+
+    private ChillQuery<T> orderBy$(ChillField field, Direction direction) {
+        orders.add(Pair.of(field.getRecord().getTableName() + "." + field.getColumnName(), direction));
         return this;
     }
 
@@ -230,37 +259,40 @@ public class ChillQuery<T extends ChillRecord> implements Iterable<T> {
     }
 
     public String sql() {
-        var sql = "SELECT " + buildSelectSentence() + "\n" +
-                "FROM " + getTableName();
+        StringBuilder sql = new StringBuilder("SELECT ");
+        if (top != null) {
+            sql.append("TOP ").append(top).append(" ");
+        }
+        sql.append(buildSelectSentence()).append("\n").append("FROM ").append(getTableName());
         for (Join join : joins) {
-            sql += "\n" + join.sql();
+            sql.append("\n").append(join.sql());
         }
         if (whereClause.length() > 0) {
-            sql = sql + "\nWHERE " + whereClause;
+            sql.append("\nWHERE ").append(whereClause);
         }
         if (orders.size() > 0) {
-            sql = sql + "\n ORDER BY ";
+            sql.append("\n ORDER BY ");
             for (int i = 0; i < orders.size(); i++) {
                 Pair<String, Direction> order = orders.get(i);
-                sql = sql + order.first + (order.second == Direction.ASCENDING ? " ASC " : " DESC ");
+                sql.append(order.first).append(order.second == Direction.ASCENDING ? " ASC " : " DESC ");
                 if (i < orders.size() - 2) {
-                    sql += ", ";
+                    sql.append(", ");
                 }
             }
         }
         if (limit != null) {
-            sql += "\nLIMIT " + limit;
+            sql.append("\nLIMIT ").append(limit);
             if (page != null) {
-                sql += "\nOFFSET " + limit * (page - 1);
+                sql.append("\nOFFSET ").append(limit * (page - 1));
             }
         }
         if (forUpdate) {
-            sql += "\nFOR UPDATE";
+            sql.append("\nFOR UPDATE");
             if (skipLocked) {
-                sql += " SKIP LOCKED";
+                sql.append(" SKIP LOCKED");
             }
         }
-        return sql;
+        return sql.toString();
     }
 
     private String buildSelectSentence() {
@@ -297,22 +329,27 @@ public class ChillQuery<T extends ChillRecord> implements Iterable<T> {
     }
 
     public String firstSQL() {
-        String sql = "SELECT " + buildSelectSentence() + "\n" +
-                "FROM " + getTableName();
+        StringBuilder sql = new StringBuilder();
+        sql.append("SELECT ");
+        if (top != null) {
+            sql.append("TOP ").append(top).append(" ");
+        }
+        sql.append(buildSelectSentence()).append("\n")
+                .append("FROM ").append(getTableName());
         for (Join join : joins) {
-            sql += "\n" + join.sql();
+            sql.append("\n").append(join.sql());
         }
         if (whereClause.length() > 0) {
-            sql = sql + "\nWHERE " + whereClause;
+            sql.append("\nWHERE ").append(whereClause);
         }
-        sql = sql + "\nLIMIT 1";
+        sql.append("\nLIMIT 1");
         if (forUpdate) {
-            sql += "\nFOR UPDATE";
+            sql.append("\nFOR UPDATE");
             if (skipLocked) {
-                sql += " SKIP LOCKED";
+                sql.append(" SKIP LOCKED");
             }
         }
-        return sql;
+        return sql.toString();
     }
 
     public String deleteSQL() {
@@ -438,6 +475,54 @@ public class ChillQuery<T extends ChillRecord> implements Iterable<T> {
         }
 
         return t;
+    }
+
+    public int updateAll(String fields, Object... values) {
+        StringBuilder query = new StringBuilder();
+        query.append("UPDATE ").append(tableName).append('\n');
+        query.append("SET ").append(fields);
+
+        if (!whereClause.isEmpty()) {
+            query.append('\n').append("WHERE ").append(whereClause);
+        }
+        buildOrderClause(query);
+        if (limit != null) {
+            query.append("\nLIMIT ").append(limit);
+            if (page != null) {
+                query.append("\nOFFSET ").append(limit * (page - 1));
+            }
+        }
+
+        String sql = query.toString();
+        if (ChillRecord.shouldLog()) {
+            log.info(ChillRecord.makeQueryLog("QUERY", sql, List.of(values)));
+        }
+        return TheMissingUtils.safely(() -> {
+            try (Connection connection = ChillRecord.connectionSource.getConnection()) {
+                PreparedStatement preparedStatement = connection.prepareStatement(sql);
+                int col = 1;
+                for (Object value : values) {
+                    preparedStatement.setObject(col++, value);
+                }
+                for (Object value : args()) {
+                    preparedStatement.setObject(col++, value);
+                }
+                return preparedStatement.executeUpdate();
+            }
+        });
+    }
+
+    private void buildOrderClause(StringBuilder query) {
+        if (!orders.isEmpty()) {
+            query.append('\n').append("ORDER BY ");
+            for (int i = 0; i < orders.size(); i++) {
+                Pair<String, Direction> order = orders.get(i);
+                query.append(order.first).append(order.second == Direction.ASCENDING ? " ASC " : " DESC ");
+                if (i < orders.size() - 2) {
+                    query.append(", ");
+                }
+            }
+        }
     }
 
     public int delete() {

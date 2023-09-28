@@ -12,7 +12,6 @@ public class Migrations extends ChillMigrations {
             exec("""
                     CREATE TABLE chill_job_jobs (
                         id VARCHAR(256) PRIMARY KEY, -- chilljob:uuid:tag
-                        status VARCHAR(16) NOT NULL,
                         job_json TEXT NOT NULL,
                         job_class TEXT NOT NULL
                     )""");
@@ -28,11 +27,13 @@ public class Migrations extends ChillMigrations {
                     CREATE TABLE chill_job_pending_queue (
                         id LONG PRIMARY KEY AUTO_INCREMENT,
                         job_id VARCHAR(256) NOT NULL,
-                        timestamp TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                        status VARCHAR(16) NOT NULL,
+                        worker_id VARCHAR(256),
                         
                         CONSTRAINT fk_job_id FOREIGN KEY (job_id) REFERENCES chill_job_jobs(id)
                         ON DELETE CASCADE
-                    )""");
+                    )
+                    """);
         }
         protected void down() {
             exec("""

@@ -10,5 +10,6 @@ public class QueueEntity extends _generated.AbstractQueueEntity {
 
     ChillField<Long> id = pk("id");
     ChillField.FK<QueueEntity, JobEntity> jobId = fk("job_id", JobEntity.class);
-    ChillField<Timestamp> timestamp = field("timestamp", Timestamp.class);
+    ChillField<JobEntity.Status> status = field("status", JobEntity.Status.class).required();
+    ChillField<String> workerId = field("worker_id", String.class);
 }

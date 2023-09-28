@@ -10,7 +10,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public abstract class ChillJobWorker {
     protected final UUID serverId;
     protected final int numWorkers;
-    private final List<Thread> workers;
     protected AtomicBoolean paused = new AtomicBoolean(false);
 
     public ChillJobWorker() {
@@ -20,29 +19,22 @@ public abstract class ChillJobWorker {
     public ChillJobWorker(int numWorkers) {
         this.serverId = UUID.randomUUID();
         this.numWorkers = numWorkers;
-        this.workers = new LinkedList<>();
     }
+
+    public abstract int getActiveJobs();
+    public abstract int getNumWorkers();
 
     public boolean isPaused() {
         return paused.get();
     }
 
-    protected void addWorker(Thread worker) {
-        if (worker != null && numWorkers > 0 && workers.size() < numWorkers) {
-            workers.add(worker);
-        }
+    public void setPaused(boolean paused) {
+        this.paused.set(paused);
     }
 
     public abstract void submit(ChillJob job);
 
-    public abstract void cancel(ChillJob job);
-
     public abstract ChillJob fetchJob(ChillJobId id);
 
-    public JobEntity.Status getJobStatus(ChillJobId jobId) {
-        return JobEntity.select(JobEntity.status())
-                .where("id = ?", jobId.toString())
-                .first()
-                .getStatus();
-    }
+    public abstract JobEntity.Status getJobStatus(ChillJobId jobId);
 }
