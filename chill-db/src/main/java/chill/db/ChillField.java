@@ -125,6 +125,10 @@ public class ChillField<T> {
         return get() != null;
     }
 
+    public boolean hasRawValue() {
+        return rawValue() != null;
+    }
+
     public boolean isSynthetic() {
         return synthetic;
     }
@@ -392,6 +396,15 @@ public class ChillField<T> {
             }
             cachedRecord = (ChillRecord) valueToReturn;
             return valueToReturn;
+        }
+
+        @Override
+        public boolean hasValue() {
+            if (cachedRecord != null) {
+                return true;
+            } else {
+                return super.hasValue();
+            }
         }
 
         @Override

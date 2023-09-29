@@ -29,6 +29,7 @@ public class Migrations extends ChillMigrations {
                         job_id VARCHAR(256) NOT NULL,
                         status VARCHAR(16) NOT NULL,
                         worker_id VARCHAR(256),
+                        timestamp TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
                         
                         CONSTRAINT fk_job_id FOREIGN KEY (job_id) REFERENCES chill_job_jobs(id)
                         ON DELETE CASCADE
@@ -37,7 +38,8 @@ public class Migrations extends ChillMigrations {
         }
         protected void down() {
             exec("""
-                    DROP TABLE chill_job_pending_queue""");
+                    DROP TABLE chill_job_pending_queue
+                    """);
         }
     };
 }

@@ -11,6 +11,8 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
 
+import static chill.utils.TheMissingUtils.n;
+
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class ChillJobManagerTests {
     private static final String UP = """
@@ -100,5 +102,18 @@ public class ChillJobManagerTests {
 
         var status = worker.getJobStatus(jobId);
         System.out.println("Test got status: " + status);
+    }
+
+    @Test
+    public void testManyJobs() {
+        ChillRecord.inTransaction(() -> {
+           n(100).times(() -> submitJob(2500));
+        });
+        System.out.println("jobs submitted");
+        try {
+            Thread.sleep(2500 * 4 + 10000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 }

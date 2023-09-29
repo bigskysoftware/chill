@@ -20,7 +20,6 @@ public class JobEntity extends _generated.AbstractJobEntity {
 
     // chilljob:uuid:tag
     ChillField<String> id = field("id", String.class).primaryKey();
-    ChillField<Status> status = field("status", Status.class).required();
     ChillField<String> jobJson = field("job_json", String.class).required();
     ChillField<String> jobClass = field("job_class", String.class).required();
 

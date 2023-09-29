@@ -12,6 +12,7 @@ import chill.utils.TheMissingUtils;
 import com.google.gson.Gson;
 import org.eclipse.jetty.util.thread.TimerScheduler;
 
+import java.sql.Timestamp;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -51,7 +52,6 @@ public class DefaultChillJobWorker extends ChillJobWorker {
                 new LinkedBlockingQueue<>(),
                 Thread.ofVirtual().name("chill-job-worker-pool").factory()
         );
-//        manager = Thread.ofVirtual().name("chill-job-pool-manager").start(this::manage);
         manager = new TimerScheduler();
         TheMissingUtils.safely(() -> {
             manager.start();
@@ -80,9 +80,10 @@ public class DefaultChillJobWorker extends ChillJobWorker {
                         .where("status = ?", JobEntity.Status.PENDING)
                         .limit(numToSpawn)
                         .updateAll(
-                                "status = ?, worker_id = ?",
+                                "status = ?, worker_id = ?, timestamp = ?",
                                 JobEntity.Status.RUNNING,
-                                serverId.toString()
+                                workerId.toString(),
+                                new Timestamp(System.currentTimeMillis())
                         );
 
                 if (numReceived != 0) {
@@ -91,6 +92,7 @@ public class DefaultChillJobWorker extends ChillJobWorker {
                             .limit(numReceived)
                             .orderBy("timestamp")
                             .toList();
+                    System.out.println("got " + items.size() + " items");
                 }
             }
 
@@ -102,13 +104,14 @@ public class DefaultChillJobWorker extends ChillJobWorker {
     public void submit(ChillJob job) {
         ChillRecord.inTransaction(() -> {
             var jobEntity = new JobEntity()
-                    .withStatus(JobEntity.Status.PENDING)
                     .withId(job.getJobId().toString())
                     .withJobJson(new Gson().toJson(job))
                     .withJobClass(job.getClass().getName())
                     .createOrThrow();
 
             new QueueEntity()
+                    .withStatus(JobEntity.Status.PENDING)
+                    .withWorkerId(worker.getWorkerId())
                     .withJobId(jobEntity)
                     .createOrThrow();
         });
@@ -127,5 +130,10 @@ public class DefaultChillJobWorker extends ChillJobWorker {
     @Override
     public JobEntity.Status getJobStatus(ChillJobId jobId) {
         return null;
+    }
+
+    @Override
+    public String getWorkerId() {
+        return workerId.toString();
     }
 }

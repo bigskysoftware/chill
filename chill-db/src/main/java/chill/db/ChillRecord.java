@@ -231,7 +231,7 @@ public class ChillRecord {
                 beforeCreateImpl();
 
                 var fields = getDBFields();
-                var nonNullFields = fields.filter(ChillField::hasValue);
+                var nonNullFields = fields.filter(ChillField::hasRawValue);
 
                 String fieldNames = nonNullFields.map(ChillField::getColumnName).join(",");
                 String queryVars = nonNullFields.map(field -> "?").join(",");
@@ -239,7 +239,7 @@ public class ChillRecord {
                 var sql = "INSERT INTO " + getTableName() + "(" + fieldNames + ")\n" +
                         "VALUES (" + queryVars + ")";
 
-                var values = nonNullFields.map(field -> field.get());
+                var values = nonNullFields.map(field -> field.rawValue());
 
                 if (shouldLog()) {
                     info(makeQueryLog("INSERT", sql, values));

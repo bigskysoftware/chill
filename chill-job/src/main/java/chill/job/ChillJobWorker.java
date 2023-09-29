@@ -2,13 +2,11 @@ package chill.job;
 
 import chill.job.model.JobEntity;
 
-import java.util.LinkedList;
-import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public abstract class ChillJobWorker {
-    protected final UUID serverId;
+    protected final UUID workerId;
     protected final int numWorkers;
     protected AtomicBoolean paused = new AtomicBoolean(false);
 
@@ -17,7 +15,7 @@ public abstract class ChillJobWorker {
     }
 
     public ChillJobWorker(int numWorkers) {
-        this.serverId = UUID.randomUUID();
+        this.workerId = UUID.randomUUID();
         this.numWorkers = numWorkers;
     }
 
@@ -37,4 +35,6 @@ public abstract class ChillJobWorker {
     public abstract ChillJob fetchJob(ChillJobId id);
 
     public abstract JobEntity.Status getJobStatus(ChillJobId jobId);
+
+    public abstract String getWorkerId();
 }
