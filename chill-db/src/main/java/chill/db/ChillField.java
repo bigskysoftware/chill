@@ -457,7 +457,7 @@ public class ChillField<T> {
         }
 
         public ChillQuery<T> get() {
-            var query = new ChillQuery(componentType);
+            var query = new ChillQuery<T>(componentType);
             if (through != null) {
                 FK joinFk = findJoinFKFor(componentType, through.componentType);
                 query = query.join(joinFk);

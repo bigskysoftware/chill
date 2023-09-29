@@ -113,8 +113,15 @@ public class ChillQuery<T extends ChillRecord> implements Iterable<T> {
     public ChillQuery<T> join(ChillField.FK foreignKey) {
         instantiatable = false;
         ChillQuery<T> ts = new ChillQuery<>(this);
-        boolean thisIsForeignType = getClass().isAssignableFrom(foreignKey.getType());
-        ts.joins.add(new Join(foreignKey, !thisIsForeignType));
+        boolean foreignTypeIsThis = this.clazz.isAssignableFrom(foreignKey.getType());
+        ts.joins.add(new Join(foreignKey, foreignTypeIsThis));
+        return ts;
+    }
+
+    public ChillQuery<T> join(ChillField.FK foreignKey, boolean invertJoin) {
+        instantiatable = false;
+        ChillQuery<T> ts = new ChillQuery<>(this);
+        ts.joins.add(new Join(foreignKey, invertJoin));
         return ts;
     }
 
