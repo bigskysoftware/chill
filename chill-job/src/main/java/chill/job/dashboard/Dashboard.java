@@ -36,7 +36,7 @@ public class Dashboard {
 
     public static void main(String[] args) {
         ChillRecord.connectionSource = () -> DriverManager.getConnection("jdbc:h2:./chill_job");
-        ChillJobWorker.setDefaultInstance(new DefaultChillJobWorker(8));
+        ChillJobWorker.setDefaultInstance(new DefaultChillJobWorker());
         var dashboard = new Dashboard();
         dashboard.start(args);
     }

@@ -54,18 +54,6 @@ public class _generated extends ChillCodeGenerator {
             return self;
         }
 
-        public java.lang.String getTag() {
-            return self.tag.get();
-        }
-
-        public void setTag(java.lang.String tag) {
-            self.tag.set(tag);
-        }
-
-        public ChillJobEntity withTag(java.lang.String tag) {
-            setTag(tag);
-            return self;
-        }
 
         public chill.job.model.JobStatus getStatus() {
             return self.status.get();
@@ -167,7 +155,6 @@ public class _generated extends ChillCodeGenerator {
         public static class field {
             public static final chill.db.ChillField<ChillJobEntity> ALL = new chill.db.ChillField<>(instance, "*", ChillJobEntity.class);
             public static final chill.db.ChillField<java.lang.String> id = instance.id;
-            public static final chill.db.ChillField<java.lang.String> tag = instance.tag;
             public static final chill.db.ChillField<chill.job.model.JobStatus> status = instance.status;
             public static final chill.db.ChillField<java.lang.Integer> backoff = instance.backoff;
             public static final chill.db.ChillField<java.lang.String> error = instance.error;
@@ -180,9 +167,6 @@ public class _generated extends ChillCodeGenerator {
         }
         public static chill.db.ChillField<java.lang.String> id() {
             return instance.id;
-        }
-        public static chill.db.ChillField<java.lang.String> tag() {
-            return instance.tag;
         }
         public static chill.db.ChillField<chill.job.model.JobStatus> status() {
             return instance.status;

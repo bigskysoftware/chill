@@ -1,6 +1,7 @@
 package chill.job;
 
 import chill.job.model.ChillJobEntity;
+import chill.job.model.JobStatus;
 import chill.utils.TheMissingUtils;
 import com.google.gson.Gson;
 
@@ -22,6 +23,7 @@ public abstract class ChillJob {
     public ChillJob(ChillJobId id, ChillJobWorker worker) {
         this.id = id == null ? new ChillJobId() : id;
         this.worker = worker;
+        this.entity = new ChillJobEntity().withId(this.id.toString());
     }
 
     protected ChillJobWorker getWorker() {
@@ -61,5 +63,9 @@ public abstract class ChillJob {
     @Override
     public String toString() {
         return getClass().getSimpleName() + "(jobId: " + id + ")";
+    }
+
+    public JobStatus getStatus() {
+        return getWorker().getJobStatus(getJobId());
     }
 }

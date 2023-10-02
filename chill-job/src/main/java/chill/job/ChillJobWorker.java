@@ -21,10 +21,11 @@ public abstract class ChillJobWorker {
         return defaultInstance;
     }
 
-    public static ChillJobWorker setDefaultInstance(ChillJobWorker worker) {
-        var out = defaultInstance;
+    public static void setDefaultInstance(ChillJobWorker worker) {
+        if (defaultInstance != null) {
+            defaultInstance.shutdown();;
+        }
         defaultInstance = worker;
-        return out;
     }
 
     protected final UUID workerId;

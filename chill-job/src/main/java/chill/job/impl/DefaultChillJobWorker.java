@@ -4,6 +4,7 @@ import chill.db.ChillMigrations;
 import chill.db.ChillRecord;
 import chill.job.ChillJob;
 import chill.job.ChillJobId;
+import chill.job.ChillJobRunner;
 import chill.job.ChillJobWorker;
 import chill.job.model.ChillJobEntity;
 import chill.job.model.JobStatus;
@@ -20,16 +21,18 @@ public class DefaultChillJobWorker extends ChillJobWorker {
     private static ChillMigrations migrations;
 
     //---
+    private ChillJobRunner runner;
 
     private ThreadPoolExecutor executor;
     private TimerScheduler manager;
 
     public DefaultChillJobWorker() {
-        this(4);
+        this(4, 60 * 1000, null);
     }
 
-    public DefaultChillJobWorker(int numWorkers) {
+    public DefaultChillJobWorker(int numWorkers, long msKeepAlive, ChillJobRunner runner) {
         super(numWorkers);
+        this.runner = runner == null ? new DefaultChillJobRunner() : runner;
 
         if (migrations == null) {
             migrations = new ChillMigrations(Migrations.class);
@@ -39,8 +42,8 @@ public class DefaultChillJobWorker extends ChillJobWorker {
         executor = new ThreadPoolExecutor(
                 numWorkers,
                 numWorkers * 2,
-                60,
-                TimeUnit.SECONDS,
+                msKeepAlive,
+                TimeUnit.MILLISECONDS,
                 new LinkedBlockingQueue<>(),
                 Thread.ofVirtual().name("chill-job-worker-pool").factory()
         );
@@ -70,42 +73,43 @@ public class DefaultChillJobWorker extends ChillJobWorker {
     }
 
     protected Runnable managerTask() {
-        throw new UnsupportedOperationException();
-//        return () -> TheMissingUtils.safely(() -> {
-//            try (var ignored = ChillRecord.quietly()) {
-//                int activeJobs = getActiveJobs();
-//                if (activeJobs < numWorkers) {
-//                    int numToSpawn = numWorkers - activeJobs;
-//
-//                    var numReceived = QueueEntity
-//                            .where("status = ?", JobStatus.PENDING)
-//                            .limit(numToSpawn)
-//                            .updateAll(
-//                                    "status = ?, worker_id = ?, timestamp = ?",
-//                                    JobStatus.RUNNING,
-//                                    workerId.toString(),
-//                                    new Timestamp(System.currentTimeMillis())
-//                            );
-//
-//                    if (numReceived != 0) {
-//                        var items = QueueEntity
-//                                .where("status = ?", JobStatus.RUNNING)
-//                                .limit(numReceived)
-//                                .orderBy("timestamp")
-//                                .toList();
-//                        for (var item : items) {
-//                            executor.submit(() -> TheMissingUtils.safely(() -> {
-//                                var job = ChillJob.fromRecord(item.getJobId());
-//                                job.run();
-//                                item.delete();
-//                            }));
-//                        }
-//                    }
-//                }
-//            }
-//
-//            manager.schedule(managerTask(), 5, TimeUnit.SECONDS);
-//        });
+        return () -> {
+            long startTime = System.currentTimeMillis();
+
+            var entityCount = ChillJobEntity
+                    .where("status = ?", JobStatus.PENDING)
+                    .orderBy("timestamp")
+                    .limit(numWorkers - executor.getActiveCount())
+                    .updateAll(
+                            "status = ?, worker_id = ?",
+                            JobStatus.ASSIGNED,
+                            workerId.toString()
+                    );
+
+            if (entityCount > 0) {
+                var jobs = ChillJobEntity
+                        .where("status = ?, worker_id = ?",
+                                JobStatus.ASSIGNED, workerId.toString())
+                        .limit(entityCount)
+                        .toList();
+
+                for (var job : jobs) {
+                    var clazz = TheMissingUtils.safely(() -> Class.forName(job.getJobClass()));
+                    ChillJob task = (ChillJob) new Gson().fromJson(job.getJobData(), clazz);
+                    System.out.println("Executing job: " + task.getJobId());
+                    executor.submit(() -> {
+                        TheMissingUtils.safely(() -> {
+                            runner.handle(task);
+                        });
+                    });
+                }
+            }
+
+            Long endTime = System.currentTimeMillis();
+            Long duration = endTime - startTime;
+            Long sleepTime = Math.max(0, 5000 - duration);
+            manager.schedule(managerTask(), sleepTime, TimeUnit.MILLISECONDS);
+        };
     }
 
     @Override
