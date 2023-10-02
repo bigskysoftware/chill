@@ -4,7 +4,6 @@ import chill.db.ChillRecord;
 import chill.job.ChillJobId;
 import chill.job.ChillJobWorker;
 import chill.job.impl.DefaultChillJobWorker;
-import chill.job.model.JobEntity;
 import com.google.gson.Gson;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
@@ -67,7 +66,8 @@ public class Dashboard {
     }
 
     private void getJobs(Context context) {
-        var entities = JobEntity.find.all().toList();
-        context.json(entities);
+        context.json("Null");
+//        var entities = JobEntity.find.all().toList();
+//        context.json(entities);
     }
 }

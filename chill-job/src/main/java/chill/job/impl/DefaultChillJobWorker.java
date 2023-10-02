@@ -5,15 +5,13 @@ import chill.db.ChillRecord;
 import chill.job.ChillJob;
 import chill.job.ChillJobId;
 import chill.job.ChillJobWorker;
-import chill.job.model.JobEntity;
+import chill.job.model.ChillJobEntity;
 import chill.job.model.JobStatus;
 import chill.job.model.Migrations;
-import chill.job.model.QueueEntity;
 import chill.utils.TheMissingUtils;
 import com.google.gson.Gson;
 import org.eclipse.jetty.util.thread.TimerScheduler;
 
-import java.sql.Timestamp;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -72,85 +70,86 @@ public class DefaultChillJobWorker extends ChillJobWorker {
     }
 
     protected Runnable managerTask() {
-        return () -> TheMissingUtils.safely(() -> {
-            try (var ignored = ChillRecord.quietly()) {
-                int activeJobs = getActiveJobs();
-                if (activeJobs < numWorkers) {
-                    int numToSpawn = numWorkers - activeJobs;
-
-                    var numReceived = QueueEntity
-                            .where("status = ?", JobStatus.PENDING)
-                            .limit(numToSpawn)
-                            .updateAll(
-                                    "status = ?, worker_id = ?, timestamp = ?",
-                                    JobStatus.RUNNING,
-                                    workerId.toString(),
-                                    new Timestamp(System.currentTimeMillis())
-                            );
-
-                    if (numReceived != 0) {
-                        var items = QueueEntity
-                                .where("status = ?", JobStatus.RUNNING)
-                                .limit(numReceived)
-                                .orderBy("timestamp")
-                                .toList();
-                        for (var item : items) {
-                            executor.submit(() -> TheMissingUtils.safely(() -> {
-                                var job = ChillJob.fromRecord(item.getJobId());
-                                job.run();
-                                item.delete();
-                            }));
-                        }
-                    }
-                }
-            }
-
-            manager.schedule(managerTask(), 5, TimeUnit.SECONDS);
-        });
+        throw new UnsupportedOperationException();
+//        return () -> TheMissingUtils.safely(() -> {
+//            try (var ignored = ChillRecord.quietly()) {
+//                int activeJobs = getActiveJobs();
+//                if (activeJobs < numWorkers) {
+//                    int numToSpawn = numWorkers - activeJobs;
+//
+//                    var numReceived = QueueEntity
+//                            .where("status = ?", JobStatus.PENDING)
+//                            .limit(numToSpawn)
+//                            .updateAll(
+//                                    "status = ?, worker_id = ?, timestamp = ?",
+//                                    JobStatus.RUNNING,
+//                                    workerId.toString(),
+//                                    new Timestamp(System.currentTimeMillis())
+//                            );
+//
+//                    if (numReceived != 0) {
+//                        var items = QueueEntity
+//                                .where("status = ?", JobStatus.RUNNING)
+//                                .limit(numReceived)
+//                                .orderBy("timestamp")
+//                                .toList();
+//                        for (var item : items) {
+//                            executor.submit(() -> TheMissingUtils.safely(() -> {
+//                                var job = ChillJob.fromRecord(item.getJobId());
+//                                job.run();
+//                                item.delete();
+//                            }));
+//                        }
+//                    }
+//                }
+//            }
+//
+//            manager.schedule(managerTask(), 5, TimeUnit.SECONDS);
+//        });
     }
 
     @Override
     public void submit(ChillJob job) {
         ChillRecord.inTransaction(() -> {
-            var jobEntity = new JobEntity()
+            job.getEntity()
                     .withId(job.getJobId().toString())
-                    .withJobJson(new Gson().toJson(job))
-                    .withJobClass(job.getClass().getName())
-                    .createOrThrow();
-
-            new QueueEntity()
                     .withStatus(JobStatus.PENDING)
-                    .withWorkerId(getWorkerId())
-                    .withJobId(jobEntity)
+                    .withWorkerId(workerId.toString())
+                    .withJobClass(job.getClass().getName())
+                    .withJobData(new Gson().toJson(job))
                     .createOrThrow();
         });
     }
 
     @Override
     public ChillJob fetchJob(ChillJobId id) {
-        var entity = JobEntity.find.byPrimaryKey(id.toString());
+        var entity = ChillJobEntity.find.byPrimaryKey(id.toString());
         if (entity == null) {
             return null;
         } else {
-            return ChillJob.fromRecord(entity);
+            return TheMissingUtils.safely(() -> {
+                Gson gson = new Gson();
+                Class<?> clazz = Class.forName(entity.getJobClass());
+                ChillJob job = ((ChillJob) gson.fromJson(entity.getJobData(), clazz));
+                setJobEntity(job, entity);
+                return job;
+            });
         }
     }
 
     @Override
     public boolean cancelJob(ChillJobId id) {
-        return JobEntity
-                .where("job_id", id.toString())
-                .join(QueueEntity.to.jobId)
-                .and("status", JobStatus.PENDING)
-                .deleteAll() > 0;
+        return new ChillJobEntity()
+                .withId(id.toString())
+                .withStatus(JobStatus.PENDING)
+                .delete() > 0;
     }
 
     @Override
     public JobStatus getJobStatus(ChillJobId jobId) {
-        return QueueEntity
-                .where("job_id = ?", jobId.toString())
-                .limit(1)
-                .select(QueueEntity.field.status)
+        return ChillJobEntity
+                .find
+                .select(ChillJobEntity.status())
                 .first()
                 .getStatus();
     }

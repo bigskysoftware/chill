@@ -2,9 +2,7 @@ package chill.job;
 
 import chill.db.ChillRecord;
 import chill.job.impl.DefaultChillJobWorker;
-import chill.job.model.JobEntity;
 import chill.job.model.JobStatus;
-import chill.job.model.QueueEntity;
 import chill.utils.TheMissingUtils;
 import org.junit.jupiter.api.*;
 
@@ -63,8 +61,8 @@ public class ChillJobManagerTests {
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
-        JobEntity.find.deleteAll();
-        QueueEntity.find.deleteAll(); // this should be redundant since we delete all jobs and have a cascade delete
+//        JobEntity.find.deleteAll();
+//        QueueEntity.find.deleteAll(); // this should be redundant since we delete all jobs and have a cascade delete
     }
 
     @AfterAll
@@ -83,7 +81,7 @@ public class ChillJobManagerTests {
         Long pkey;
 
         public SleepJob(long timeout, ChillJobWorker worker) {
-            super("chill-job-with-" + timeout, worker);
+            super(worker);
             this.timeout = timeout;
         }
 
@@ -150,19 +148,19 @@ public class ChillJobManagerTests {
                     pendingJobIds[i++] = id.toString();
                 }
 
-                var completedBatch = QueueEntity
-                        .where("job_id in ?", pendingJobIds)
-                        .and("not (status in ?)", unterminatedJobs)
-                        .select(QueueEntity.jobId())
-                        .toList();
+//                var completedBatch = QueueEntity
+//                        .where("job_id in ?", pendingJobIds)
+//                        .and("not (status in ?)", unterminatedJobs)
+//                        .select(QueueEntity.jobId())
+//                        .toList();
 
-                int start = pendingJobs.size();
-                for (var job : completedBatch) {
-                    ChillJobId id = ChillJobId.fromString(job.getJobId().getId());
-                    pendingJobs.remove(id);
-                }
+//                int start = pendingJobs.size();
+//                for (var job : completedBatch) {
+//                    ChillJobId id = ChillJobId.fromString(job.getJobId().getId());
+//                    pendingJobs.remove(id);
+//                }
 
-                System.out.println("removed " + (start - pendingJobs.size()) + " jobs");
+//                System.out.println("removed " + (start - pendingJobs.size()) + " jobs");
             });
         }
 

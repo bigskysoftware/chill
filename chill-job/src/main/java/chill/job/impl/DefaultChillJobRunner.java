@@ -2,9 +2,7 @@ package chill.job.impl;
 
 import chill.job.ChillJob;
 import chill.job.ChillJobRunner;
-import chill.job.model.JobEntity;
 import chill.job.model.JobStatus;
-import chill.job.model.QueueEntity;
 import chill.utils.TheMissingUtils;
 
 public class DefaultChillJobRunner extends ChillJobRunner {
@@ -23,9 +21,9 @@ public class DefaultChillJobRunner extends ChillJobRunner {
     }
 
     protected void updateStatus(ChillJob job, JobStatus status) {
-        new QueueEntity()
-                .withJobId(new JobEntity().withId(job.getJobId().toString()))
+        job
+                .getEntity()
                 .withStatus(status)
-                .update();
+                .save();
     }
 }

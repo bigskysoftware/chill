@@ -14,29 +14,17 @@ import com.google.gson.JsonSerializer;
  */
 public final class ChillJobId {
     private final UUID uuid;
-    private final String tag;
-
-    public ChillJobId(String tag) {
-        this.uuid = UUID.randomUUID();
-        this.tag = tag;
-    }
-
-    ChillJobId(UUID uuid, String tag) {
-        this.uuid = uuid;
-        this.tag = tag;
-    }
 
     public ChillJobId() {
         this.uuid = UUID.randomUUID();
-        this.tag = "";
+    }
+
+    ChillJobId(UUID uuid) {
+        this.uuid = uuid;
     }
 
     public UUID getUuid() {
         return uuid;
-    }
-
-    public String getTag() {
-        return tag;
     }
 
     @Override
@@ -44,17 +32,17 @@ public final class ChillJobId {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         ChillJobId that = (ChillJobId) o;
-        return Objects.equals(uuid, that.uuid) && Objects.equals(tag, that.tag);
+        return Objects.equals(uuid, that.uuid);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(uuid, tag);
+        return Objects.hash(uuid);
     }
 
     @Override
     public String toString() {
-        return "chilljob:job:" + uuid + ":" + tag;
+        return "chilljob:job:" + uuid;
     }
 
 
@@ -70,7 +58,6 @@ public final class ChillJobId {
             throw new IllegalArgumentException("Invalid ChillJobId format");
         }
         UUID uuid = UUID.fromString(parts[2]);
-        String tag = parts[3];
-        return new ChillJobId(uuid, tag);
+        return new ChillJobId(uuid);
     }
 }

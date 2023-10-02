@@ -1,32 +1,26 @@
 package chill.job;
 
-import chill.db.ChillRecord;
-import chill.job.impl.DefaultChillJobWorker;
-import chill.job.model.JobEntity;
+import chill.job.model.ChillJobEntity;
 import chill.utils.TheMissingUtils;
 import com.google.gson.Gson;
 
 import java.util.Objects;
 
 public abstract class ChillJob {
-    private final ChillJobId jobId;
-    transient JobEntity entity;
-    transient ChillJobWorker worker;
+    ChillJobId id;
+    private transient ChillJobWorker worker = null;
+    transient ChillJobEntity entity = null;
 
     public ChillJob() {
-        this(new ChillJobId(), null);
+        this(null, null);
     }
 
-    public ChillJob(String tag) {
-        this(new ChillJobId(tag), null);
+    public ChillJob(ChillJobWorker worker) {
+        this(null, worker);
     }
 
-    public ChillJob(String tag, ChillJobWorker worker) {
-        this(new ChillJobId(tag), worker);
-    }
-
-    public ChillJob(ChillJobId jobId, ChillJobWorker worker) {
-        this.jobId = Objects.requireNonNull(jobId);
+    public ChillJob(ChillJobId id, ChillJobWorker worker) {
+        this.id = id == null ? new ChillJobId() : id;
         this.worker = worker;
     }
 
@@ -37,17 +31,12 @@ public abstract class ChillJob {
         return worker;
     }
 
-    public static ChillJob fromRecord(JobEntity record) {
-        Gson gson = new Gson();
-        String jobJson = record.getJobJson();
-        Class<?> jobClass = TheMissingUtils.safely(() -> Class.forName(record.getJobClass()));
-        ChillJob job = (ChillJob) gson.fromJson(jobJson, jobClass);
-        job.entity = record;
-        return job;
+    public ChillJobId getJobId() {
+        return id;
     }
 
-    public ChillJobId getJobId() {
-        return jobId;
+    public ChillJobEntity getEntity() {
+        return entity;
     }
 
     public void submit() {
@@ -61,16 +50,16 @@ public abstract class ChillJob {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         ChillJob chillJob = (ChillJob) o;
-        return Objects.equals(jobId, chillJob.jobId);
+        return Objects.equals(id, chillJob.id);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(jobId);
+        return Objects.hash(id);
     }
 
     @Override
     public String toString() {
-        return getClass().getSimpleName() + "(jobId: " + jobId + ")";
+        return getClass().getSimpleName() + "(jobId: " + id + ")";
     }
 }

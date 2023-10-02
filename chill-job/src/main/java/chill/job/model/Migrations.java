@@ -7,38 +7,28 @@ public class Migrations extends ChillMigrations {
         generateNewMigration();
     }
 
-    public final ChillMigration migration_2023_09_23_13_21_01 = new ChillMigration("jobs") {
+    public final ChillMigration migration_2023_10_01_20_29_02 = new ChillMigration("ChillJob") {
         protected void up() {
             exec("""
-                    CREATE TABLE chill_job_jobs (
-                        id VARCHAR(256) PRIMARY KEY, -- chilljob:uuid:tag
-                        job_json TEXT NOT NULL,
-                        job_class TEXT NOT NULL
-                    )""");
-        }
-        protected void down() {
-            exec("DROP TABLE chill_job_jobs");
-        }
-    };
-
-    public final ChillMigration migration_2023_09_23_16_18_27 = new ChillMigration("chill_job_queue"){
-        protected void up() {
-            exec("""
-                    CREATE TABLE chill_job_pending_queue (
-                        id LONG PRIMARY KEY AUTO_INCREMENT,
-                        job_id VARCHAR(256) NOT NULL,
-                        status TEXT NOT NULL,
-                        worker_id TEXT,
-                        timestamp TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                        
-                        CONSTRAINT fk_job_id FOREIGN KEY (job_id) REFERENCES chill_job_jobs(id)
-                        ON DELETE CASCADE
-                    )
+                    create table chill_job_jobs (
+                        id varchar(128) not null primary key,
+                        tag text not null,
+                        status varchar(32) not null,
+                        backoff integer default null,
+                        worker_id varchar(128) default null,
+                        error text default null,
+                        job_class text not null,
+                        job_data text not null
+                    );
+                    
+                    create index chill_job_jobs_status_idx ON chill_job_jobs (status);
                     """);
         }
+
         protected void down() {
             exec("""
-                    DROP TABLE chill_job_pending_queue
+                    drop index chill_job_jobs_status_idx;
+                    drop table chill_job_jobs;
                     """);
         }
     };

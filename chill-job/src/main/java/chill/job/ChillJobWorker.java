@@ -1,6 +1,7 @@
 package chill.job;
 
 import chill.job.impl.DefaultChillJobWorker;
+import chill.job.model.ChillJobEntity;
 import chill.job.model.JobStatus;
 
 import java.sql.Timestamp;
@@ -39,6 +40,11 @@ public abstract class ChillJobWorker {
         this.numWorkers = numWorkers;
     }
 
+
+    protected void setJobEntity(ChillJob job, ChillJobEntity entity) {
+        job.id = ChillJobId.fromString(entity.getId());
+        job.entity = entity;
+    }
 
     public abstract void shutdown();
     public abstract int getActiveJobs();
