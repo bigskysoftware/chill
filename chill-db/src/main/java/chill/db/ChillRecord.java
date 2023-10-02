@@ -20,7 +20,7 @@ public class ChillRecord {
 
     public static ConnectionSource connectionSource = null;
 
-    private static int SHOULD_LOG = 0;
+    private static ThreadLocal<Integer> SHOULD_LOG = new ThreadLocal<>();
     private ChillLogs.LogCategory log = ChillLogs.get(this.getClass());
 
     String tableName = TheMissingUtils.snake(this.getClass().getSimpleName());
@@ -239,7 +239,7 @@ public class ChillRecord {
                 var sql = "INSERT INTO " + getTableName() + "(" + fieldNames + ")\n" +
                         "VALUES (" + queryVars + ")";
 
-                var values = nonNullFields.map(field -> field.rawValue());
+                var values = nonNullFields.map(field -> field.get());
 
                 if (shouldLog()) {
                     info(makeQueryLog("INSERT", sql, values));
@@ -471,7 +471,7 @@ public class ChillRecord {
         query.reload(this);
     }
 
-    protected <T> T getAdditionalField(ChillField<T> id) {
+    public <T> T getAdditionalField(ChillField<T> id) {
         return (T) additionalData.get(id);
     }
 
@@ -531,6 +531,10 @@ public class ChillRecord {
         public T by(String column, Object val) {
             return new ChillQuery<T>(clazz).where(column, val).first();
         }
+
+        public int deleteAll() {
+            return new ChillQuery<T>(clazz).deleteAll();
+        }
     }
 
     // manages timestamps during update/insert
@@ -551,12 +555,14 @@ public class ChillRecord {
 
 
     public static boolean shouldLog() {
-        return SHOULD_LOG == 0;
+        Integer shouldLog = SHOULD_LOG.get();
+        return shouldLog == null || shouldLog == 0;
     }
 
     public static SafeAutoCloseable quietly() {
-        SHOULD_LOG++;
-        return () -> SHOULD_LOG--;
+        Integer shouldLog = SHOULD_LOG.get();
+        SHOULD_LOG.set(shouldLog == null ? 1 : shouldLog + 1);
+        return () -> SHOULD_LOG.set(SHOULD_LOG.get() - 1);
     }
 
     //=====================================

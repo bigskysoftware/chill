@@ -32,7 +32,7 @@ public abstract class ChillJob {
 
     protected ChillJobWorker getWorker() {
         if (worker == null) {
-            worker = DefaultChillJobWorker.getInstance();
+            worker = ChillJobWorker.getDefaultInstance();
         }
         return worker;
     }

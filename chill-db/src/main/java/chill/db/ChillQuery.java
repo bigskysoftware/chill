@@ -5,12 +5,13 @@ import chill.utils.NiceList;
 import chill.utils.Pair;
 import chill.utils.TheMissingUtils;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @SuppressWarnings("unchecked")
 public class ChillQuery<T extends ChillRecord> implements Iterable<T> {
@@ -38,7 +39,6 @@ public class ChillQuery<T extends ChillRecord> implements Iterable<T> {
     private Integer page;
     private boolean forUpdate = false;
     private boolean skipLocked = false;
-    private Integer top = null;
 
     public ChillQuery(Class<T> clazz) {
         this.clazz = clazz;
@@ -77,13 +77,6 @@ public class ChillQuery<T extends ChillRecord> implements Iterable<T> {
         this.page = from.page;
         this.forUpdate = from.forUpdate;
         this.skipLocked = from.skipLocked;
-        this.top = top;
-    }
-
-    public ChillQuery<T> top(int limit) {
-        ChillQuery<T> ts = new ChillQuery<>(this);
-        ts.top = limit;
-        return ts;
     }
 
     public ChillQuery<T> and(Object... conditions) {
@@ -215,30 +208,65 @@ public class ChillQuery<T extends ChillRecord> implements Iterable<T> {
                     matcher = vars.matcher(newWhereSQL);
                 }
                 whereClause.append(newWhereSQL + "\n");
-                instantiatable = false;
-            } else if (newWhereSQL.contains("?")  || conditions.length == 1) {
+            } else if (newWhereSQL.contains("?") || conditions.length == 1) {
                 // query is positional style
-                for (int i = 1; i < conditions.length; i++) {
-                    Object condition = conditions[i];
-                    queryArguments.add(condition);
+                var values = NiceList.of(conditions).slice(1);
+
+                var numQuestions = TheMissingUtils.countOccurrences(newWhereSQL, "?");
+                if (numQuestions != conditions.length - 1) {
+                    throw new IllegalArgumentException("Not enough arguments for query: " + newWhereSQL +
+                            "\n  args:" + values.join(", "));
                 }
-                whereClause.append(newWhereSQL + "\n");
-                instantiatable = false;
+
+                var sqlOut = new StringBuilder();
+                var sqlSlices = TheMissingUtils.iteratorFrom(newWhereSQL.split(Pattern.quote("?")));
+                for (var value : values) {
+                    String slice = sqlSlices.next();
+                    sqlOut.append(slice);
+
+                    NiceList<?> items = NiceList.maybeOf(value);
+                    if (items == null) {
+                        queryArguments.add(value);
+                        sqlOut.append('?');
+                    } else {
+                        queryArguments.addAll(items);
+                        sqlOut.append('(').append(NiceList.filled('?', items.size()).join(", ")).append(')');
+                    }
+                }
+
+                if (sqlSlices.hasNext()) {
+                    sqlOut.append(sqlSlices.next());
+                }
+                assert !sqlSlices.hasNext();
+
+                whereClause.append(sqlOut).append("\n");
             } else {
-                for (int i = 0; i < conditions.length - 1; i = i + 2) {
+                for (int i = 0; i < conditions.length - 1; i += 2) {
                     String field = String.valueOf(conditions[i]);
                     Object value = conditions[i + 1];
-                    queryArguments.add(value);
                     if (i > 0) {
                         whereClause.append(" AND ");
                     }
-                    // TODO - support other operations, NULL values, IN, etc.
+                    // TODO - support other operations, NULL values, etc.
                     if (field.contains(" ")) {
-                        whereClause.append(field).append(" ?\n");
-                        colValues.put(field, value);
+                        NiceList valueSet = NiceList.maybeOf(value);
+                        if (valueSet == null) {
+                            whereClause.append(field).append(" ?\n");
+                            colValues.put(field, value);
+                            queryArguments.add(value);
+                        } else {
+                            whereClause.append(field).append(" (");
+                            whereClause.append(NiceList.filled("?", valueSet.size()).join(", "));
+                            whereClause.append(")\n");
+                            colValues.put(field, valueSet);
+                            queryArguments.addAll(valueSet);
+                        }
+                    } else if (value == null) {
+                        whereClause.append("field").append(" IS NULL\n");
                     } else {
                         whereClause.append(field).append(" = ?\n");
                         colValues.put(field, value);
+                        queryArguments.add(value);
                     }
                 }
             }
@@ -267,32 +295,12 @@ public class ChillQuery<T extends ChillRecord> implements Iterable<T> {
 
     public String sql() {
         StringBuilder sql = new StringBuilder("SELECT ");
-        if (top != null) {
-            sql.append("TOP ").append(top).append(" ");
-        }
-        sql.append(buildSelectSentence()).append("\n").append("FROM ").append(getTableName());
-        for (Join join : joins) {
-            sql.append("\n").append(join.sql());
-        }
-        if (whereClause.length() > 0) {
-            sql.append("\nWHERE ").append(whereClause);
-        }
-        if (orders.size() > 0) {
-            sql.append("\n ORDER BY ");
-            for (int i = 0; i < orders.size(); i++) {
-                Pair<String, Direction> order = orders.get(i);
-                sql.append(order.first).append(order.second == Direction.ASCENDING ? " ASC " : " DESC ");
-                if (i < orders.size() - 2) {
-                    sql.append(", ");
-                }
-            }
-        }
-        if (limit != null) {
-            sql.append("\nLIMIT ").append(limit);
-            if (page != null) {
-                sql.append("\nOFFSET ").append(limit * (page - 1));
-            }
-        }
+        buildSelectSentence(sql);
+        sql.append("\n").append("FROM ").append(getTableName());
+        buildJoinClause(sql);
+        buildWhereClause(sql);
+        buildOrderClause(sql);
+        buildLimitClause(sql);
         if (forUpdate) {
             sql.append("\nFOR UPDATE");
             if (skipLocked) {
@@ -300,28 +308,6 @@ public class ChillQuery<T extends ChillRecord> implements Iterable<T> {
             }
         }
         return sql.toString();
-    }
-
-    private String buildSelectSentence() {
-        Stream<ChillField> selectors;
-        if (this.selectors.isEmpty()) {
-            selectors = getFields().stream();
-        } else {
-            selectors = this.selectors.stream();
-        }
-        return selectors
-                .flatMap(field -> {
-                    if (field.getColumnName().equals("*")) {
-                        return field.getRecord().getFields().stream();
-                    } else {
-                        return Stream.of(field);
-                    }
-                })
-                .map(field -> {
-                    var selector = field.getRecord().getTableName() + "." + field.getColumnName();
-                    return selector + " as \"" + selector + "\"";
-                })
-                .collect(Collectors.joining(", "));
     }
 
     public String countSQL() {
@@ -338,17 +324,10 @@ public class ChillQuery<T extends ChillRecord> implements Iterable<T> {
     public String firstSQL() {
         StringBuilder sql = new StringBuilder();
         sql.append("SELECT ");
-        if (top != null) {
-            sql.append("TOP ").append(top).append(" ");
-        }
-        sql.append(buildSelectSentence()).append("\n")
-                .append("FROM ").append(getTableName());
-        for (Join join : joins) {
-            sql.append("\n").append(join.sql());
-        }
-        if (whereClause.length() > 0) {
-            sql.append("\nWHERE ").append(whereClause);
-        }
+        buildSelectSentence(sql);
+        sql.append("\n").append("FROM ").append(getTableName());
+        buildWhereClause(sql);
+        buildOrderClause(sql);
         sql.append("\nLIMIT 1");
         if (forUpdate) {
             sql.append("\nFOR UPDATE");
@@ -360,14 +339,13 @@ public class ChillQuery<T extends ChillRecord> implements Iterable<T> {
     }
 
     public String deleteSQL() {
-        String sql = "DELETE FROM " + getTableName();
-        for (Join join : joins) {
-            sql += "\n" + join.sql();
-        }
-        if (whereClause.length() > 0) {
-            sql = sql + "\nWHERE " + whereClause;
-        }
-        return sql;
+        StringBuilder sql = new StringBuilder();
+        sql.append("DELETE FROM ").append(getTableName());
+        buildJoinClause(sql);
+        buildWhereClause(sql);
+        buildOrderClause(sql);
+        buildLimitClause(sql);
+        return sql.toString();
     }
 
     private NiceList<ChillField> getFields() {
@@ -389,7 +367,7 @@ public class ChillQuery<T extends ChillRecord> implements Iterable<T> {
         queryList.add(whereClause);
         queryList.addAll(primaryKeyValues);
         TheMissingUtils.safely(() -> {
-            try (var resultSetAndConnection =  where(queryList.toArray()).executeQuery()) {
+            try (var resultSetAndConnection = where(queryList.toArray()).executeQuery()) {
                 if (resultSetAndConnection.resultSet.next()) {
                     ChillRecord.populateFromResultSet(record, resultSetAndConnection.resultSet);
                 } else {
@@ -398,6 +376,7 @@ public class ChillQuery<T extends ChillRecord> implements Iterable<T> {
             }
         });
     }
+
     public T findByPrimaryKey(Object... keys) {
         String where = getFields().filter(ChillField::isPrimaryKey).map(field -> field.getColumnName() + "=?").join(" AND ");
         LinkedList<Object> queryList = new LinkedList<>();
@@ -437,9 +416,7 @@ public class ChillQuery<T extends ChillRecord> implements Iterable<T> {
             try (Connection connection = ChillRecord.connectionSource.getConnection()) {
                 PreparedStatement preparedStatement = connection.prepareStatement(sql);
                 int col = 1;
-                for (Object value : args()) {
-                    preparedStatement.setObject(col++, value);
-                }
+                col = whereValues(preparedStatement, col);
                 ResultSet resultSet = preparedStatement.executeQuery();
                 return populateFromResultSet(resultSet);
             }
@@ -509,14 +486,84 @@ public class ChillQuery<T extends ChillRecord> implements Iterable<T> {
                 PreparedStatement preparedStatement = connection.prepareStatement(sql);
                 int col = 1;
                 for (Object value : values) {
-                    preparedStatement.setObject(col++, value);
+                    if (value instanceof Enum<?> enumValue) {
+                        preparedStatement.setObject(col++, enumValue.name());
+                    } else {
+                        preparedStatement.setObject(col++, value);
+                    }
                 }
-                for (Object value : args()) {
-                    preparedStatement.setObject(col++, value);
-                }
+                col = whereValues(preparedStatement, col);
                 return preparedStatement.executeUpdate();
             }
         });
+    }
+
+    public int deleteAll() {
+        StringBuilder query = new StringBuilder();
+        query.append("DELETE FROM ").append(tableName).append('\n');
+
+        if (!whereClause.isEmpty()) {
+            query.append('\n').append("WHERE ").append(whereClause);
+        }
+        buildOrderClause(query);
+        if (limit != null) {
+            query.append("\nLIMIT ").append(limit);
+            if (page != null) {
+                query.append("\nOFFSET ").append(limit * (page - 1));
+            }
+        }
+
+        String sql = query.toString();
+        if (ChillRecord.shouldLog()) {
+            log.info(ChillRecord.makeQueryLog("QUERY", sql, args()));
+        }
+        return TheMissingUtils.safely(() -> {
+            try (Connection connection = ChillRecord.connectionSource.getConnection()) {
+                PreparedStatement preparedStatement = connection.prepareStatement(sql);
+                int col = 1;
+                col = whereValues(preparedStatement, col);
+                return preparedStatement.executeUpdate();
+            }
+        });
+    }
+
+    private void buildSelectSentence(StringBuilder sql) {
+        List<ChillField> fields;
+        if (this.selectors.isEmpty()) {
+            fields = getFields();
+        } else {
+            fields = new NiceList<>(this.selectors);
+        }
+        int i = 0;
+        for (var field : fields) {
+            if (field.getColumnName().equals("*")) {
+                for (var recordField : field.getRecord().getFields()) {
+                    if (i++ > 0) {
+                        sql.append(", ");
+                    }
+                    var selector = recordField.getRecord().getTableName() + "." + recordField.getColumnName();
+                    sql.append(selector).append(" as \"").append(selector).append("\"");
+                }
+            } else {
+                if (i++ > 0) {
+                    sql.append(", ");
+                }
+                var selector = field.getRecord().getTableName() + "." + field.getColumnName();
+                sql.append(selector).append(" as \"").append(selector).append("\"");
+            }
+        }
+    }
+
+    private void buildJoinClause(StringBuilder query) {
+        for (Join join : joins) {
+            query.append("\n").append(join.sql());
+        }
+    }
+
+    private void buildWhereClause(StringBuilder query) {
+        if (!whereClause.isEmpty()) {
+            query.append('\n').append("WHERE ").append(whereClause);
+        }
     }
 
     private void buildOrderClause(StringBuilder query) {
@@ -532,6 +579,15 @@ public class ChillQuery<T extends ChillRecord> implements Iterable<T> {
         }
     }
 
+    private void buildLimitClause(StringBuilder query) {
+        if (limit != null) {
+            query.append("\nLIMIT ").append(limit);
+            if (page != null) {
+                query.append("\nOFFSET ").append(limit * (page - 1));
+            }
+        }
+    }
+
     public int delete() {
         String sql = deleteSQL();
         if (ChillRecord.shouldLog()) {
@@ -541,9 +597,9 @@ public class ChillQuery<T extends ChillRecord> implements Iterable<T> {
             try (Connection connection = ChillRecord.connectionSource.getConnection()) {
                 PreparedStatement preparedStatement = connection.prepareStatement(sql);
                 int col = 1;
-                for (Object value : args()) {
-                    preparedStatement.setObject(col++, value);
-                }
+                col = whereValues(preparedStatement, col);
+                col = orderValues(preparedStatement, col);
+                col = limitValues(preparedStatement, col);
                 return preparedStatement.executeUpdate();
             }
         });
@@ -582,9 +638,9 @@ public class ChillQuery<T extends ChillRecord> implements Iterable<T> {
             Connection connection = ChillRecord.connectionSource.getConnection();
             PreparedStatement preparedStatement = connection.prepareStatement(sql);
             int col = 1;
-            for (Object value : args()) {
-                preparedStatement.setObject(col++, value);
-            }
+            col = whereValues(preparedStatement, col);
+            col = orderValues(preparedStatement, col);
+            col = limitValues(preparedStatement, col);
             ResultSet resultSet = preparedStatement.executeQuery();
             return new ResultSetAndConnection(resultSet, connection);
         });
@@ -599,14 +655,42 @@ public class ChillQuery<T extends ChillRecord> implements Iterable<T> {
             try (Connection connection = ChillRecord.connectionSource.getConnection()) {
                 PreparedStatement preparedStatement = connection.prepareStatement(sql);
                 int col = 1;
-                for (Object value : args()) {
-                    preparedStatement.setObject(col++, value);
-                }
+                col = whereValues(preparedStatement, col);
                 ResultSet resultSet = preparedStatement.executeQuery();
                 boolean next = resultSet.next();
                 return resultSet.getInt(1);
             }
         });
+    }
+
+    int whereValues(PreparedStatement preparedStatement, int col) throws SQLException {
+        for (Object value : args()) {
+            if (value instanceof Enum enumValue) {
+                preparedStatement.setObject(col++, enumValue.name());
+            } else {
+                preparedStatement.setObject(col++, value);
+            }
+        }
+        return col;
+    }
+
+    int orderValues(PreparedStatement preparedStatement, int col) throws SQLException {
+        for (Pair<String, Direction> order : orders) {
+            if (order.first.contains(" ")) {
+                preparedStatement.setObject(col++, order.first);
+            }
+        }
+        return col;
+    }
+
+    int limitValues(PreparedStatement preparedStatement, int col) throws SQLException {
+        if (limit != null) {
+            preparedStatement.setObject(col++, limit);
+            if (page != null) {
+                preparedStatement.setObject(col++, limit * (page - 1));
+            }
+        }
+        return col;
     }
 
     @Override

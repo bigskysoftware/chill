@@ -7,14 +7,6 @@ import chill.job.ChillJob;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class JobEntity extends _generated.AbstractJobEntity {
-    public enum Status {
-        PENDING,
-        ASSIGNED,
-        RUNNING,
-        COMPLETED,
-        ERRORED,
-        CANCELLED
-    }
 
     {tableName("chill_job_jobs");}
 

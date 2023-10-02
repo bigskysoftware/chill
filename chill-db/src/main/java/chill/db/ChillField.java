@@ -160,7 +160,7 @@ public class ChillField<T> {
     public void fromResultSet(ResultSet resultSet) {
         TheMissingUtils.safely(() -> {
             if (ChillRecord.class.isAssignableFrom(type)) {
-                long valueFromDB = resultSet.getLong(getColumnName());
+                Object valueFromDB = resultSet.getObject(getColumnName());
                 lastSavedValue = (T) (Object) valueFromDB;
                 value = (T) (Object) valueFromDB;
             } else if (type.isEnum()) {
@@ -413,7 +413,9 @@ public class ChillField<T> {
                 value = beforeSet.transform(value);
             }
             Object fkValue = getFKValue(value);
-            cachedRecord = null;
+            if (value instanceof ChillRecord record) {
+                cachedRecord = record;
+            }
             if (fkValue == null) {
                 throw new IllegalStateException("Could not find field " + foreignColumn + " on " + cachedRecord);
             } else {

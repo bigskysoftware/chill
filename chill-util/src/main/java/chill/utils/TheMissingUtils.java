@@ -279,6 +279,36 @@ public class TheMissingUtils {
         return !isEmpty(size);
     }
 
+    public static int countOccurrences(String source, String subst) {
+        int occurrences = 0;
+        int index = source.indexOf(subst);
+        while (index != -1) {
+            occurrences++;
+            index = source.indexOf(subst, index + 1);
+        }
+        return occurrences;
+    }
+
+    public static <T> Iterator<T> iteratorFrom(T[] split) {
+        return new Iterator<>() {
+            int i = 0;
+
+            @Override
+            public boolean hasNext() {
+                return i < split.length;
+            }
+
+            @Override
+            public T next() {
+                return split[i++];
+            }
+        };
+    }
+
+    public static <T> Iterator<T> iteratorFrom(Iterable<T> split) {
+        return split.iterator();
+    }
+
     public interface ToString {
         String getString();
     }
@@ -540,6 +570,16 @@ public class TheMissingUtils {
                 int finalI = i;
                 safely(() -> arg.exec(finalI));
             }
+        }
+
+        public <T> NiceList<T> map(Function<Integer, T> mapper) {
+            return safely(() -> {
+                var list = new NiceList<T>();
+                for (int i = 0; i < n; i++) {
+                    list.add(mapper.apply(i));
+                }
+                return list;
+            });
         }
 
         public interface DangerousIntArg {

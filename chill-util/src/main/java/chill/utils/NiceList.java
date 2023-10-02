@@ -42,6 +42,54 @@ public class NiceList<T> implements List<T>{
         return wrapper;
     }
 
+    public static NiceList<?> of(Object... value) {
+        NiceList<Object> list = new NiceList<>();
+        for (Object o : value) {
+            list.add(o);
+        }
+        return list;
+    }
+
+    public static NiceList<?> of(Object value) {
+        NiceList<?> values = maybeOf(value);
+        if (values == null) {
+            NiceList list = new NiceList<>();
+            list.add(value);
+            return list;
+        } else {
+            return values;
+        }
+    }
+
+    public static <T> NiceList<T> filled(T elt, int size) {
+        return new NiceList<T>().fill(elt, size);
+    }
+
+    public static <T> NiceList<T> generate(Function<Integer, T> generator) {
+        NiceList<T> list = new NiceList<>();
+        int i = 0;
+        while (true) {
+            T t = generator.apply(i++);
+            if (t == null) {
+                break;
+            }
+            list.add(t);
+        }
+        return list;
+    }
+
+    public static NiceList<?> maybeOf(Object value) {
+        if (value instanceof Collection) {
+            return new NiceList<>((Collection) value);
+        } else if (value instanceof Iterable) {
+            return new NiceList<>((Iterable) value);
+        } else if (value instanceof Object[]) {
+            return new NiceList<>((Object[]) value);
+        } else {
+            return null;
+        }
+    }
+
     public NiceList<T> filter(Predicate<? super T> predicate) {
         return TheMissingUtils.filter(this, predicate);
     }
@@ -166,6 +214,29 @@ public class NiceList<T> implements List<T>{
             }
         }
         return elementsOfType;
+    }
+
+    public NiceList<T> fill(T s, int size) {
+        for (int i = 0; i < size; i++) {
+            add(s);
+        }
+        return this;
+    }
+
+    public NiceList<T> slice(int i) {
+        return slice(i, size());
+    }
+
+    public NiceList<T> slice(int start, int end) {
+        if (end < 0) {
+            end = this.size() + end + 1; // size - 1 + 1 --> size + 0
+        }
+
+        NiceList<T> slice = new NiceList<>();
+        for (int i = start; i < end; i++) {
+            slice.add(get(i));
+        }
+        return slice;
     }
 
     public interface Each<T> {

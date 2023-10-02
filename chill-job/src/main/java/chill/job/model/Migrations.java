@@ -27,8 +27,8 @@ public class Migrations extends ChillMigrations {
                     CREATE TABLE chill_job_pending_queue (
                         id LONG PRIMARY KEY AUTO_INCREMENT,
                         job_id VARCHAR(256) NOT NULL,
-                        status VARCHAR(16) NOT NULL,
-                        worker_id VARCHAR(256),
+                        status TEXT NOT NULL,
+                        worker_id TEXT,
                         timestamp TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
                         
                         CONSTRAINT fk_job_id FOREIGN KEY (job_id) REFERENCES chill_job_jobs(id)

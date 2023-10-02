@@ -6,6 +6,7 @@ import chill.job.ChillJob;
 import chill.job.ChillJobId;
 import chill.job.ChillJobWorker;
 import chill.job.model.JobEntity;
+import chill.job.model.JobStatus;
 import chill.job.model.Migrations;
 import chill.job.model.QueueEntity;
 import chill.utils.TheMissingUtils;
@@ -18,13 +19,6 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 public class DefaultChillJobWorker extends ChillJobWorker {
-    private static DefaultChillJobWorker worker = null;
-
-    public static DefaultChillJobWorker getInstance() {
-        if (worker == null) worker = new DefaultChillJobWorker();
-        return worker;
-    }
-
     private static ChillMigrations migrations;
 
     //---
@@ -60,6 +54,14 @@ public class DefaultChillJobWorker extends ChillJobWorker {
     }
 
     @Override
+    public void shutdown() {
+        TheMissingUtils.safely(() -> {
+            executor.shutdown();
+            manager.stop();
+        });
+    }
+
+    @Override
     public int getActiveJobs() {
         return executor.getActiveCount();
     }
@@ -71,28 +73,35 @@ public class DefaultChillJobWorker extends ChillJobWorker {
 
     protected Runnable managerTask() {
         return () -> TheMissingUtils.safely(() -> {
-            int activeJobs = getActiveJobs();
-            if (activeJobs < numWorkers) {
-                int numToSpawn = numWorkers - activeJobs;
+            try (var ignored = ChillRecord.quietly()) {
+                int activeJobs = getActiveJobs();
+                if (activeJobs < numWorkers) {
+                    int numToSpawn = numWorkers - activeJobs;
 
-                System.out.println("update query");
-                var numReceived = QueueEntity
-                        .where("status = ?", JobEntity.Status.PENDING)
-                        .limit(numToSpawn)
-                        .updateAll(
-                                "status = ?, worker_id = ?, timestamp = ?",
-                                JobEntity.Status.RUNNING,
-                                workerId.toString(),
-                                new Timestamp(System.currentTimeMillis())
-                        );
+                    var numReceived = QueueEntity
+                            .where("status = ?", JobStatus.PENDING)
+                            .limit(numToSpawn)
+                            .updateAll(
+                                    "status = ?, worker_id = ?, timestamp = ?",
+                                    JobStatus.RUNNING,
+                                    workerId.toString(),
+                                    new Timestamp(System.currentTimeMillis())
+                            );
 
-                if (numReceived != 0) {
-                    var items = QueueEntity
-                            .where("status = ?", JobEntity.Status.RUNNING)
-                            .limit(numReceived)
-                            .orderBy("timestamp")
-                            .toList();
-                    System.out.println("got " + items.size() + " items");
+                    if (numReceived != 0) {
+                        var items = QueueEntity
+                                .where("status = ?", JobStatus.RUNNING)
+                                .limit(numReceived)
+                                .orderBy("timestamp")
+                                .toList();
+                        for (var item : items) {
+                            executor.submit(() -> TheMissingUtils.safely(() -> {
+                                var job = ChillJob.fromRecord(item.getJobId());
+                                job.run();
+                                item.delete();
+                            }));
+                        }
+                    }
                 }
             }
 
@@ -110,8 +119,8 @@ public class DefaultChillJobWorker extends ChillJobWorker {
                     .createOrThrow();
 
             new QueueEntity()
-                    .withStatus(JobEntity.Status.PENDING)
-                    .withWorkerId(worker.getWorkerId())
+                    .withStatus(JobStatus.PENDING)
+                    .withWorkerId(getWorkerId())
                     .withJobId(jobEntity)
                     .createOrThrow();
         });
@@ -128,8 +137,22 @@ public class DefaultChillJobWorker extends ChillJobWorker {
     }
 
     @Override
-    public JobEntity.Status getJobStatus(ChillJobId jobId) {
-        return null;
+    public boolean cancelJob(ChillJobId id) {
+        return JobEntity
+                .where("job_id", id.toString())
+                .join(QueueEntity.to.jobId)
+                .and("status", JobStatus.PENDING)
+                .deleteAll() > 0;
+    }
+
+    @Override
+    public JobStatus getJobStatus(ChillJobId jobId) {
+        return QueueEntity
+                .where("job_id = ?", jobId.toString())
+                .limit(1)
+                .select(QueueEntity.field.status)
+                .first()
+                .getStatus();
     }
 
     @Override

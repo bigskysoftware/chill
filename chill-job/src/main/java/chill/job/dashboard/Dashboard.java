@@ -1,11 +1,14 @@
 package chill.job.dashboard;
 
 import chill.db.ChillRecord;
+import chill.job.ChillJobId;
+import chill.job.ChillJobWorker;
 import chill.job.impl.DefaultChillJobWorker;
 import chill.job.model.JobEntity;
 import com.google.gson.Gson;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
+import io.javalin.http.NotFoundResponse;
 import io.javalin.http.staticfiles.Location;
 import io.javalin.json.JsonMapper;
 import org.jetbrains.annotations.NotNull;
@@ -34,7 +37,7 @@ public class Dashboard {
 
     public static void main(String[] args) {
         ChillRecord.connectionSource = () -> DriverManager.getConnection("jdbc:h2:./chill_job");
-        var worker = new DefaultChillJobWorker(1);
+        ChillJobWorker.setDefaultInstance(new DefaultChillJobWorker(8));
         var dashboard = new Dashboard();
         dashboard.start(args);
     }
@@ -45,8 +48,22 @@ public class Dashboard {
                     config.jsonMapper(jsonMapper);
                 })
                 .get("/", ctx -> ctx.redirect("index.html"))
-                .get("jobs", this::getJobs);
-        app.start(8620);
+                .get("jobs", this::getJobs)
+                .post("jobs/{id}/cancel", this::cancelJob)
+                .start(8620);
+        try (var ignored = app.start(8620)) {
+            System.out.println("sup 8620");
+        }
+    }
+
+    private void cancelJob(Context context) {
+        var id = context.pathParam("id");
+        ChillJobId jobId = ChillJobId.fromString(id);
+        if (ChillJobWorker.getDefaultInstance().cancelJob(jobId)) {
+            context.result("ok");
+        } else {
+            throw new NotFoundResponse("Could not find job: " + jobId);
+        }
     }
 
     private void getJobs(Context context) {

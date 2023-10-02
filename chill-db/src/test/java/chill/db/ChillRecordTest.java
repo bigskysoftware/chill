@@ -1,11 +1,12 @@
 package chill.db;
 
+import chill.utils.NiceList;
 import chill.utils.TheMissingUtils;
-import test.model.User;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import test.model.User;
 import test.model.Vehicle;
 
 import java.sql.DriverManager;
@@ -158,7 +159,7 @@ public class ChillRecordTest {
 //    }
 
     @Test
-    void foreignKeys(){
+    void foreignKeys() {
         var user = new User().withFirstName("Carson").withLastName("Gross").withEmail("example@example.com").createOrThrow();
 
         var vehicle = new Vehicle().withMake("Toyota").withModel("LandCruiser").withYear(1983).withUser(user).createOrThrow();
@@ -176,7 +177,7 @@ public class ChillRecordTest {
     }
 
     @Test
-    void validators(){
+    void validators() {
         var user = new User()
                 .withFirstName("Carson")
                 .withLastName("Gross")
@@ -306,7 +307,7 @@ public class ChillRecordTest {
     }
 
     @Test
-    public void testDateFunctionality(){
+    public void testDateFunctionality() {
         Vehicle vehicle = new Vehicle().withMake("Toyota").withModel("LandCruiser").withYear(1983);
 
         assertNull(vehicle.getCreatedAt());
@@ -328,7 +329,7 @@ public class ChillRecordTest {
     }
 
     @Test
-    public void testOptimistConcurrency(){
+    public void testOptimistConcurrency() {
         Vehicle vehicle = new Vehicle().withMake("Toyota").withModel("LandCruiser").withYear(1983);
         vehicle.saveOrThrow();
 
@@ -351,7 +352,7 @@ public class ChillRecordTest {
     }
 
     @Test
-    public void testOptimistConcurrencyWorksWRepeatedSaves(){
+    public void testOptimistConcurrencyWorksWRepeatedSaves() {
         Vehicle vehicle = new Vehicle().withMake("Toyota").withModel("LandCruiser").withYear(1983);
         vehicle.saveOrThrow();
 
@@ -365,7 +366,7 @@ public class ChillRecordTest {
     }
 
     @Test
-    void perfTest(){
+    void perfTest() {
         int iterations = 10000;
         long time = TheMissingUtils.time(() -> {
             TheMissingUtils.n(iterations).times(
@@ -405,5 +406,24 @@ public class ChillRecordTest {
 //                .where("user.id = ?", user.getId())
 //                .find();
 
+    }
+
+    @Test
+    public void testInClause() {
+        NiceList<Long> ids = new NiceList<>();
+        ChillRecord.inTransaction(() -> {
+            for (int age = 15; age < 20; age++) {
+                var user = new User()
+                        .withFirstName("Dillon" + age)
+                        .withLastName("Shaffer" + age)
+                        .withEmail("junior" + age + "@example.com")
+                        .withAge(age)
+                        .saveOrThrow();
+                ids.add(user.getId());
+            }
+        });
+
+        var users = User.where("id IN ?", ids);
+        assertEquals(5, users.count());
     }
 }

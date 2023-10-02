@@ -170,15 +170,15 @@ public class _generated extends ChillCodeGenerator {
       return new QueueEntity().jobId.reverse(jobId);
     }
     
-    public chill.job.model.JobEntity.Status getStatus() {
+    public chill.job.model.JobStatus getStatus() {
       return self.status.get();
     }
     
-    public void setStatus(chill.job.model.JobEntity.Status status) {
+    public void setStatus(chill.job.model.JobStatus status) {
       self.status.set(status);
     }
     
-    public QueueEntity withStatus(chill.job.model.JobEntity.Status status) {
+    public QueueEntity withStatus(chill.job.model.JobStatus status) {
       setStatus(status);
       return self;
     }
@@ -220,7 +220,7 @@ public class _generated extends ChillCodeGenerator {
       public static final chill.db.ChillField<QueueEntity> ALL = new chill.db.ChillField<>(instance, "*", QueueEntity.class);
       public static final chill.db.ChillField<java.lang.Long> id = instance.id;
       public static final chill.db.ChillField<chill.job.model.JobEntity> jobId = instance.jobId;
-      public static final chill.db.ChillField<chill.job.model.JobEntity.Status> status = instance.status;
+      public static final chill.db.ChillField<chill.job.model.JobStatus> status = instance.status;
       public static final chill.db.ChillField<java.lang.String> workerId = instance.workerId;
     }
     public static chill.db.ChillField<QueueEntity> allFields() {
@@ -232,7 +232,7 @@ public class _generated extends ChillCodeGenerator {
     public static chill.db.ChillField<chill.job.model.JobEntity> jobId() {
       return instance.jobId;
     }
-    public static chill.db.ChillField<chill.job.model.JobEntity.Status> status() {
+    public static chill.db.ChillField<chill.job.model.JobStatus> status() {
       return instance.status;
     }
     public static chill.db.ChillField<java.lang.String> workerId() {
