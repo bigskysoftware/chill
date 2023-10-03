@@ -21,6 +21,7 @@ public class DefaultChillJobRunner extends ChillJobRunner {
     }
 
     protected void updateStatus(ChillJob job, JobStatus status) {
+        System.out.println("Updating status to " + status);
         job
                 .getEntity()
                 .withStatus(status)

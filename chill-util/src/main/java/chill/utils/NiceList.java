@@ -95,8 +95,16 @@ public class NiceList<T> implements List<T>{
         return TheMissingUtils.map(this, mapper);
     }
 
+    public <R> NiceList<R> flatMap(Function<? super T, Iterable<? extends R>> mapper) {
+        return TheMissingUtils.flatMap(this, mapper);
+    }
+
     public String join(String str) {
         return TheMissingUtils.join(this, str);
+    }
+
+    public void join(StringBuilder sb, String joiner) {
+        TheMissingUtils.join(sb, this, joiner);
     }
 
     public NiceList<T> concat(Collection<T> other) {
