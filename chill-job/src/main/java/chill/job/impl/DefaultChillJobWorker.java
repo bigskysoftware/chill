@@ -76,53 +76,58 @@ public class DefaultChillJobWorker extends ChillJobWorker {
         return () -> {
             long startTime = System.currentTimeMillis();
 
-            var entityCount = ChillJobEntity
-                    .where("status = ?", JobStatus.PENDING)
-                    .orderBy("timestamp")
-                    .limit(numWorkers - executor.getActiveCount())
-                    .updateAll(
-                            "status = ?, worker_id = ?",
-                            JobStatus.ASSIGNED,
-                            workerId.toString()
-                    );
+            try (var shh = ChillRecord.quietly()) {
+                var entityCount = ChillJobEntity
+                        .where("status = ?", JobStatus.PENDING)
+                        .orderBy("timestamp")
+                        .limit(numWorkers - executor.getActiveCount())
+                        .updateAll(
+                                "status = ?, worker_id = ?",
+                                JobStatus.ASSIGNED,
+                                workerId.toString()
+                        );
+                System.out.println("got entity count: " + entityCount);
 
-            if (entityCount > 0) {
-                var jobs = ChillJobEntity
-                        .where("status = ?, worker_id = ?",
-                                JobStatus.ASSIGNED, workerId.toString())
-                        .limit(entityCount)
-                        .toList();
+                if (entityCount > 0) {
+                    var jobs = ChillJobEntity
+                            .where("status = ? and worker_id = ?",
+                                    JobStatus.ASSIGNED, workerId.toString())
+                            .limit(entityCount)
+                            .toList();
 
-                for (var job : jobs) {
-                    var clazz = TheMissingUtils.safely(() -> Class.forName(job.getJobClass()));
-                    ChillJob task = (ChillJob) new Gson().fromJson(job.getJobData(), clazz);
-                    System.out.println("Executing job: " + task.getJobId());
-                    executor.submit(() -> {
-                        TheMissingUtils.safely(() -> {
-                            runner.handle(task);
+                    for (var job : jobs) {
+                        var clazz = TheMissingUtils.safely(() -> Class.forName(job.getJobClass()));
+                        ChillJob task = (ChillJob) new Gson().fromJson(job.getJobData(), clazz);
+                        System.out.println("Executing job: " + task.getJobId());
+                        executor.submit(() -> {
+                            TheMissingUtils.safely(() -> {
+                                runner.handle(task);
+                            });
                         });
-                    });
+                    }
                 }
             }
 
-            Long endTime = System.currentTimeMillis();
-            Long duration = endTime - startTime;
-            Long sleepTime = Math.max(0, 5000 - duration);
+            long endTime = System.currentTimeMillis();
+            long duration = endTime - startTime;
+            long sleepTime = Math.max(0, 5000 - duration);
             manager.schedule(managerTask(), sleepTime, TimeUnit.MILLISECONDS);
         };
     }
 
     @Override
     public void submit(ChillJob job) {
-        ChillRecord.inTransaction(() -> {
-            job.getEntity()
-                    .withId(job.getJobId().toString())
-                    .withStatus(JobStatus.PENDING)
-                    .withWorkerId(workerId.toString())
-                    .withJobClass(job.getClass().getName())
-                    .withJobData(new Gson().toJson(job))
-                    .createOrThrow();
-        });
+        try (var shh = ChillRecord.quietly()) {
+            ChillRecord.inTransaction(() -> {
+                new ChillJobEntity()
+                        .withId(job.getJobId().toString())
+                        .withStatus(JobStatus.PENDING)
+                        .withWorkerId(workerId.toString())
+                        .withJobClass(job.getClass().getName())
+                        .withJobData(new Gson().toJson(job))
+                        .createOrThrow();
+            });
+        }
     }
 
     @Override
@@ -134,9 +139,7 @@ public class DefaultChillJobWorker extends ChillJobWorker {
             return TheMissingUtils.safely(() -> {
                 Gson gson = new Gson();
                 Class<?> clazz = Class.forName(entity.getJobClass());
-                ChillJob job = ((ChillJob) gson.fromJson(entity.getJobData(), clazz));
-                setJobEntity(job, entity);
-                return job;
+                return ((ChillJob) gson.fromJson(entity.getJobData(), clazz));
             });
         }
     }
@@ -153,6 +156,7 @@ public class DefaultChillJobWorker extends ChillJobWorker {
     public JobStatus getJobStatus(ChillJobId jobId) {
         return ChillJobEntity
                 .find
+                .where("id = ?", jobId.toString())
                 .select(ChillJobEntity.status())
                 .first()
                 .getStatus();

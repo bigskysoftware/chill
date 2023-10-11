@@ -530,30 +530,10 @@ public class ChillQuery<T extends ChillRecord> implements Iterable<T> {
     private void buildSelectSentence(StringBuilder sql) {
         if (this.selectors.isEmpty()) {
             getFields()
-                    .map(f -> f.getColumnName())
+                    .map(field -> field.getColumnName())
                     .join(sql, ", ");
         } else {
-            var fields = new NiceList<>(selectors);
-            if (fields.allMatch(f -> f.getRecord().getTableName().equals(tableName))) {
-                fields
-                        .map(field -> field.getRecord().getTableName() + "." + field.getColumnName())
-                        .join(sql, ", ");
-            } else {
-                fields
-                        .flatMap(field -> field.getColumnName().equals("*") ? field.getRecord().getFields() : NiceList.of(field))
-                        .map(field -> field.getRecord().getTableName() + "." + field.getColumnName())
-                        .join(sql, ", ");
-                for (var field : fields) {
-                    fields
-                    if (field.getColumnName().equals("*")) {
-                        field.getRecord().getFields()
-                                .map(f -> f.getRecord().getTableName() + "." + f.getColumnName())
-                                .join(sql, ", ");
-                    } else {
-
-                    }
-                }
-            }
+            var fields = new NiceList<>(this.selectors);
             int i = 0;
             for (var field : fields) {
                 if (field.getColumnName().equals("*")) {
@@ -562,14 +542,16 @@ public class ChillQuery<T extends ChillRecord> implements Iterable<T> {
                             sql.append(", ");
                         }
                         var selector = recordField.getRecord().getTableName() + "." + recordField.getColumnName();
-                        sql.append(selector).append(" as \"").append(selector).append("\"");
+                        sql.append(selector);
+//                        sql.append(selector).append(" as \"").append(selector).append("\"");
                     }
                 } else {
                     if (i++ > 0) {
                         sql.append(", ");
                     }
                     var selector = field.getRecord().getTableName() + "." + field.getColumnName();
-                    sql.append(selector).append(" as \"").append(selector).append("\"");
+                    sql.append(selector);
+//                    sql.append(selector).append(" as \"").append(selector).append("\"");
                 }
             }
         }
@@ -661,7 +643,6 @@ public class ChillQuery<T extends ChillRecord> implements Iterable<T> {
             int col = 1;
             col = whereValues(preparedStatement, col);
             col = orderValues(preparedStatement, col);
-            col = limitValues(preparedStatement, col);
             ResultSet resultSet = preparedStatement.executeQuery();
             return new ResultSetAndConnection(resultSet, connection);
         });

@@ -3,6 +3,7 @@ package chill.db;
 import chill.utils.ChillLogs;
 
 import java.sql.*;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.Properties;
 import java.util.UUID;
@@ -14,23 +15,29 @@ public class ChillTransaction implements AutoCloseable{
 
     public static ChillLogs.LogCategory LOG = ChillLogs.get(ChillTransaction.class);
 
-    private static final ThreadLocal<ChillTransaction> CURRENT_TRANSACTION = new ThreadLocal<>();
+    private static final ThreadLocal<LinkedList<ChillTransaction>> CURRENT_TRANSACTION = new ThreadLocal<>();
     private final Connection connection;
     private final Connection wrapper;
     private final UUID uuid;
 
     public static ChillTransaction start(Connection connection) {
         ChillTransaction newTransaction = new ChillTransaction(connection);
-        CURRENT_TRANSACTION.set(newTransaction);
+        var stack = CURRENT_TRANSACTION.get();
+        if (stack == null) CURRENT_TRANSACTION.set(stack = new LinkedList<>());
+        stack.push(newTransaction);
         return newTransaction;
     }
 
     public static ChillTransaction getCurrentTransaction() {
-        return CURRENT_TRANSACTION.get();
+        var stack = CURRENT_TRANSACTION.get();
+        if (stack == null) CURRENT_TRANSACTION.set(stack = new LinkedList<>());
+        if (stack.isEmpty()) return null;
+        return stack.peek();
     }
 
     public static Connection currentTransactionConnection() {
-        ChillTransaction currentTransaction = CURRENT_TRANSACTION.get();
+        if (CURRENT_TRANSACTION.get() == null) CURRENT_TRANSACTION.set(new LinkedList<>());
+        ChillTransaction currentTransaction = CURRENT_TRANSACTION.get().peek();
         if (currentTransaction != null) {
             return currentTransaction.getTransactionConnection();
         } else {

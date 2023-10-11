@@ -44,34 +44,29 @@ public class TheMissingUtils {
 
     public static String join(Object[] strings, String delimiter) {
         StringBuilder sb = new StringBuilder();
+        join(sb, Arrays.asList(strings), delimiter);
+        return sb.toString();
+    }
+
+
+    public static void join(StringBuilder builder, Iterable items, String s) {
         boolean first = true;
-        for (Object string : strings) {
+        for (Object item : items) {
             if (first) {
                 first = false;
             } else {
-                sb.append(delimiter);
+                builder.append(s);
             }
-            sb.append(string);
+            builder.append(item);
         }
-        return sb.toString();
     }
+
+
 
     public static String join(Iterable strings, String delimiter) {
         StringBuilder sb = new StringBuilder();
         join(sb, strings, delimiter);
         return sb.toString();
-    }
-
-    public static void join(StringBuilder builder, Iterable strings, String delimiter) {
-        boolean first = true;
-        for (Object string : strings) {
-            if (first) {
-                first = false;
-            } else {
-                builder.append(delimiter);
-            }
-            builder.append(string);
-        }
     }
 
     public static <T> NiceList<T> concat(Collection<T> theOne, Collection<T> theOther) {
@@ -172,16 +167,6 @@ public class TheMissingUtils {
         NiceList<R> result = new NiceList<>();
         for (T field : ts) {
             result.add(mapper.apply(field));
-        }
-        return result;
-    }
-
-    public static <R, T> NiceList<R> flatMap(NiceList<T> ts, Function<? super T, Iterable<? extends R>> mapper) {
-        NiceList<R> result = new NiceList<>();
-        for (T field : ts) {
-            for (R r : mapper.apply(field)) {
-                result.add(r);
-            }
         }
         return result;
     }

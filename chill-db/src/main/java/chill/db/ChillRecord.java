@@ -76,7 +76,19 @@ public class ChillRecord {
     }
 
     public static void inTransaction(Runnable run){
-        ChillTransaction currentTransaction = ChillTransaction.getCurrentTransaction();
+        inTransaction(TransactionBehavior.CREATE_OR_JOIN, run);
+    }
+
+    public enum TransactionBehavior {
+        CREATE_OR_JOIN,
+        CREATE_NEW,
+    }
+
+    public static void inTransaction(TransactionBehavior behavior, Runnable run) {
+        ChillTransaction currentTransaction = switch(behavior) {
+            case CREATE_OR_JOIN -> ChillTransaction.getCurrentTransaction();
+            case CREATE_NEW -> null;
+        };
         if (currentTransaction == null) {
             ChillTransaction transaction = ChillTransaction.start(safely(() -> getRawConnection()));
             try {
@@ -567,6 +579,12 @@ public class ChillRecord {
         Integer shouldLog = SHOULD_LOG.get();
         SHOULD_LOG.set(shouldLog == null ? 1 : shouldLog + 1);
         return () -> SHOULD_LOG.set(SHOULD_LOG.get() - 1);
+    }
+
+    public static SafeAutoCloseable loudly() {
+        Integer hold = SHOULD_LOG.get();
+        SHOULD_LOG.set(0);
+        return () -> SHOULD_LOG.set(hold);
     }
 
     //=====================================

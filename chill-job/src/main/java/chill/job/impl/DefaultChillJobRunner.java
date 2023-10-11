@@ -1,7 +1,9 @@
 package chill.job.impl;
 
+import chill.db.ChillRecord;
 import chill.job.ChillJob;
 import chill.job.ChillJobRunner;
+import chill.job.model.ChillJobEntity;
 import chill.job.model.JobStatus;
 import chill.utils.TheMissingUtils;
 
@@ -16,15 +18,22 @@ public class DefaultChillJobRunner extends ChillJobRunner {
                 updateStatus(job, JobStatus.ERRORED);
                 throw t;
             }
+
             updateStatus(job, JobStatus.COMPLETED);
         });
     }
 
     protected void updateStatus(ChillJob job, JobStatus status) {
-        System.out.println("Updating status to " + status);
-        job
-                .getEntity()
-                .withStatus(status)
-                .save();
+        ChillRecord.inTransaction(() -> {
+            try {
+                new ChillJobEntity()
+                        .withId(job.getJobId().toString())
+                        .withStatus(status)
+                        .update();
+            } catch (Throwable t) {
+                System.err.println("Failed to update job status: " + t.getMessage());
+                t.printStackTrace();
+            }
+        });
     }
 }

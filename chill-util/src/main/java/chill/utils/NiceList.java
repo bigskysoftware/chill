@@ -40,23 +40,24 @@ public class NiceList<T> implements List<T>{
     }
 
     public static NiceList<?> of(Object... value) {
-        NiceList<Object> list = new NiceList<>();
-        for (Object o : value) {
-            list.add(o);
+        if (value.length == 1) {
+            NiceList<?> values = maybeOf(value);
+            if (values == null) {
+                NiceList list = new NiceList<>();
+                list.add(value);
+                return list;
+            } else {
+                return values;
+            }
+        } else {
+            NiceList<Object> list = new NiceList<>();
+            for (Object o : value) {
+                list.add(o);
+            }
+            return list;
         }
-        return list;
     }
 
-    public static NiceList<?> of(Object value) {
-        NiceList<?> values = maybeOf(value);
-        if (values == null) {
-            NiceList list = new NiceList<>();
-            list.add(value);
-            return list;
-        } else {
-            return values;
-        }
-    }
 
     public static <T> NiceList<T> filled(T elt, int size) {
         return new NiceList<T>().fill(elt, size);
@@ -95,16 +96,8 @@ public class NiceList<T> implements List<T>{
         return TheMissingUtils.map(this, mapper);
     }
 
-    public <R> NiceList<R> flatMap(Function<? super T, Iterable<? extends R>> mapper) {
-        return TheMissingUtils.flatMap(this, mapper);
-    }
-
     public String join(String str) {
         return TheMissingUtils.join(this, str);
-    }
-
-    public void join(StringBuilder sb, String joiner) {
-        TheMissingUtils.join(sb, this, joiner);
     }
 
     public NiceList<T> concat(Collection<T> other) {
@@ -242,6 +235,10 @@ public class NiceList<T> implements List<T>{
             slice.add(get(i));
         }
         return slice;
+    }
+
+    public void join(StringBuilder sql, String s) {
+        TheMissingUtils.join(sql, this, s);
     }
 
     public interface Each<T> {

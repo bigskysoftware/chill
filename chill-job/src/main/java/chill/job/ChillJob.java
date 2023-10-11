@@ -10,7 +10,6 @@ import java.util.Objects;
 public abstract class ChillJob {
     ChillJobId id;
     private transient ChillJobWorker worker = null;
-    transient ChillJobEntity entity = null;
 
     public ChillJob() {
         this(null, null);
@@ -23,7 +22,6 @@ public abstract class ChillJob {
     public ChillJob(ChillJobId id, ChillJobWorker worker) {
         this.id = id == null ? new ChillJobId() : id;
         this.worker = worker;
-        this.entity = new ChillJobEntity().withId(this.id.toString());
     }
 
     protected ChillJobWorker getWorker() {
@@ -35,10 +33,6 @@ public abstract class ChillJob {
 
     public ChillJobId getJobId() {
         return id;
-    }
-
-    public ChillJobEntity getEntity() {
-        return entity;
     }
 
     public void submit() {

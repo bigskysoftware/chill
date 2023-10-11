@@ -42,11 +42,6 @@ public abstract class ChillJobWorker {
     }
 
 
-    protected void setJobEntity(ChillJob job, ChillJobEntity entity) {
-        job.id = ChillJobId.fromString(entity.getId());
-        job.entity = entity;
-    }
-
     public abstract void shutdown();
     public abstract int getActiveJobs();
     public abstract int getNumWorkers();
