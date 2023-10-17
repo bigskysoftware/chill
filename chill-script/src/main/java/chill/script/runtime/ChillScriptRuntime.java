@@ -60,6 +60,13 @@ public class ChillScriptRuntime {
         if (!frames.isEmpty()) {
             frames.getFirst().setSymbol(symbol, initialValue);
         } else {
+            for (var scope : scopes) {
+                var entry = scope.getEntry(symbol);
+                if (entry != null) {
+                    entry.value(initialValue);
+                    return;
+                }
+            }
             scopes.getFirst().setSymbol(symbol, initialValue);
         }
     }
@@ -98,20 +105,22 @@ public class ChillScriptRuntime {
     public void beforeExecute(Command command) {
         if (command instanceof ChillScriptProgram program && !program.getChildren().isEmpty()) {
             NiceList<DependOnCommand> imports = new NiceList<>();
-            classLoader = new IvyClassLoader();
 
             for (ParseElement child : program.getChildren()) {
                 if (child instanceof DependOnCommand importCommand) {
+                    if (classLoader == null) classLoader = new IvyClassLoader();
+
                     ModuleRevisionId mrid = ModuleRevisionId.newInstance(importCommand.getUri(), importCommand.getName(), importCommand.getVersion());
                     classLoader.resolve(mrid);
                     imports.add(importCommand);
                 }
             }
-
-            classLoader.load();
-            for (DependOnCommand importCommand : imports) {
-                for (Command selector : importCommand.getSelectors()) {
-                    resolveImportSelector(selector, classLoader);
+            if (classLoader != null) {
+                classLoader.load();
+                for (DependOnCommand importCommand : imports) {
+                    for (Command selector : importCommand.getSelectors()) {
+                        resolveImportSelector(selector, classLoader);
+                    }
                 }
             }
         }

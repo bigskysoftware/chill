@@ -13,11 +13,11 @@ public class Sqlite {
     }
 
     public Connection getConnection(String database) throws SQLException {
-        var connection = DriverManager.getConnection("jdbc:sqlite:" + database + ".db");
-        try (var statement = connection.createStatement()) {
-            statement.execute("PRAGMA foreign_keys = ON");
-            statement.execute("PRAGMA journal_mode = WAL");
-        }
+        var connection = DriverManager.getConnection("jdbc:h2:./" + database);
+//        try (var statement = connection.createStatement()) {
+//            statement.execute("PRAGMA foreign_keys = ON");
+//            statement.execute("PRAGMA journal_mode = WAL");
+//        }
         return connection;
     }
 }

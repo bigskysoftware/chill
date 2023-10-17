@@ -15,7 +15,7 @@ public class RepeatCommandTest {
 
         assertEquals(
                 "2",
-                programOutput("set i to 0   repeat while i != 2 set i to i + 1 end   print i")
+                programOutput("set i to 0   repeat while i is not 2 set i to i + 1 end   print i")
         );
     }
 
@@ -23,12 +23,12 @@ public class RepeatCommandTest {
     public void untilLoopWorks() {
         assertEquals(
                 "",
-                programOutput("repeat until 1 == 1 print 1 end")
+                programOutput("repeat until 1 is 1 print 1 end")
         );
 
         assertEquals(
                 "2",
-                programOutput("set i to 0   repeat until i == 2 set i to i + 1 end   print i")
+                programOutput("set i to 0   repeat until i is 2 set i to i + 1 end   print i")
         );
     }
 
@@ -63,12 +63,22 @@ public class RepeatCommandTest {
     public void indexIdentifierWorks() {
         assertEquals(
                 "01",
-                programOutput("set i to 0   repeat while i is not 2 index j set i to i + 1 print j end")
+                programOutput("""
+                        set i to 0
+                        repeat while i is not 2 index j
+                            set i to i + 1
+                            print j
+                        end""")
         );
 
         assertEquals(
                 "01",
-                programOutput("set i to 0   repeat until i == 2 index j set i to i + 1 print j end")
+                programOutput("""
+                        set i to 0
+                        repeat until i is 2 index j
+                            set i to i + 1
+                            print j
+                        end""")
         );
 
         assertEquals(

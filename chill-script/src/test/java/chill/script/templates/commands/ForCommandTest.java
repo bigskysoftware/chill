@@ -28,18 +28,22 @@ public class ForCommandTest {
 
     @Test
     public void doesNotPolluteGlobals() {
-        assertEquals("\nHello\n" +
-                "1\n" +
-                "2\n" +
-                "3\n" +
-                "Hello\n" +
-                "", renderTemplate(
-                "\n" +
-                        "${x}\n" +
-                        "#for x in [1, 2, 3]\n" +
-                        "${x}\n" +
-                        "#end\n" +
-                        "${x}\n", "x", "Hello"));
+        assertEquals("""
+
+                Hello
+                1
+                2
+                3
+                Hello
+                """, renderTemplate(
+                """
+
+                        ${x}
+                        #for x in [1, 2, 3]
+                        ${x}
+                        #end
+                        ${x}
+                        """, "x", "Hello"));
     }
 
 }

@@ -61,13 +61,14 @@ public class IfCommandTest {
                         """
         ));
         Assertions.assertEquals("foo\nfoo\n", TestHelpers.renderTemplate(
-                        "foo\n" +
-                        "#if 1 != 1\n" +
-                        "bar\n" +
-                        "#elseif 1 == 1\n" +
-                        "foo\n" +
-                        "#end\n" +
-                        ""
+                """
+                        foo
+                        #if 1 is not 1
+                        bar
+                        #elseif 1 is 1
+                        foo
+                        #end
+                        """
         ));
     }
 

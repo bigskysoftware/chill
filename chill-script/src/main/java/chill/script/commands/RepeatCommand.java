@@ -55,8 +55,7 @@ public class RepeatCommand extends Command {
         }
 
         rv.setBody(parser.parseCommandList("end"));
-
-        rv.setEnd(parser.consumeToken());
+        rv.setEnd(parser.require("end", rv, "Expected 'end'"));
 
         return rv;
     }
