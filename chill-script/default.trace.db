@@ -1,0 +1,50 @@
+2023-10-15 08:40:28.375877-06:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "CREATE TABLE IF NOT EXISTS users (\000a        id INTEGER PRIMARY KEY [*]AUTOINCREMENT,\000a        name TEXT NOT NULL,\000a        email TEXT NOT NULL UNIQUE,\000a        password TEXT NOT NULL,\000a        CONSTRAINT email_unique UNIQUE (email)\000a    )\000a"; expected "HASH, CONSTRAINT, COMMENT, UNIQUE, NOT NULL, CHECK, REFERENCES, ,, )"; SQL statement:
+CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        email TEXT NOT NULL UNIQUE,
+        password TEXT NOT NULL,
+        CONSTRAINT email_unique UNIQUE (email)
+    )
+ [42001-224]
+2023-10-15 08:40:47.028393-06:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "CREATE TABLE IF NOT EXISTS users (\000a        id INTEGER PRIMARY KEY [*]AUTOINCREMENT,\000a        name TEXT NOT NULL,\000a        email TEXT NOT NULL UNIQUE,\000a        password TEXT NOT NULL,\000a        CONSTRAINT email_unique UNIQUE (email)\000a    )\000a"; expected "HASH, CONSTRAINT, COMMENT, UNIQUE, NOT NULL, CHECK, REFERENCES, ,, )"; SQL statement:
+CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        email TEXT NOT NULL UNIQUE,
+        password TEXT NOT NULL,
+        CONSTRAINT email_unique UNIQUE (email)
+    )
+ [42001-224]
+2023-10-16 22:26:24.610117-06:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "CREATE TABLE IF NOT EXISTS users (\000a        id INTEGER PRIMARY KEY [*]AUTOINCREMENT,\000a        name TEXT NOT NULL,\000a        email TEXT NOT NULL UNIQUE,\000a        password TEXT NOT NULL,\000a        CONSTRAINT email_unique UNIQUE (email)\000a    )\000a"; expected "HASH, CONSTRAINT, COMMENT, UNIQUE, NOT NULL, CHECK, REFERENCES, ,, )"; SQL statement:
+CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        email TEXT NOT NULL UNIQUE,
+        password TEXT NOT NULL,
+        CONSTRAINT email_unique UNIQUE (email)
+    )
+ [42001-224]
+2023-10-16 22:28:33.082682-06:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "CREATE TABLE IF NOT EXISTS users (\000a        id INTEGER PRIMARY KEY [*]AUTOINCREMENT,\000a        name TEXT NOT NULL,\000a        email TEXT NOT NULL UNIQUE,\000a        password TEXT NOT NULL,\000a        CONSTRAINT email_unique UNIQUE (email)\000a    )\000a"; expected "HASH, CONSTRAINT, COMMENT, UNIQUE, NOT NULL, CHECK, REFERENCES, ,, )"; SQL statement:
+CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        email TEXT NOT NULL UNIQUE,
+        password TEXT NOT NULL,
+        CONSTRAINT email_unique UNIQUE (email)
+    )
+ [42001-224]
+2023-10-16 22:28:54.954475-06:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "CREATE TABLE IF NOT EXISTS users (\000a        id INTEGER PRIMARY KEY [*]AUTOINCREMENT,\000a        name TEXT NOT NULL,\000a        email TEXT NOT NULL UNIQUE,\000a        password TEXT NOT NULL,\000a        CONSTRAINT email_unique UNIQUE (email)\000a    )\000a"; expected "HASH, CONSTRAINT, COMMENT, UNIQUE, NOT NULL, CHECK, REFERENCES, ,, )"; SQL statement:
+CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        email TEXT NOT NULL UNIQUE,
+        password TEXT NOT NULL,
+        CONSTRAINT email_unique UNIQUE (email)
+    )
+ [42001-224]

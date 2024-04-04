@@ -1,7 +1,6 @@
 package chill.job;
 
 import chill.job.impl.DefaultChillJobWorker;
-import chill.job.model.ChillJobEntity;
 import chill.job.model.JobStatus;
 
 import java.sql.Timestamp;

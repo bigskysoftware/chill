@@ -42,9 +42,9 @@
         <!-- WORKER INFRASTRUCTURE -->
 
         <dependency>
-            <groupId>org.jobrunr</groupId>
-            <artifactId>jobrunr</artifactId>
-            <version>4.0.6</version>
+            <groupId>chill.software</groupId>
+            <artifactId>chill-job</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
         </dependency>
 
         <dependency>
