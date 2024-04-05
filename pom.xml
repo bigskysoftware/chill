@@ -1,21 +1,21 @@
 <project>
-  <modelVersion>4.0.0</modelVersion>
-  <groupId>chill.software</groupId>
-  <artifactId>chill</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
-  <packaging>pom</packaging>
- 
-  <modules>
-    <module>chill-util</module>
-    <module>chill-db</module>
-    <module>chill-script</module>
-    <module>chill-web</module>
-    <module>autom8</module>
-      <module>chill-job</module>
-      <module>chill-tool</module>
-  </modules>
-  <properties>
-    <maven.compiler.source>17</maven.compiler.source>
-    <maven.compiler.target>17</maven.compiler.target>
-  </properties>
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>chill.software</groupId>
+    <artifactId>chill</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+    <packaging>pom</packaging>
+
+    <modules>
+        <module>chill-util</module>
+        <module>chill-db</module>
+        <module>chill-script</module>
+        <module>chill-web</module>
+        <module>autom8</module>
+        <module>chill-job</module>
+        <module>chill-tool</module>
+    </modules>
+    <properties>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
+    </properties>
 </project>

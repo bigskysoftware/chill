@@ -271,7 +271,7 @@ public class ChillRecord {
                 var generatedFields = fields.filter(ChillField::isGenerated);
                 col = 1;
                 for (ChillField generatedField : generatedFields) {
-                    generatedField.set(generatedKeys.getObject(col++, generatedField.getType()));
+                    generatedField.set(generatedKeys.getObject(col++, generatedField.getForeignType()));
                 }
                 this.persisted = inserted == 1;
                 if (this.persisted) {

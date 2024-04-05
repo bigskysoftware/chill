@@ -6,12 +6,8 @@ import chill.utils.TheMissingUtils;
 import java.io.*;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
-import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.SimpleFileVisitor;
-import java.nio.file.attribute.BasicFileAttributes;
-import java.util.Collections;
 
 import static chill.utils.TheMissingUtils.*;
 
@@ -173,8 +169,8 @@ public class ChillCodeGenerator {
                 if (chillField instanceof ChillField.FK) {
                     sb.append("public static chill.db.ChillQuery<")
                             .append(className).append("> for")
-                            .append(chillField.getType().getSimpleName())
-                            .append("(").append(chillField.getType().getSimpleName()).append(" ")
+                            .append(chillField.getForeignType().getSimpleName())
+                            .append("(").append(chillField.getForeignType().getSimpleName()).append(" ")
                             .append(javaField.getName()).append(") {").append(newLine)
                             .append("  return new ").append(className).append("().").append(javaField.getName()).append(".reverse(").append(javaField.getName()).append(");").append(newLine)
                             .append("}").append(newLine)

@@ -13,7 +13,7 @@ public class DefaultChillJobRunner extends ChillJobRunner {
         TheMissingUtils.safely(() -> {
             updateStatus(job, JobStatus.RUNNING);
             try {
-                job.run();
+                job.executeInPlace();
             } catch (Throwable t) {
                 updateStatus(job, JobStatus.ERRORED);
                 throw t;

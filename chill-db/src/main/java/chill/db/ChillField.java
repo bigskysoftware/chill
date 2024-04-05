@@ -153,7 +153,7 @@ public class ChillField<T> {
         return readOnly;
     }
 
-    public Class<T> getType() {
+    public Class<T> getForeignType() {
         return type;
     }
 
@@ -285,7 +285,7 @@ public class ChillField<T> {
     }
 
     public String getTypeName() {
-        return  getType().getTypeName().replace("$", ".");
+        return  getForeignType().getTypeName().replace("$", ".");
     }
 
     public ChillField<T> beforeCreate(Consumer<ChillField<T>> callback){
@@ -353,7 +353,7 @@ public class ChillField<T> {
     }
 
     public boolean isBoolean() {
-        return getType().equals(Boolean.class) || getType().equals(Boolean.TYPE);
+        return getForeignType().equals(Boolean.class) || getForeignType().equals(Boolean.TYPE);
     }
 
     public boolean isUUID() {
@@ -388,7 +388,7 @@ public class ChillField<T> {
                 return (T) cachedRecord;
             } else {
                 var fkey = fkValue();
-                var query = new ChillQuery(getType()).where(foreignColumn, fkey);
+                var query = new ChillQuery(getForeignType()).where(foreignColumn, fkey);
                 valueToReturn = (T) query.first();
             }
             for (var beforeReturn : beforeReturns) {
@@ -482,7 +482,7 @@ public class ChillField<T> {
 
         private FK findJoinFKFor(Class type, Class componentType) {
             ChillRecord prototype = ChillRecord.getPrototype(type);
-            FK fk = prototype.getFields().ofType(FK.class).first(field -> field.getType().equals(componentType));
+            FK fk = prototype.getFields().ofType(FK.class).first(field -> field.getForeignType().equals(componentType));
             return fk;
         }
 

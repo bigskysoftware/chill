@@ -39,7 +39,11 @@ public abstract class ChillJob {
         getWorker().submit(this);
     }
 
-    public abstract void run() throws Exception;
+    protected abstract void run() throws Exception;
+
+    public void executeInPlace() {
+        TheMissingUtils.safely(this::run);
+    }
 
     @Override
     public boolean equals(Object o) {

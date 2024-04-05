@@ -12,6 +12,7 @@ import java.sql.SQLException;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @SuppressWarnings("unchecked")
 public class ChillQuery<T extends ChillRecord> implements Iterable<T> {
@@ -106,15 +107,8 @@ public class ChillQuery<T extends ChillRecord> implements Iterable<T> {
     public ChillQuery<T> join(ChillField.FK foreignKey) {
         instantiatable = false;
         ChillQuery<T> ts = new ChillQuery<>(this);
-        boolean foreignTypeIsThis = this.clazz.isAssignableFrom(foreignKey.getType());
+        boolean foreignTypeIsThis = this.clazz.isAssignableFrom(foreignKey.getForeignType());
         ts.joins.add(new Join(foreignKey, foreignTypeIsThis));
-        return ts;
-    }
-
-    public ChillQuery<T> join(ChillField.FK foreignKey, boolean invertJoin) {
-        instantiatable = false;
-        ChillQuery<T> ts = new ChillQuery<>(this);
-        ts.joins.add(new Join(foreignKey, invertJoin));
         return ts;
     }
 
@@ -528,9 +522,21 @@ public class ChillQuery<T extends ChillRecord> implements Iterable<T> {
     }
 
     private void buildSelectSentence(StringBuilder sql) {
+        var joinFields = joins.stream()
+                .flatMap(join -> join.foreignRecord().getFields().stream())
+                .map(ChillField::getColumnName)
+                .collect(Collectors.toSet());
+
         if (this.selectors.isEmpty()) {
             getFields()
-                    .map(field -> field.getColumnName())
+                    .map(field -> {
+                        var colName = field.getColumnName();
+                        if (joinFields.contains(colName)) {
+                            return tableName + "." + colName;
+                        } else {
+                            return colName;
+                        }
+                    })
                     .join(sql, ", ");
         } else {
             var fields = new NiceList<>(this.selectors);
@@ -541,17 +547,21 @@ public class ChillQuery<T extends ChillRecord> implements Iterable<T> {
                         if (i++ > 0) {
                             sql.append(", ");
                         }
-                        var selector = recordField.getRecord().getTableName() + "." + recordField.getColumnName();
-                        sql.append(selector);
-//                        sql.append(selector).append(" as \"").append(selector).append("\"");
+                        if (joinFields.contains(recordField.getColumnName())) {
+                            sql.append(recordField.getRecord().getTableName() + "." + recordField.getColumnName());
+                        } else {
+                            sql.append(recordField.getColumnName());
+                        }
                     }
                 } else {
                     if (i++ > 0) {
                         sql.append(", ");
                     }
-                    var selector = field.getRecord().getTableName() + "." + field.getColumnName();
-                    sql.append(selector);
-//                    sql.append(selector).append(" as \"").append(selector).append("\"");
+                    if (joinFields.contains(field.getColumnName())) {
+                        sql.append(field.getRecord().getTableName() + "." + field.getColumnName());
+                    } else {
+                        sql.append(field.getColumnName());
+                    }
                 }
             }
         }
@@ -748,34 +758,50 @@ public class ChillQuery<T extends ChillRecord> implements Iterable<T> {
     }
 
     protected class Join {
-        String table;
-        String from;
-        String to;
-
-        public Join(ChillField.FK foreignKey) {
-            this(foreignKey, false);
-        }
+        final ChillField.FK foreignKey;
+        /**
+         * if reverse then we join to the foreign table, otherwise the foreign table is joining
+         * to the table that owns the foreignKey
+         */
+        final boolean reverse;
+        final String table;
+        final String from;
+        final String to;
 
         public Join(ChillField.FK foreignKey, boolean reverse) {
-//            T prototype = (T) ChillRecord.getPrototype(foreignKey.getType());
-//            table = prototype.tableName;
-//            from = foreignKey.getRecord().getTableName() + "." + foreignKey.getColumnName();
-//            to = table + "." + foreignKey.getForeignColumn();
-
-            T foreignType = (T) ChillRecord.getPrototype(foreignKey.getType());
+            this.foreignKey = foreignKey;
+            this.reverse = reverse;
+            ChillRecord foreignType = foreignRecord();
+            ChillRecord localRecord = localRecord();
             if (reverse) {
-                table = foreignKey.getRecord().getTableName();
-                from = table + "." + foreignKey.getColumnName();
-                to = foreignType.getTableName() + "." + foreignKey.getForeignColumn();
+                table = foreignType.getTableName();
+                from = foreignType.getTableName() + "." + foreignKey.getColumnName();
+                to = localRecord.getTableName() + "." + foreignKey.getForeignColumn();
             } else {
                 table = foreignType.tableName;
                 from = foreignType.getTableName() + "." + foreignKey.getForeignColumn();
-                to = foreignKey.getRecord().getTableName() + "." + foreignKey.getColumnName();
+                to = localRecord.getTableName() + "." + foreignKey.getColumnName();
             }
         }
 
         public String sql() {
             return "  JOIN " + table + " ON " + from + " = " + to;
+        }
+
+        public ChillRecord localRecord() {
+            if (reverse) {
+                return ChillRecord.getPrototype(foreignKey.getForeignType());
+            } else {
+                return foreignKey.getRecord();
+            }
+        }
+
+        public ChillRecord foreignRecord() {
+            if (reverse) {
+                return foreignKey.getRecord();
+            } else {
+                return ChillRecord.getPrototype(foreignKey.getForeignType());
+            }
         }
     }
 }
